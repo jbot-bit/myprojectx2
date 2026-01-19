@@ -1,19 +1,23 @@
-@"
-# Databases
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Databases / backups
 *.db
 *.db.wal
 *.db-shm
-*.db-journal
 *.duckdb
-
-# Project DB folders (never commit)
 data/db/
 data/backups/
 
-# Python cache
+# Python / venv
 __pycache__/
 *.pyc
-
-# venv
 .venv/
-"@ | Set-Content .gitignore
+venv/
+
+# Logs
+*.log
+logs/

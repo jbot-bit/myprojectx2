@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python tests/test_ai_source_lock.py:*)",
+      "Bash(python -c:*)",
+      "Bash(python:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
