@@ -1,0 +1,36 @@
+NEXT TASK: Fix pytest collection so `pytest -q` runs clean.
+
+Current problem:
+- `pytest -q` fails during collection due to duplicate test_app_sync.py, missing ml_inference module, legacy tests importing missing modules/functions.
+
+Rules:
+- Only tests under /tests are collected by pytest.
+- Root scripts like test_app_sync.py are NOT pytest tests (manual verification only).
+- Archived/legacy tests must not be collected.
+
+Implement (minimal):
+1) Add a pytest.ini in repo root with:
+   [pytest]
+   testpaths = tests
+   python_files = test_*.py
+   norecursedirs = _archive strategies pipeline data docs trading_app
+   addopts = -q
+
+2) Resolve the duplicate module name collision:
+   - strategies/test_app_sync.py must be renamed or moved to _archive (do not delete).
+   - Root test_app_sync.py remains as manual script (not collected due to testpaths).
+
+3) Deal with legacy failing tests inside /tests:
+   - For tests that depend on missing modules (ml_inference*, night_orbs_full_sl), either:
+     a) move them to _archive/, OR
+     b) mark them skipped with pytest.skip + reason at import-time
+   Choose the simplest to make `pytest -q` pass.
+
+Constraints:
+- Do NOT change Trade Mode or AI Source Lock logic.
+- Do NOT remove important functionality; just stop pytest from collecting dead tests.
+- Stop and report after `pytest -q` passes.
+
+Deliverable:
+- Run command: `pytest -q` must complete with no collection errors.
+- List all moved/renamed files and why.

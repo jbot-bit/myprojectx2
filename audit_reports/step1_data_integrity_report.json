@@ -1,0 +1,117 @@
+{
+  "step": "Step 1: Data Integrity",
+  "passed": 12,
+  "failed": 0,
+  "total": 12,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "test": "Session Boundaries",
+      "passed": true,
+      "message": "24-hour data coverage: 24/24 hours have data (futures trade nearly 24hrs)",
+      "details": {
+        "hours_with_data": 24,
+        "missing_main_hours": [],
+        "note": "Gold futures trade ~23 hours/day - 24-hour data is correct"
+      },
+      "timestamp": "2026-01-19T16:04:38.650459"
+    },
+    {
+      "test": "ORB 09:00 Window",
+      "passed": true,
+      "message": "Found 523 valid 09:00 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.697065"
+    },
+    {
+      "test": "ORB 10:00 Window",
+      "passed": true,
+      "message": "Found 523 valid 10:00 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.698065"
+    },
+    {
+      "test": "ORB 11:00 Window",
+      "passed": true,
+      "message": "Found 523 valid 11:00 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.698065"
+    },
+    {
+      "test": "ORB 18:00 Window",
+      "passed": true,
+      "message": "Found 522 valid 18:00 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.699066"
+    },
+    {
+      "test": "ORB 23:00 Window",
+      "passed": true,
+      "message": "Found 522 valid 23:00 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.699066"
+    },
+    {
+      "test": "ORB 00:30 Window",
+      "passed": true,
+      "message": "Found 523 valid 00:30 ORBs in daily_features_v2",
+      "details": {},
+      "timestamp": "2026-01-19T16:04:38.700066"
+    },
+    {
+      "test": "Session Data Completeness",
+      "passed": true,
+      "message": "Trading days: 523/529 have complete sessions, 7 weekday holidays",
+      "details": {
+        "total_days": 740,
+        "weekend_days": 211,
+        "trading_days_with_data": 523,
+        "missing_weekdays": 7,
+        "note": "Weekends and holidays expected to have no data"
+      },
+      "timestamp": "2026-01-19T16:04:38.734626"
+    },
+    {
+      "test": "Duplicate Timestamps",
+      "passed": true,
+      "message": "Found 0 duplicate timestamps",
+      "details": {
+        "duplicates": []
+      },
+      "timestamp": "2026-01-19T16:04:38.828592"
+    },
+    {
+      "test": "ORB Construction (1000)",
+      "passed": true,
+      "message": "Found 0 mismatches in 1000 ORB size (high-low)",
+      "details": {
+        "mismatches": 0
+      },
+      "timestamp": "2026-01-19T16:04:38.888775"
+    },
+    {
+      "test": "ATR Validity",
+      "passed": true,
+      "message": "ATR stats: min=5.89, max=63.55, avg=24.51, zeros=0",
+      "details": {
+        "total_rows": 740,
+        "non_null": 712,
+        "min_atr": 5.894999999999982,
+        "max_atr": 63.54500000000007,
+        "avg_atr": 24.510133426966316,
+        "zero_count": 0
+      },
+      "timestamp": "2026-01-19T16:04:38.928931"
+    },
+    {
+      "test": "ORB Data Availability",
+      "passed": true,
+      "message": "Zero-lookahead check: ORB data only used after ORB close (validated by structure)",
+      "details": {
+        "note": "Enforced by trading day definition"
+      },
+      "timestamp": "2026-01-19T16:04:38.933933"
+    }
+  ],
+  "verdict": "PASS"
+}

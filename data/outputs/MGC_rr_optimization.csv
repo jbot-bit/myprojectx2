@@ -1,0 +1,7 @@
+orb,symbol,total_trades,optimal_rr,optimal_win_rate,optimal_avg_r,optimal_total_r,baseline_1r_avg_r,improvement_vs_1r
+0900,MGC,1,1.25,100.0,1.25,1.25,1.0,25.0
+1000,MGC,1,2.5,100.0,2.5,2.5,1.0,150.0
+1100,MGC,1,1.25,100.0,1.25,1.25,1.0,25.0
+1800,MGC,1,1.75,100.0,1.75,1.75,1.0,75.0
+2300,MGC,1,1.0,0.0,-1.0,-1.0,-1.0,0.0
+0030,MGC,1,1.0,0.0,-1.0,-1.0,-1.0,0.0

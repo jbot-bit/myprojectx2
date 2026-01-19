@@ -1,0 +1,159 @@
+I’ll give Step 3.1–3.3 now.
+Confirm before we move to 3.4+ (live & attack tests).
+
+3.1 Strategy Definition Lock (Freeze the Truth)
+
+Action
+
+Create a Strategy Manifest (one per strategy).
+
+Must include
+
+ORB(s) traded
+
+Entry rule (exact candle condition)
+
+Stop rule
+
+Target rule
+
+Filters (feature + threshold)
+
+Position sizing rule
+
+Max trades/day
+
+Timeout rule
+
+Rule
+
+If it’s not in the manifest → it does not exist.
+
+Test
+
+Hash manifest JSON
+
+Backtest must log the manifest hash
+
+Any code change = new hash
+
+Pass
+
+Same manifest → identical results
+
+3.2 Backtest Engine Correctness (Mechanics, Not Performance)
+
+A. Entry Determinism
+
+Given the same candles → same entry price, always.
+
+Test
+
+Run the same backtest twice
+
+Assert identical:
+
+entry timestamp
+
+entry price
+
+stop
+
+target
+
+outcome
+
+Fail
+
+Any drift = nondeterminism bug
+
+B. Execution Reality Model (Baseline)
+Implement three execution modes (must be switchable):
+
+Ideal
+
+Enter at close (baseline only)
+
+Realistic
+
+Entry = close ± 1–2 ticks
+
+Randomized per trade
+
+Hostile
+
+Worst-case fill within next candle
+
+Stop-first bias on ambiguity
+
+Pass Criteria
+
+Edge survives Realistic
+
+Edge degrades but does not flip in Hostile
+
+3.3 Walk-Forward & Regime Safety
+
+A. Rolling Walk-Forward
+
+Train window: 90 days
+
+Test window: 30 days
+
+Roll forward one month at a time
+
+Metrics
+
+Avg R
+
+Win rate
+
+Max DD
+
+Trade count
+
+Pass
+
+No catastrophic collapse
+
+Performance variance explainable by volatility regime
+
+B. Time-Shuffle Test
+
+Shuffle dates, not candles
+
+Keep intraday structure intact
+
+Expectation
+
+Performance degrades toward zero
+
+If not → leakage or overfit
+
+C. Feature Drop Test
+
+Remove one feature at a time
+
+Re-run backtest
+
+Interpretation
+
+Small degradation = robust
+
+Total collapse = brittle / curve-fit
+
+Output Required for Step 3.1–3.3
+
+You should have:
+
+✅ Frozen strategy manifests
+
+✅ Deterministic backtest engine
+
+✅ Execution realism modes
+
+✅ Walk-forward report
+
+✅ Shuffle test results
+
+✅ Feature sensitivity map

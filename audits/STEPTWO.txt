@@ -1,0 +1,209 @@
+STEP 2 — FEATURE & DERIVED METRIC VERIFICATION
+
+(Everything calculated FROM raw data must be provably correct)
+
+Goal:
+Prove that every feature used in strategies is:
+
+mathematically correct
+
+time-safe (no lookahead)
+
+stable across rebuilds
+
+internally consistent
+
+2.1 Lock the Feature Contract (Non-Negotiable)
+
+Create a canonical feature spec for daily_features_v2.
+
+For EACH feature, define:
+
+source candles (exact window)
+
+formula
+
+time availability
+
+allowed downstream usage
+
+Example (new defs included):
+
+asia_gap:
+  formula: asia_open - prior_ny_close
+  source_window: NY close → 09:00 open
+  available_at: 09:00
+  usable_for: 09:00 ORB+
+
+pre_london_range:
+  formula: max(high) - min(low)
+  source_window: 17:00–18:00
+  available_at: 18:00
+  usable_for: 18:00 ORB+
+
+
+Rule
+
+If it’s not in the contract → it cannot be used in a strategy.
+
+Confirm you’re OK enforcing this strictly.
+
+2.2 Deterministic Rebuild Test (CRITICAL)
+
+Test
+
+Rebuild daily_features_v2 twice
+
+Same input DB
+
+Hash all numeric columns
+
+assert hash_run_1 == hash_run_2
+
+
+Fail = hidden state / ordering bug
+
+This catches:
+
+accidental forward joins
+
+non-sorted groupbys
+
+floating drift
+
+2.3 Single-Feature Truth Tests (One by One)
+
+For EACH feature:
+
+Example: asia_gap
+SELECT
+  date,
+  asia_gap,
+  asia_open - prior_ny_close AS recomputed
+FROM daily_features_v2
+WHERE ABS(asia_gap - recomputed) > 0.1;
+
+
+Pass
+
+zero rows
+
+Repeat for:
+
+pre_asia_range
+
+pre_london_range
+
+atr_20
+
+orb_size
+
+pre_orb_travel
+
+transition ranges
+
+No batching. One feature at a time.
+
+2.4 Time-Safety Assertions (Hard Failures)
+
+Add assertions, not comments.
+
+Example:
+
+assert feature_time <= orb_open_time
+
+
+For every feature, assert:
+
+it is computed before the ORB it’s used for
+
+it never uses candles ≥ ORB open
+
+If violated → raise exception, not warning.
+
+2.5 Feature Distribution Sanity Checks
+
+For each numeric feature:
+
+min
+
+max
+
+mean
+
+std
+
+% zeros
+
+% nulls
+
+Flag:
+
+constant features
+
+clipped features
+
+fat-tail explosions
+
+Example:
+
+assert std > epsilon
+assert pct_null < 0.1%
+
+
+This catches:
+
+broken joins
+
+empty sessions
+
+silent data loss
+
+2.6 Feature Correlation Scan (No Strategy Yet)
+
+Compute correlation only to outcomes, not to other features.
+
+corr(feature, orb_r)
+
+
+Purpose:
+
+detect inverted signs
+
+detect impossible strength
+
+detect leakage (|corr| > 0.3 is suspicious)
+
+No optimisation yet. Observation only.
+
+2.7 Feature Availability Matrix
+
+Create a table:
+
+Feature	09:00	10:00	11:00	18:00	23:00	00:30
+
+Mark:
+
+✅ allowed
+
+❌ forbidden
+
+This prevents:
+
+accidental Asia→London leakage
+
+future-session bleed
+
+Output of Step 2 (Required)
+
+You should end Step 2 with:
+
+✅ feature spec locked
+
+✅ deterministic rebuild confirmed
+
+✅ all formulas verified
+
+✅ time-safety enforced by code
+
+✅ no silent feature corruption

@@ -1,0 +1,248 @@
+STEP 3.4 — ADVERSARIAL / ATTACK TESTING
+
+(Break it on purpose. If it survives, it’s real.)
+
+I’ll give concrete attacks + pass/fail rules.
+No optimisation. Observation only.
+
+3.4.1 Slippage Shock Tests
+
+Attack
+
+Inject slippage by regime:
+
+Normal: +1 tick
+
+Volatile: +3–5 ticks
+
+Extreme: +8–12 ticks (tail events)
+
+Apply to
+
+Entry
+
+Stop
+
+Target (worst-case)
+
+Pass
+
+Edge stays > 0R in Normal
+
+Degrades but doesn’t invert in Volatile
+
+Loss bounded in Extreme
+
+3.4.2 Spread Widening / Liquidity Vacuum
+
+Attack
+
+Artificially widen bid/ask during:
+
+ORB break candle
+
+Retest candle
+
+Randomly reject fills if spread > X ticks
+
+Pass
+
+Strategy still trades selectively
+
+Trade count drops (expected)
+
+No explosion in loss per trade
+
+3.4.3 Ambiguous Candle Resolution (Stop-First Bias)
+
+Attack
+
+If a candle hits both stop & target:
+
+Force STOP first
+
+Or force WORST of next candle
+
+Pass
+
+Expectancy decreases but remains positive
+
+No reliance on optimistic fills
+
+3.4.4 Delayed Signal / Latency Injection
+
+Attack
+
+Delay entry by:
+
++1 candle
+
++2 candles
+
+Recompute stop & target from delayed entry
+
+Pass
+
+Edge survives +1 candle
+
++2 candle likely degrades (acceptable)
+
+No catastrophic inversion
+
+3.4.5 Partial Data / Missed Bar Simulation
+
+Attack
+
+Randomly remove:
+
+1 candle from ORB window
+
+1 candle after breakout
+
+Or delay candle arrival by 1 minute
+
+Pass
+
+System either:
+
+Skips trade safely, or
+
+Trades with reduced size
+
+Never trades on incomplete ORB unknowingly
+
+3.4.6 Trade Skipping Stress
+
+Attack
+
+Randomly skip:
+
+10%
+
+20%
+
+30% of valid trades
+
+Purpose
+
+Simulates human hesitation, platform outages, copier failure
+
+Pass
+
+Equity curve shape remains similar
+
+No “one-trade dependency”
+
+3.4.7 Capital & Risk Attack (Realism)
+
+Attack
+
+Enforce:
+
+Max 1 trade per ORB
+
+STEP 3.5 — PAPER vs LIVE RECONCILIATION
+
+Requirement
+
+Every paper trade logs:
+
+Signal time
+
+Entry sent time
+
+Fill time
+
+Fill price
+
+Slippage vs model
+
+Weekly Test
+
+Compare:
+
+Expected R vs Realised R
+
+Expected win rate vs Actual
+
+Rejection rate vs Model
+
+Fail Conditions
+
+Persistent negative slippage drift
+
+Fill quality worse than “Realistic” model
+
+Structural mismatch (e.g. late fills always losing)
+
+STEP 3 OUTPUT (NON-NEGOTIABLE)
+
+You finish Step 3 only if you have:
+
+✅ Attack matrix results
+
+✅ Worst-case expectancy table
+
+✅ Paper vs model delta report
+
+✅ Clear “do not trade if X” conditions
+
+Max 2 concurrent trades
+
+Daily max loss (e.g. −3R)
+
+Force shutdown on breach
+
+Pass
+
+Strategy still profitable over sample
+
+Drawdown capped
+
+No martingale behaviour
+
+STEP 3.5 — PAPER vs LIVE RECONCILIATION
+
+Requirement
+
+Every paper trade logs:
+
+Signal time
+
+Entry sent time
+
+Fill time
+
+Fill price
+
+Slippage vs model
+
+Weekly Test
+
+Compare:
+
+Expected R vs Realised R
+
+Expected win rate vs Actual
+
+Rejection rate vs Model
+
+Fail Conditions
+
+Persistent negative slippage drift
+
+Fill quality worse than “Realistic” model
+
+Structural mismatch (e.g. late fills always losing)
+
+STEP 3 OUTPUT (NON-NEGOTIABLE)
+
+You finish Step 3 only if you have:
+
+✅ Attack matrix results
+
+✅ Worst-case expectancy table
+
+✅ Paper vs model delta report
+
+✅ Clear “do not trade if X” conditions
