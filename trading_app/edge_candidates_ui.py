@@ -73,6 +73,9 @@ def _load_candidates(
                 test_window_end,
                 approved_at,
                 approved_by,
+                promoted_validated_setup_id,
+                promoted_by,
+                promoted_at,
                 notes,
                 metrics_json,
                 robustness_json,
@@ -298,6 +301,46 @@ def render_edge_candidates_panel():
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error rejecting candidate: {e}")
+
+        # Promote button (only for APPROVED candidates that haven't been promoted)
+        promoted_id = candidate.get('promoted_validated_setup_id')
+        is_approved = current_status == "APPROVED"
+        already_promoted = promoted_id is not None and pd.notna(promoted_id)
+
+        st.divider()
+
+        if already_promoted:
+            st.success(f"🎉 Already promoted to validated_setups.setup_id = {promoted_id}")
+            if candidate.get('promoted_by'):
+                st.caption(f"Promoted by: {candidate.get('promoted_by')} at {candidate.get('promoted_at', 'N/A')}")
+        elif is_approved:
+            st.warning("⚠️ This candidate is APPROVED and ready for promotion to production")
+            if st.button("🚀 Promote to Production", type="primary", use_container_width=True):
+                try:
+                    # Import promotion function
+                    from edge_pipeline import promote_candidate_to_validated_setups
+
+                    # Promote candidate
+                    setup_id = promote_candidate_to_validated_setups(selected_id, "Josh")
+
+                    st.success(f"✅ Promoted candidate {selected_id} → validated_setups.setup_id = {setup_id}")
+                    st.info("Next step: Run python test_app_sync.py to verify sync")
+
+                    # Reload data
+                    st.session_state.edge_candidates_df = _load_candidates(
+                        status_filter=status_filter,
+                        instrument_filter=instrument_filter,
+                        limit=limit
+                    )
+                    st.rerun()
+                except ValueError as e:
+                    st.error(f"❌ Promotion failed: {e}")
+                    st.caption("Fix: Ensure candidate has all required fields for promotion")
+                except Exception as e:
+                    st.error(f"❌ Promotion failed: {e}")
+                    logger.error(f"Promotion error for candidate {selected_id}: {e}", exc_info=True)
+        else:
+            st.info(f"ℹ️ Candidate must be APPROVED before promotion (current status: {current_status})")
 
         # Show current notes if any
         if candidate.get('notes'):
