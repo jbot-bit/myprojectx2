@@ -138,14 +138,33 @@ def run_sanity_checks(conn, trading_days):
     # Test 4: ISOLATION exits within window
     print("\nTest 4: ISOLATION mode exits within scan window...")
     iso_result = run_backtest(conn, "0900", 1.5, "HALF", "ISOLATION", trading_days[:20])
-    late_exits = [t for t in iso_result['trades_list']
-                  if t.exit_ts is not None and
-                  (t.exit_ts.hour > 11 or (t.exit_ts.hour == 11 and t.exit_ts.minute > 0))]
+
+    # Check exits against proper scan_end_utc (not local time hour!)
+    from zoneinfo import ZoneInfo
+    from datetime import datetime, time as dt_time
+    TZ_LOCAL = ZoneInfo("Australia/Brisbane")
+
+    late_exits = []
+    for t in iso_result['trades_list']:
+        if t.exit_ts is not None:
+            # Get trading date from trade
+            trading_date_str = t.date_local
+            trading_date = datetime.strptime(trading_date_str, '%Y-%m-%d').date()
+
+            # Calculate proper scan_end for this trade
+            scan_end_local = datetime.combine(trading_date, dt_time(11, 0)).replace(tzinfo=TZ_LOCAL)
+            scan_end_utc = scan_end_local.astimezone(ZoneInfo("UTC"))
+
+            # Check if exit is after scan_end
+            if t.exit_ts > scan_end_utc:
+                late_exits.append(t)
 
     if len(late_exits) == 0:
         print(f"  PASS - All ISOLATION exits within window")
     else:
         print(f"  FAIL - Found {len(late_exits)} exits outside window")
+        for t in late_exits[:3]:
+            print(f"    {t.date_local}: exit at {t.exit_ts} (should be <= scan_end)")
         passed = False
 
     print("\n" + "="*80)

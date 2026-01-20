@@ -1,5 +1,5 @@
 # SANITY CHECK RESULTS
 
-**Status**: FAIL SOME CHECKS FAILED
+**Status**: OK ALL CHECKS PASSED
 
-CRITICAL: Do not use results until failures are resolved.
+The backtest engine is zero-lookahead compliant and deterministic.
