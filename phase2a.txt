@@ -1,36 +1,131 @@
-NEXT TASK: Fix pytest collection so `pytest -q` runs clean.
+You are Claude Code working inside repo: C:\Users\sydne\OneDrive\myprojectx2_cleanpush
+Goal: FIX the edge discovery/backtest pipeline so candidate-specific rules are actually tested (no baseline/precomputed shortcut), then re-run Phase 3 properly and produce survivors.
 
-Current problem:
-- `pytest -q` fails during collection due to duplicate test_app_sync.py, missing ml_inference module, legacy tests importing missing modules/functions.
+NON-NEGOTIABLES
+- Zero lookahead. Enforce timestamp ordering explicitly in code.
+- Do NOT run or resurrect _archive/deprecated/populate_validated_setups.py.
+- Do NOT delete/truncate validated_setups.
+- Any promotion must go through the existing edge pipeline + audit trail.
+- Work fail-closed: if a required field is missing, mark candidate INVALID and skip.
 
-Rules:
-- Only tests under /tests are collected by pytest.
-- Root scripts like test_app_sync.py are NOT pytest tests (manual verification only).
-- Archived/legacy tests must not be collected.
+CONTEXT / BUG
+- Phase 3 produced 0 survivors because it used baseline precomputed ORB outcomes from daily_features_v2 (RR=2.0, SL=HALF, default window, no filters).
+- This caused “all candidates in same session identical results” and ignored extended windows / RR / filters.
+- We proved empirically that breaks happen frequently:
+  - 2300: 120/120 days had >=1 close outside ORB in 23:05→09:00 window
+  - 0030: 94/120 days had >=1 close outside ORB in 00:35→09:00 window
 
-Implement (minimal):
-1) Add a pytest.ini in repo root with:
-   [pytest]
-   testpaths = tests
-   python_files = test_*.py
-   norecursedirs = _archive strategies pipeline data docs trading_app
-   addopts = -q
+TASK
+1) Implement a REAL candidate backtest engine that evaluates EACH candidate using:
+   - raw bars_1m (ts_utc, symbol, open/high/low/close/volume)
+   - ORB computed from bars (not precomputed outcome shortcuts)
+   - candidate-specific RR, SL mode, scan/hold windows, and filters
+2) Integrate it into the current Phase 3 runner so Phase 3 tests candidates correctly.
+3) Re-run Phase 3 on the existing 50 DRAFT candidates and output proper results + shortlist.
+4) Add tests to prevent regression (ensure candidate variations change results).
 
-2) Resolve the duplicate module name collision:
-   - strategies/test_app_sync.py must be renamed or moved to _archive (do not delete).
-   - Root test_app_sync.py remains as manual script (not collected due to testpaths).
+PHASE 0 — REPO DISCOVERY (DO THIS FIRST)
+- Locate and open:
+  - research/ede/backtest_engine.py (if exists)
+  - research/extended_window_backtest.py (buggy midnight rollover)
+  - any Phase 3 runner script that produced research/phase3_results.csv
+  - edge_candidates schema + how candidates store rr/sl_mode/orb_time/filters/windows
+- Print a short “what files control Phase 3” map before editing.
 
-3) Deal with legacy failing tests inside /tests:
-   - For tests that depend on missing modules (ml_inference*, night_orbs_full_sl), either:
-     a) move them to _archive/, OR
-     b) mark them skipped with pytest.skip + reason at import-time
-   Choose the simplest to make `pytest -q` pass.
+REQUIRED DESIGN (CANDIDATE SPEC)
+Every candidate MUST be normalized into a single spec dict with these fields (all required unless marked optional):
+- instrument: 'MGC' (for now)
+- orb_time: one of ('0900','1000','1100','1800','2300','0030')
+- orb_minutes: default 5
+- entry_rule: currently “first 1m close outside ORB” OR “rejection entry after sweep” (support both)
+- sl_mode: 'HALF' or 'FULL'
+- rr: float (e.g., 1.5, 3.0)
+- scan_start_local: time string (e.g., '23:05')
+- scan_end_local: time string (e.g., '09:00')  # may cross midnight
+- max_hold_end_local: time string (often same as scan_end_local)
+- filters: object (may be empty)
+  - orb_size_pct_min/max (optional)
+  - directional_bias_required (optional)
+  - asia_sweep_rejection (optional: requires asia_high/low and rejection confirmation)
+  - session_dependency (optional: MUST be zero-lookahead; use only break_dir, not future outcomes)
 
-Constraints:
-- Do NOT change Trade Mode or AI Source Lock logic.
-- Do NOT remove important functionality; just stop pytest from collecting dead tests.
-- Stop and report after `pytest -q` passes.
+TIME + SESSION RULES (CRITICAL)
+- bars_1m timestamps are ts_utc. You must convert to Brisbane local consistently.
+- Trading day boundary for ORB logic: 09:00 Brisbane → next 09:00 Brisbane.
+- Support windows that cross midnight (23:05→09:00 next day).
+- Fix the midnight rollover bug correctly:
+  - Never compare times as naive strings alone.
+  - Build actual datetimes per trading day for window start/end.
+  - If end_time < start_time, end is next calendar day.
+- ORB calculation:
+  - For orb_time T, ORB is bars from T to T+5min (inclusive/exclusive consistent) in Brisbane time.
+  - Compute orb_high/low and midpoint.
+  - Entry detection starts after ORB completes (e.g., 23:05:00+).
 
-Deliverable:
-- Run command: `pytest -q` must complete with no collection errors.
-- List all moved/renamed files and why.
+BACKTEST ENGINE REQUIREMENTS
+For each trading day:
+- Compute ORB from bars for that day/session.
+- Apply candidate filters that are knowable at entry time (zero-lookahead).
+- Determine entry:
+  A) Breakout entry:
+     - first 1m CLOSE outside ORB after ORB end within scan window
+  B) Sweep+rejection entry (for the “Asia Rejection Fade” candidate):
+     - detect sweep of Asia high/low (Asia range must be known before 18:00; compute from 09:00→17:00)
+     - then confirm rejection: first 1m CLOSE back inside Asia range within 18:05→18:35
+     - entry at rejection close; direction is opposite sweep
+- Stop:
+  - FULL: other side of ORB
+  - HALF: ORB midpoint
+- Target: entry +/- RR * risk (risk = abs(entry - stop))
+- Exit simulation:
+  - walk forward bar-by-bar from entry until:
+    - TP hit OR SL hit OR time reaches max_hold_end_local
+  - For intra-bar ordering, be conservative and deterministic:
+    - If both TP and SL are touched in same bar, assume worst-case (SL first) unless you already have a defined policy. Document it.
+- Record:
+  - entry_ts_local, exit_ts_local
+  - direction, entry, stop, target
+  - outcome (WIN/LOSS/TIME_EXIT/NO_TRADE)
+  - R result
+  - MAE/MFE in R (optional but preferred)
+  - time_to_resolution minutes
+
+PHASE 3 GATES (KEEP BUT APPLY TO REAL RESULTS)
+- min_trades >= 200
+- min_avg_r >= +0.15R (keep default, but parameterize)
+- time-split validation: 3 splits, require >=2 positive
+- max_drawdown <= 50R (if you can compute equity curve; otherwise add in Phase 4)
+
+OUTPUTS (MUST MATCH + IMPROVE)
+Write:
+- research/phase3_results.csv
+- research/phase3_results.md
+- research/phase3_shortlist.md
+- research/phase3_for_import.json (ONLY survivors, empty ok)
+
+Also:
+- Include per-candidate “reason for fail” (gate failed, data missing, invalid spec, etc.)
+- Ensure candidates with different RR / windows do NOT collapse to identical metrics.
+
+TESTS (ADD THESE)
+Add pytest tests proving:
+1) Changing RR for same ORB changes results (not identical).
+2) Changing scan window (85min vs extended) changes results for 2300 on same data subset.
+3) Midnight-crossing windows behave correctly (end is next day, not same day 00:00).
+4) Zero-lookahead guard: filters cannot reference future outcomes; fail if attempted.
+
+EXECUTION PLAN
+- Implement engine in a new reusable module, e.g. research/candidate_backtest_engine.py
+- Update Phase 3 runner to call it for each candidate.
+- Run Phase 3 on the 50 DRAFT candidates already imported.
+- Summarize survivors (if any) and confirm the known edges:
+  - 2300 RR=1.5 HALF, window 23:05→09:00 should reproduce ~+0.403R / 56.1% on the same dataset range used in Phase 2 CSVs.
+  - 0030 RR=3.0 HALF, window 00:35→09:00 should reproduce ~+0.254R / 31.3% similarly.
+If mismatch, debug until alignment or explicitly identify why (data range, symbol filters, timezone).
+
+STOP CONDITIONS
+- Do not promote anything automatically.
+- After outputs are written, stop and report:
+  - which candidates passed
+  - which failed and why
+  - whether 2300/0030 extended metrics reproduce
