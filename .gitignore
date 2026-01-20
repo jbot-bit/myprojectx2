@@ -21,3 +21,13 @@ venv/
 # Logs
 *.log
 logs/
+
+# Windows reserved filenames
+nul
+
+# Temporary task files
+delete.txt
+fix.txt
+maintenance.txt
+scope.txt
+candidate_claude.txt

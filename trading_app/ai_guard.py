@@ -88,38 +88,74 @@ class EvidencePack:
     # Query audit trail
     queries: List[str]  # Sanitized SQL or query descriptors
 
+    # Evidence Footer fields (per AI_EDGE_ENGINE_PROMPT.txt)
+    db_mode: str  # "local" | "motherduck"
+    no_lookahead_check: str  # "PASS" | "FAIL"
+    strategy_ids: List[int] = field(default_factory=list)  # Setup IDs used
+
     # Optional market data context
     current_price: Optional[float] = None
     session_levels: Optional[Dict[str, float]] = None  # Asia/London/NY highs/lows
     orb_data: Optional[Dict[str, Any]] = None  # Current ORB ranges
 
     def is_complete(self) -> bool:
-        """Check if evidence pack has minimum required fields."""
+        """
+        FAIL-CLOSED: Check if evidence pack has ALL required fields.
+
+        Requirements (per AI_EDGE_ENGINE_PROMPT.txt):
+        - instrument and timeframe present
+        - candle_tables_used exists and len >= 1
+        - ts_utc_start and ts_utc_end present
+        - engine_eval present
+        - facts exists and len >= 1 (no empty facts list)
+        - queries exists and len >= 1 (no empty queries list)
+        - db_mode present (local | motherduck)
+        - no_lookahead_check present (PASS | FAIL)
+        """
         if not self.instrument or not self.timeframe:
             return False
-        if not self.candle_tables_used or not self.ts_utc_start or not self.ts_utc_end:
+        if not self.candle_tables_used or len(self.candle_tables_used) == 0:
+            return False
+        if not self.ts_utc_start or not self.ts_utc_end:
             return False
         if not self.engine_eval:
+            return False
+        # FAIL-CLOSED: Require at least one fact
+        if not self.facts or len(self.facts) == 0:
+            return False
+        # FAIL-CLOSED: Require at least one query
+        if not self.queries or len(self.queries) == 0:
+            return False
+        # FAIL-CLOSED: Require db_mode and no_lookahead_check
+        if not self.db_mode or self.db_mode not in ["local", "motherduck"]:
+            return False
+        if not self.no_lookahead_check or self.no_lookahead_check not in ["PASS", "FAIL"]:
             return False
         return True
 
     def missing_fields(self) -> List[str]:
-        """Return list of missing/null required fields."""
+        """Return list of missing/null required fields (fail-closed)."""
         missing = []
         if not self.instrument:
             missing.append("instrument")
         if not self.timeframe:
             missing.append("timeframe")
-        if not self.candle_tables_used:
-            missing.append("candle_tables_used")
+        if not self.candle_tables_used or len(self.candle_tables_used) == 0:
+            missing.append("candle_tables_used (must have >= 1 table)")
         if not self.ts_utc_start:
             missing.append("ts_utc_start")
         if not self.ts_utc_end:
             missing.append("ts_utc_end")
         if not self.engine_eval:
             missing.append("engine_eval")
-        if not self.facts:
-            missing.append("facts")
+        if not self.facts or len(self.facts) == 0:
+            missing.append("facts (must have >= 1 fact)")
+        if not self.queries or len(self.queries) == 0:
+            missing.append("queries (must have >= 1 query)")
+        if not self.db_mode or self.db_mode not in ["local", "motherduck"]:
+            missing.append("db_mode (must be 'local' or 'motherduck')")
+        if not self.no_lookahead_check or self.no_lookahead_check not in ["PASS", "FAIL"]:
+            missing.append("no_lookahead_check (must be 'PASS' or 'FAIL')")
         return missing
 
 
@@ -203,6 +239,16 @@ def validate_evidence_pack(evidence_pack: Optional[EvidencePack], user_question:
                 evidence_pack.candle_tables_used,
                 "strategy_engine must provide entry/stop/target for ENTER signals"
             )
+
+    # Rule 6: Block recommendations if lookahead check failed
+    # Per AI_EDGE_ENGINE_PROMPT.txt Section 2: "Any violation → FAIL and block approval"
+    if is_trade_question and evidence_pack.no_lookahead_check == "FAIL":
+        return False, _format_refusal(
+            "Cannot recommend trade - lookahead violation detected",
+            ["no_lookahead_check=FAIL"],
+            evidence_pack.candle_tables_used,
+            "Fix lookahead violation: ensure all queries use as-of joins (feature_ts <= decision_ts)"
+        )
 
     # All validations passed
     return True, None
@@ -342,6 +388,55 @@ def _format_evidence_for_prompt(evidence_pack: EvidencePack) -> str:
     return "\n".join(output)
 
 
+def _format_evidence_footer(evidence_pack: EvidencePack) -> str:
+    """
+    Format Evidence Footer for user-visible audit trail.
+
+    Per AI_EDGE_ENGINE_PROMPT.txt Section 1:
+    - db_mode: local | motherduck
+    - tables_used: [list]
+    - queries_used: [list OR hashes]
+    - data_window: [start_ts, end_ts]
+    - strategy_ids: [list]
+    - no_lookahead_check: PASS | FAIL
+
+    This footer is APPENDED to the AI response (user-visible).
+    """
+    # Format timestamps
+    start_str = evidence_pack.ts_utc_start.strftime("%Y-%m-%d %H:%M UTC")
+    end_str = evidence_pack.ts_utc_end.strftime("%Y-%m-%d %H:%M UTC")
+
+    # Format tables
+    tables_str = ", ".join(evidence_pack.candle_tables_used)
+
+    # Format queries (truncate if too long)
+    queries_display = []
+    for q in evidence_pack.queries[:3]:  # Max 3 queries
+        if len(q) > 80:
+            queries_display.append(q[:77] + "...")
+        else:
+            queries_display.append(q)
+    if len(evidence_pack.queries) > 3:
+        queries_display.append(f"... +{len(evidence_pack.queries) - 3} more")
+    queries_str = " | ".join(queries_display) if queries_display else "none"
+
+    # Format strategy IDs
+    strategy_ids_str = ", ".join(str(sid) for sid in evidence_pack.strategy_ids) if evidence_pack.strategy_ids else "none"
+
+    # Build footer
+    footer = f"""
+---
+**Evidence Footer:**
+- **DB Mode:** {evidence_pack.db_mode}
+- **Tables Used:** {tables_str}
+- **Data Window:** {start_str} → {end_str}
+- **Strategy IDs:** {strategy_ids_str}
+- **No Lookahead Check:** {evidence_pack.no_lookahead_check}
+- **Queries:** {queries_str}
+"""
+    return footer
+
+
 def guarded_chat_answer(
     question: str,
     evidence_pack: Optional[EvidencePack],
@@ -424,10 +519,128 @@ def guarded_chat_answer(
         # Log for audit trail
         logger.info(f"AI response generated successfully (length={len(assistant_message)} chars)")
 
-        return assistant_message
+        # APPEND EVIDENCE FOOTER (per AI_EDGE_ENGINE_PROMPT.txt Section 1)
+        # This makes the data sources visible to the user
+        evidence_footer = _format_evidence_footer(evidence_pack)
+        full_response = assistant_message + evidence_footer
+
+        return full_response
 
     except Exception as e:
         error_msg = f"Error communicating with AI: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def guarded_vision_answer(
+    image_data_base64: str,
+    image_type: str,
+    user_prompt: str,
+    instrument: str = "MGC",
+    visual_only: bool = True
+) -> str:
+    """
+    GUARDED VISION API CALL - Chart analysis through AI Source Lock.
+
+    This function enforces:
+    1. No performance/edge claims without DB-backed EvidencePack
+    2. Visual observations only (timeframe, levels, structure)
+    3. Locked system prompt enforces constraints
+
+    Args:
+        image_data_base64: Base64-encoded image data
+        image_type: MIME type (image/png, image/jpeg)
+        user_prompt: Analysis request from user
+        instrument: Trading instrument (for context)
+        visual_only: If True, restrict to visual observations only (no DB claims)
+
+    Returns:
+        Analysis text OR refusal if misconfigured
+    """
+
+    # GATE 1: Load locked system prompt
+    try:
+        locked_prompt = _load_locked_prompt()
+    except FileNotFoundError as e:
+        logger.error(f"AI Source Lock misconfigured: {e}")
+        return "AI LOCK MISCONFIGURED: LOCKED_SYSTEM_PROMPT.txt not found. AI responses disabled."
+
+    # GATE 2: Get API key and client
+    api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+    if not api_key:
+        logger.error("No ANTHROPIC_API_KEY found in environment")
+        return "AI assistant not available. Set ANTHROPIC_API_KEY in .env file."
+
+    try:
+        client = Anthropic(api_key=api_key)
+    except Exception as e:
+        logger.error(f"Error initializing Anthropic client: {e}")
+        return f"Error initializing AI client: {e}"
+
+    # Build system prompt with constraints
+    vision_constraints = """
+VISION MODE CONSTRAINTS:
+- You are analyzing a trading chart image
+- You may ONLY describe what is VISUALLY OBSERVABLE in the image
+- DO NOT make performance claims, edge claims, or win rate statements
+- DO NOT recommend specific strategies unless backed by database facts
+- If you see price levels, timeframes, or patterns, describe them objectively
+- Instrument: {instrument}
+"""
+
+    if visual_only:
+        vision_constraints += """
+- NO DATABASE ACCESS for this request
+- Limit output to visual observations only
+- Do NOT claim any strategy has an edge or historical performance
+"""
+
+    system_prompt = f"""{locked_prompt}
+
+{vision_constraints.format(instrument=instrument)}
+
+RESPOND WITH ONLY VISUAL OBSERVATIONS FROM THE CHART.
+"""
+
+    # Build messages with image
+    messages = [{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": image_type,
+                    "data": image_data_base64,
+                },
+            },
+            {
+                "type": "text",
+                "text": user_prompt
+            }
+        ],
+    }]
+
+    # Call Claude Vision API (THE ONLY PLACE VISION CALLS HAPPEN)
+    try:
+        logger.info(f"Calling Claude Vision API (instrument={instrument}, visual_only={visual_only})")
+
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",  # Vision model
+            max_tokens=2000,
+            system=system_prompt,
+            messages=messages
+        )
+
+        assistant_message = response.content[0].text
+
+        # Log for audit trail
+        logger.info(f"Vision analysis generated (length={len(assistant_message)} chars)")
+
+        return assistant_message
+
+    except Exception as e:
+        error_msg = f"Error with vision analysis: {str(e)}"
         logger.error(error_msg)
         return error_msg
 
@@ -471,5 +684,5 @@ def assert_ai_lock_enabled():
                 f"AI LOCK MISCONFIGURED: LOCKED_SYSTEM_PROMPT.txt missing required phrase: '{phrase}'"
             )
 
-    logger.info("✓ AI Source Lock verified: Locked prompt loaded and validated")
+    logger.info("[OK] AI Source Lock verified: Locked prompt loaded and validated")
     return True

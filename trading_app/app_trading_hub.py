@@ -3,6 +3,19 @@ LIVE TRADING HUB - Streamlit Application
 Real-time decision support engine for trading.
 """
 
+import sys
+from pathlib import Path
+
+# Add trading_app directory and repo root to Python path
+if __name__ == "__main__" or "streamlit" in sys.modules:
+    current_dir = Path(__file__).parent
+    repo_root = current_dir.parent
+    # Add both paths for proper imports
+    if str(current_dir) not in sys.path:
+        sys.path.insert(0, str(current_dir))
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -11,7 +24,6 @@ import time
 import logging
 import uuid
 import os
-from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 
 from config import *
@@ -50,6 +62,34 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# CANONICAL ENVIRONMENT CHECK (STARTUP GATE)
+# ============================================================================
+try:
+    from trading_app.canonical import assert_canonical_environment
+    assert_canonical_environment()
+except Exception as e:
+    # Import Streamlit error handling
+    import streamlit as st
+    st.error(f"""
+    **CANONICAL ENVIRONMENT ERROR**
+
+    The application failed to start due to environment validation errors:
+
+    ```
+    {str(e)}
+    ```
+
+    **How to Fix:**
+    1. Ensure CANONICAL.json exists in repository root
+    2. Remove any shadow database files (check trading_app/ directory)
+    3. Verify data/db/gold.db exists or set CLOUD_MODE=1
+    4. Run: `python tools/preflight.py` for detailed diagnostics
+
+    **Contact:** Check README.md for setup instructions
+    """)
+    st.stop()
 
 # ============================================================================
 # PAGE CONFIG
@@ -110,7 +150,7 @@ if "current_symbol" not in st.session_state:
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 if "memory_manager" not in st.session_state:
-    st.session_state.memory_manager = AIMemoryManager("trading_app.db")
+    st.session_state.memory_manager = AIMemoryManager()  # Uses canonical DB routing
 if "ai_assistant" not in st.session_state:
     st.session_state.ai_assistant = TradingAIAssistant(st.session_state.memory_manager)
 if "chat_history" not in st.session_state:
@@ -451,24 +491,81 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 if not st.session_state.data_loader or not st.session_state.strategy_engine:
-    if is_cloud_deployment():
-        st.info("☁️ **Cloud Mode Detected**")
-        st.markdown("""
-        ### Welcome to your Trading Hub!
+    # AUTO-INITIALIZE DATA (so user doesn't need to click button)
+    st.info("🔄 Loading data... Please wait.")
 
-        Your app is running in the cloud!
+    try:
+        # Initialize data loader
+        loader = LiveDataLoader(symbol)
 
-        **What works right now:**
-        - 🤖 **AI CHAT** (scroll down) - Ask strategy questions, get trade calculations
+        # Fetch data (cloud-aware)
+        if is_cloud_deployment():
+            # In cloud: fetch live data from ProjectX API
+            if os.getenv("PROJECTX_API_KEY"):
+                loader.refresh()  # Fetches from ProjectX API automatically
+            else:
+                st.error("No PROJECTX_API_KEY found. Add it in Streamlit Cloud secrets.")
+                st.stop()
+        else:
+            # Local: check if we need to backfill
+            latest_bar = loader.get_latest_bar()
+            needs_backfill = True
 
-        **To enable live data & strategies:**
-        1. Make sure `PROJECTX_API_KEY` is in your Streamlit Cloud secrets
-        2. Click "Initialize/Refresh Data" in the sidebar
-        3. App will fetch live data from ProjectX API
-        """)
-    else:
-        st.warning("⚠️ Click 'Initialize/Refresh Data' in sidebar to start")
-    st.stop()
+            if latest_bar:
+                # Check if we have recent data (within last 6 hours)
+                latest_time = latest_bar['ts_utc']
+                time_since_last = datetime.now(TZ_UTC) - latest_time
+                if time_since_last.total_seconds() < 6 * 3600:  # 6 hours
+                    needs_backfill = False
+
+            if needs_backfill:
+                # Backfill from database then refresh
+                from cloud_mode import get_database_path
+                db_path = get_database_path()
+                loader.backfill_from_gold_db(db_path, days=2)
+
+            loader.refresh()
+
+        st.session_state.data_loader = loader
+
+        # Initialize ML engine if enabled
+        ml_engine = None
+        if ML_ENABLED:
+            try:
+                import sys
+                from pathlib import Path
+                sys.path.insert(0, str(Path(__file__).parent.parent))
+                from ml_inference.inference_engine import MLInferenceEngine
+
+                ml_engine = MLInferenceEngine()
+                logger.info("ML engine initialized successfully")
+            except Exception as e:
+                logger.warning(f"ML engine initialization failed: {e}")
+
+        st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+
+        # Update data quality monitor with latest bar
+        latest_bar = loader.get_latest_bar()
+        if latest_bar:
+            st.session_state.data_quality_monitor.update_bar(
+                symbol,
+                latest_bar['ts_local'],
+                {
+                    'open': latest_bar['open'],
+                    'high': latest_bar['high'],
+                    'low': latest_bar['low'],
+                    'close': latest_bar['close'],
+                    'volume': latest_bar.get('volume', 0)
+                }
+            )
+
+        st.success(f"✅ Data loaded for {symbol}")
+        st.rerun()  # Reload page to show all content
+
+    except Exception as e:
+        st.error(f"❌ Error loading data: {e}")
+        logger.error(f"Data load error: {e}", exc_info=True)
+        st.stop()
 
 # ========================================================================
 # CLEAN MARKET SNAPSHOT (TOP OF PAGE)
@@ -1171,6 +1268,87 @@ else:
         render_empty_position_panel(),
         height=200
     )
+
+# ============================================================================
+# CHART UPLOAD & VISION ANALYSIS
+# ============================================================================
+st.divider()
+st.title("📸 Upload Chart for AI Analysis")
+
+st.markdown("""
+**Upload a TradingView screenshot** and get AI-powered analysis with:
+- Pattern recognition
+- Support/resistance levels
+- Strategy recommendations
+- Entry/exit suggestions
+""")
+
+# Initialize chart analyzer if not exists
+if "chart_analyzer" not in st.session_state:
+    from chart_analyzer import ChartAnalyzer
+    st.session_state.chart_analyzer = ChartAnalyzer(instrument=symbol)
+
+chart_analyzer = st.session_state.chart_analyzer
+
+if not chart_analyzer.is_available():
+    st.error("⚠️ Chart analysis not available. Add ANTHROPIC_API_KEY to .env file.")
+else:
+    st.success("✅ Chart analyzer ready! (Claude Vision API)")
+
+    # File uploader
+    uploaded_file = st.file_uploader(
+        "Choose a chart image",
+        type=["png", "jpg", "jpeg"],
+        help="Upload a TradingView screenshot for AI analysis"
+    )
+
+    if uploaded_file is not None:
+        # Display uploaded image
+        st.image(uploaded_file, caption="Uploaded Chart", use_column_width=True)
+
+        # Analyze button
+        if st.button("🔍 Analyze Chart", type="primary"):
+            with st.spinner("Analyzing chart with Claude Vision..."):
+                try:
+                    # Read image bytes
+                    image_bytes = uploaded_file.read()
+
+                    # Determine image type
+                    image_type = "image/jpeg" if uploaded_file.name.endswith(('.jpg', '.jpeg')) else "image/png"
+
+                    # Call vision API
+                    analysis = chart_analyzer.analyze_chart_image(image_bytes, image_type)
+
+                    if analysis:
+                        st.success("✅ Analysis complete!")
+
+                        # Display results
+                        st.subheader("📊 Analysis Results")
+
+                        if "pattern" in analysis:
+                            st.markdown(f"**Pattern Detected:** {analysis['pattern']}")
+
+                        if "levels" in analysis:
+                            st.markdown("**Key Levels:**")
+                            for level in analysis['levels']:
+                                st.write(f"- {level}")
+
+                        if "strategy" in analysis:
+                            st.markdown(f"**Recommended Strategy:** {analysis['strategy']}")
+
+                        if "setup" in analysis:
+                            st.markdown(f"**Setup:** {analysis['setup']}")
+
+                        if "raw_response" in analysis:
+                            with st.expander("📝 Full Analysis"):
+                                st.markdown(analysis['raw_response'])
+
+                    else:
+                        st.error("❌ Analysis failed. Check logs for details.")
+
+                except Exception as e:
+                    st.error(f"❌ Error analyzing chart: {e}")
+                    logger.error(f"Chart analysis error: {e}", exc_info=True)
 
 # ============================================================================
 # AI CHAT - STREAMLINED AT BOTTOM OF PAGE

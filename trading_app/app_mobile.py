@@ -6,11 +6,15 @@ Card-based, swipeable, mobile-first trading interface
 import sys
 from pathlib import Path
 
-# Add trading_app directory to Python path (for Streamlit Cloud)
+# Add trading_app directory and repo root to Python path (for Streamlit Cloud)
 if __name__ == "__main__" or "streamlit" in sys.modules:
     current_dir = Path(__file__).parent
+    repo_root = current_dir.parent
+    # Add both paths for proper imports
     if str(current_dir) not in sys.path:
         sys.path.insert(0, str(current_dir))
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
 
 import streamlit as st
 import pandas as pd
@@ -71,6 +75,34 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================================
+# CANONICAL ENVIRONMENT CHECK (STARTUP GATE)
+# ============================================================================
+try:
+    from trading_app.canonical import assert_canonical_environment
+    assert_canonical_environment()
+except Exception as e:
+    # Import Streamlit error handling
+    import streamlit as st
+    st.error(f"""
+    **CANONICAL ENVIRONMENT ERROR**
+
+    The application failed to start due to environment validation errors:
+
+    ```
+    {str(e)}
+    ```
+
+    **How to Fix:**
+    1. Ensure CANONICAL.json exists in repository root
+    2. Remove any shadow database files (check trading_app/ directory)
+    3. Verify data/db/gold.db exists or set CLOUD_MODE=1
+    4. Run: `python tools/preflight.py` for detailed diagnostics
+
+    **Contact:** Check README.md for setup instructions
+    """)
+    st.stop()
+
+# ============================================================================
 # PAGE CONFIG - MOBILE OPTIMIZED
 # ============================================================================
 st.set_page_config(
@@ -99,7 +131,7 @@ if "current_symbol" not in st.session_state:
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
 if "memory_manager" not in st.session_state:
-    st.session_state.memory_manager = AIMemoryManager("trading_app.db")
+    st.session_state.memory_manager = AIMemoryManager()  # Uses canonical DB routing
 if "ai_assistant" not in st.session_state:
     st.session_state.ai_assistant = TradingAIAssistant(st.session_state.memory_manager)
 if "chat_history" not in st.session_state:

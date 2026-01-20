@@ -1,27 +1,30 @@
 """
 AI Memory Manager - Persistent conversation history in DuckDB
+
+Uses canonical DB routing (cloud-aware via cloud_mode.get_database_connection).
 """
 
-import duckdb
 from datetime import datetime
 from typing import List, Dict, Optional
 import json
 import logging
 
+from cloud_mode import get_database_connection
+
 logger = logging.getLogger(__name__)
 
 
 class AIMemoryManager:
-    """Manages persistent AI conversation history in DuckDB"""
+    """Manages persistent AI conversation history in canonical DB (cloud-aware)"""
 
-    def __init__(self, db_path: str = "trading_app.db"):
-        self.db_path = db_path
+    def __init__(self):
+        """Initialize AI memory manager (uses canonical DB connection)."""
         self._init_schema()
 
     def _init_schema(self):
         """Create ai_chat_history table if not exists"""
         try:
-            conn = duckdb.connect(self.db_path)
+            conn = get_database_connection()
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ai_chat_history (
                     id INTEGER PRIMARY KEY,
@@ -37,7 +40,7 @@ class AIMemoryManager:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_timestamp ON ai_chat_history(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_chat_session ON ai_chat_history(session_id)")
             conn.close()
-            logger.info("AI memory schema initialized")
+            logger.info("AI memory schema initialized in canonical DB")
         except Exception as e:
             logger.error(f"Error initializing AI memory schema: {e}")
 
@@ -45,7 +48,7 @@ class AIMemoryManager:
                      context_data: Dict = None, instrument: str = "MGC", tags: List[str] = None):
         """Save a single message to history"""
         try:
-            conn = duckdb.connect(self.db_path)
+            conn = get_database_connection()
             conn.execute("""
                 INSERT INTO ai_chat_history (session_id, role, content, context_data, instrument, tags)
                 VALUES ($1, $2, $3, $4, $5, $6)
@@ -57,7 +60,7 @@ class AIMemoryManager:
     def load_session_history(self, session_id: str, limit: int = 50) -> List[Dict]:
         """Load conversation history for a session"""
         try:
-            conn = duckdb.connect(self.db_path, read_only=True)
+            conn = get_database_connection()
             result = conn.execute("""
                 SELECT role, content, timestamp, context_data, tags
                 FROM ai_chat_history
@@ -85,7 +88,7 @@ class AIMemoryManager:
     def search_history(self, query: str, instrument: str = None, limit: int = 10) -> List[Dict]:
         """Search conversation history by content"""
         try:
-            conn = duckdb.connect(self.db_path, read_only=True)
+            conn = get_database_connection()
 
             # Use DuckDB parameter syntax ($1, $2, etc.)
             if instrument:
@@ -126,28 +129,29 @@ class AIMemoryManager:
     def get_recent_trades(self, session_id: str = None, days: int = 7) -> List[Dict]:
         """Get recent trade-related conversations"""
         try:
-            conn = duckdb.connect(self.db_path, read_only=True)
+            conn = get_database_connection()
 
-            # Use DuckDB parameter syntax ($1, $2, etc.)
+            # INTERVAL syntax doesn't support parameters in DuckDB/MotherDuck
+            # Use string formatting for the interval value (safe since days is an int)
             if session_id:
-                sql = """
+                sql = f"""
                     SELECT role, content, timestamp, context_data
                     FROM ai_chat_history
-                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL $1 DAY
+                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL '{days}' DAY
                       AND list_has(tags, 'trade')
-                      AND session_id = $2
+                      AND session_id = $1
                     ORDER BY timestamp DESC LIMIT 20
                 """
-                result = conn.execute(sql, [days, session_id]).fetchall()
+                result = conn.execute(sql, [session_id]).fetchall()
             else:
-                sql = """
+                sql = f"""
                     SELECT role, content, timestamp, context_data
                     FROM ai_chat_history
-                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL $1 DAY
+                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL '{days}' DAY
                       AND list_has(tags, 'trade')
                     ORDER BY timestamp DESC LIMIT 20
                 """
-                result = conn.execute(sql, [days]).fetchall()
+                result = conn.execute(sql).fetchall()
 
             conn.close()
 
@@ -167,7 +171,7 @@ class AIMemoryManager:
     def clear_session(self, session_id: str):
         """Clear all messages for a session"""
         try:
-            conn = duckdb.connect(self.db_path)
+            conn = get_database_connection()
             conn.execute("DELETE FROM ai_chat_history WHERE session_id = $1", [session_id])
             conn.close()
             logger.info(f"Cleared session: {session_id}")

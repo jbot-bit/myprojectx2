@@ -1,25 +1,25 @@
 """
 Chart Analyzer - Vision-based chart analysis for strategy testing
 
-Uses Claude Vision API to analyze TradingView screenshots and recommend strategies.
+Uses guarded Vision API through ai_guard.py (AI Source Lock enforced).
 """
 
 import base64
 import logging
+import os
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
-import anthropic
-import os
 from pathlib import Path
 
 from config import TZ_LOCAL
 from setup_detector import SetupDetector
+from ai_guard import guarded_vision_answer
 
 logger = logging.getLogger(__name__)
 
 
 class ChartAnalyzer:
-    """Analyzes trading charts using Claude Vision and recommends strategies."""
+    """Analyzes trading charts using Claude Vision (guarded through ai_guard.py)."""
 
     def __init__(self, instrument: str = "MGC"):
         """
@@ -31,21 +31,14 @@ class ChartAnalyzer:
         self.instrument = instrument
         self.setup_detector = SetupDetector()
 
-        # Check for API key
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not self.api_key:
-            logger.warning("ANTHROPIC_API_KEY not found - chart analysis will be unavailable")
-            self.client = None
-        else:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
-
     def is_available(self) -> bool:
         """Check if chart analysis is available (API key configured)."""
-        return self.client is not None
+        # Check if API key is set (vision calls go through ai_guard.py)
+        return os.getenv("ANTHROPIC_API_KEY") is not None
 
     def analyze_chart_image(self, image_bytes: bytes, image_type: str = "image/png") -> Optional[Dict]:
         """
-        Analyze a chart image using Claude Vision.
+        Analyze a chart image using guarded Vision API.
 
         Args:
             image_bytes: Image file bytes
@@ -65,33 +58,19 @@ class ChartAnalyzer:
             # Construct vision prompt
             prompt = self._build_analysis_prompt()
 
-            # Call Claude Vision API
-            message = self.client.messages.create(
-                model="claude-sonnet-4-20250514",  # Latest vision model
-                max_tokens=2000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": image_type,
-                                    "data": image_data,
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ],
-                    }
-                ],
+            # Call guarded vision API (through ai_guard.py - AI Source Lock enforced)
+            analysis_text = guarded_vision_answer(
+                image_data_base64=image_data,
+                image_type=image_type,
+                user_prompt=prompt,
+                instrument=self.instrument,
+                visual_only=True  # No DB access, visual observations only
             )
 
-            # Extract response
-            analysis_text = message.content[0].text
+            # Check for refusal/error messages
+            if "AI LOCK MISCONFIGURED" in analysis_text or "not available" in analysis_text:
+                logger.error(f"Vision guard refusal: {analysis_text}")
+                return None
 
             # Parse response into structured format
             analysis = self._parse_analysis_response(analysis_text)

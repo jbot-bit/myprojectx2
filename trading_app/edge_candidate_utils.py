@@ -110,3 +110,153 @@ def safe_json_cast(value: Optional[Dict]) -> str:
 #     SET test_config_json = {safe_json_cast(test_config)}
 #     WHERE candidate_id = {candidate_id}
 # """)
+
+
+# =============================================================================
+# EDGE CANDIDATE APPROVAL FUNCTIONS (Write Operations)
+# =============================================================================
+
+def approve_edge_candidate(candidate_id: int, approver: str) -> None:
+    """
+    Approve an edge candidate by setting status='APPROVED', approved_at, and approved_by.
+
+    This function uses a write-capable database connection to update the edge_candidates table.
+
+    Args:
+        candidate_id: ID of the candidate to approve
+        approver: Name/identifier of the person approving (e.g., "Josh")
+
+    Raises:
+        ValueError: If candidate doesn't exist, is already approved, or other validation errors
+        RuntimeError: If database update fails
+    """
+    from cloud_mode import get_database_connection
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Get write-capable connection
+    conn = get_database_connection(read_only=False)
+
+    try:
+        # Check if candidate exists
+        result = conn.execute(
+            "SELECT candidate_id, status FROM edge_candidates WHERE candidate_id = ?",
+            [candidate_id]
+        ).fetchone()
+
+        if result is None:
+            raise ValueError(f"Edge candidate {candidate_id} not found")
+
+        current_status = result[1]
+
+        # Check if already approved
+        if current_status == 'APPROVED':
+            logger.warning(f"Candidate {candidate_id} is already APPROVED")
+            raise ValueError(f"Candidate {candidate_id} is already APPROVED")
+
+        # Update to APPROVED status
+        conn.execute("""
+            UPDATE edge_candidates
+            SET
+                status = 'APPROVED',
+                approved_at = CURRENT_TIMESTAMP,
+                approved_by = ?
+            WHERE candidate_id = ?
+        """, [approver, candidate_id])
+
+        logger.info(f"Edge candidate {candidate_id} approved by {approver}")
+
+    except Exception as e:
+        logger.error(f"Failed to approve candidate {candidate_id}: {e}")
+        raise
+    finally:
+        conn.close()
+
+
+def set_candidate_status(
+    candidate_id: int,
+    status: str,
+    notes: Optional[str] = None,
+    actor: Optional[str] = None
+) -> None:
+    """
+    Set the status of an edge candidate.
+
+    Reusable status setter for DRAFT/PENDING/APPROVED/REJECTED transitions.
+    For APPROVED status, sets approved_at and approved_by fields.
+
+    Args:
+        candidate_id: ID of the candidate
+        status: New status (DRAFT, PENDING, APPROVED, REJECTED)
+        notes: Optional notes to append to existing notes
+        actor: Name/identifier of person making the change
+
+    Raises:
+        ValueError: If candidate doesn't exist or invalid status
+        RuntimeError: If database update fails
+    """
+    from cloud_mode import get_database_connection
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Validate status
+    valid_statuses = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED']
+    if status not in valid_statuses:
+        raise ValueError(f"Invalid status '{status}'. Must be one of: {', '.join(valid_statuses)}")
+
+    # Get write-capable connection
+    conn = get_database_connection(read_only=False)
+
+    try:
+        # Check if candidate exists
+        result = conn.execute(
+            "SELECT candidate_id, notes FROM edge_candidates WHERE candidate_id = ?",
+            [candidate_id]
+        ).fetchone()
+
+        if result is None:
+            raise ValueError(f"Edge candidate {candidate_id} not found")
+
+        existing_notes = result[1] or ""
+
+        # Build updated notes
+        if notes:
+            updated_notes = f"{existing_notes}\n[{actor or 'unknown'}] {notes}".strip()
+        else:
+            updated_notes = existing_notes
+
+        # Update status (and approval fields if APPROVED)
+        if status == 'APPROVED':
+            if not actor:
+                raise ValueError("actor parameter required when setting status to APPROVED")
+
+            conn.execute("""
+                UPDATE edge_candidates
+                SET
+                    status = ?,
+                    approved_at = CURRENT_TIMESTAMP,
+                    approved_by = ?,
+                    notes = ?
+                WHERE candidate_id = ?
+            """, [status, actor, updated_notes, candidate_id])
+
+            logger.info(f"Edge candidate {candidate_id} status set to APPROVED by {actor}")
+        else:
+            # For other statuses, just update status and notes
+            conn.execute("""
+                UPDATE edge_candidates
+                SET
+                    status = ?,
+                    notes = ?
+                WHERE candidate_id = ?
+            """, [status, updated_notes, candidate_id])
+
+            logger.info(f"Edge candidate {candidate_id} status set to {status}" + (f" by {actor}" if actor else ""))
+
+    except Exception as e:
+        logger.error(f"Failed to set candidate {candidate_id} status to {status}: {e}")
+        raise
+    finally:
+        conn.close()

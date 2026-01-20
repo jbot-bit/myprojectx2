@@ -12,17 +12,29 @@ logger = logging.getLogger(__name__)
 
 def is_cloud_deployment() -> bool:
     """Detect if running in Streamlit Cloud"""
+    # Check for explicit cloud mode setting first
+    cloud_mode = os.getenv("CLOUD_MODE", "0")
+    if cloud_mode == "1" or cloud_mode.lower() == "true":
+        return True
+
     # Streamlit Cloud sets STREAMLIT_SHARING_MODE or has specific env vars
-    return (
-        os.getenv("STREAMLIT_SHARING_MODE") is not None
-        or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
-        or not Path("../data/db/gold.db").exists()  # No local database
-    )
+    if (os.getenv("STREAMLIT_SHARING_MODE") is not None or
+        os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"):
+        return True
+
+    # Check if local database exists (relative to trading_app/ directory)
+    local_db = Path(__file__).parent.parent / "data" / "db" / "gold.db"
+    return not local_db.exists()
 
 
-def get_motherduck_connection():
+def get_motherduck_connection(read_only: bool = True):
     """
     Get MotherDuck connection for cloud deployment.
+
+    Args:
+        read_only: If True, connection is read-only (default: True).
+                   Note: MotherDuck handles permissions server-side, so this
+                   parameter has no effect for cloud connections.
 
     Returns:
         duckdb.Connection to MotherDuck projectx_prod database
@@ -43,30 +55,36 @@ def get_motherduck_connection():
         )
 
     # Connect to MotherDuck projectx_prod database
+    # Note: MotherDuck handles read/write permissions on the server side
     try:
         conn = duckdb.connect(f'md:projectx_prod?motherduck_token={token}')
-        logger.info("Connected to MotherDuck: md:projectx_prod")
+        logger.info(f"Connected to MotherDuck: md:projectx_prod (read_only={read_only} - ignored for cloud)")
         return conn
     except Exception as e:
         logger.error(f"Failed to connect to MotherDuck: {e}")
         raise
 
 
-def get_database_connection():
+def get_database_connection(read_only: bool = True):
     """
     Get appropriate database connection based on environment.
+
+    Args:
+        read_only: If True, connection is read-only (default: True).
+                   For local databases, this enforces read-only mode.
+                   For MotherDuck (cloud), permissions are handled server-side.
 
     Returns:
         duckdb.Connection - MotherDuck in cloud, local gold.db otherwise
     """
     if is_cloud_deployment():
         # Cloud mode - use MotherDuck
-        return get_motherduck_connection()
+        return get_motherduck_connection(read_only=read_only)
     else:
         # Local mode - use gold.db
         app_dir = Path(__file__).parent
         db_path = app_dir.parent / "data/db/gold.db"
-        return duckdb.connect(str(db_path), read_only=True)
+        return duckdb.connect(str(db_path), read_only=read_only)
 
 
 def get_database_path() -> str:

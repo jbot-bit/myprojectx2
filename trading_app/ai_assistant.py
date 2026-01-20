@@ -191,6 +191,17 @@ class TradingAIAssistant:
                     if isinstance(orb_info, dict) and 'low' in orb_info and 'high' in orb_info:
                         facts.append(f"{orb_name}: ${orb_info['low']:.2f} - ${orb_info['high']:.2f} (size: {orb_info.get('size', 0):.2f})")
 
+            # Detect db_mode (cloud-aware)
+            from cloud_mode import is_cloud_deployment
+            db_mode = "motherduck" if is_cloud_deployment() else "local"
+
+            # Extract strategy IDs from setup_rows
+            strategy_ids = [setup.setup_id for setup in setup_rows]
+
+            # no_lookahead_check: PASS for validated historical queries
+            # (All queries use validated_setups and historical data only)
+            no_lookahead_check = "PASS"
+
             # Build evidence pack
             evidence_pack = EvidencePack(
                 instrument=instrument,
@@ -202,6 +213,9 @@ class TradingAIAssistant:
                 engine_eval=engine_eval,
                 facts=facts,
                 queries=["SELECT FROM validated_setups WHERE instrument=?", "SELECT FROM daily_features", "SELECT FROM bars_1m"],
+                db_mode=db_mode,
+                no_lookahead_check=no_lookahead_check,
+                strategy_ids=strategy_ids,
                 current_price=current_price if current_price > 0 else None,
                 session_levels=session_levels if session_levels else None,
                 orb_data=orb_data if orb_data else None

@@ -297,7 +297,10 @@ def test_missing_fields_rejected():
         setup_rows_used=[],
         engine_eval=None,  # MISSING
         facts=["Test fact"],
-        queries=[]
+        queries=[],
+        db_mode="local",
+        no_lookahead_check="PASS",
+        strategy_ids=[]
     )
 
     result = guarded_chat_answer(
@@ -342,7 +345,10 @@ def test_wait_signal_rejects_trade_recommendation():
         ],
         engine_eval=engine_eval,
         facts=["Instrument: MGC", "Strategy: 2300 ORB HALF", "Status: WAIT"],
-        queries=["SELECT FROM validated_setups WHERE instrument='MGC'"]
+        queries=["SELECT FROM validated_setups WHERE instrument='MGC'"],
+        db_mode="local",
+        no_lookahead_check="PASS",
+        strategy_ids=[1]
     )
 
     result = guarded_chat_answer(
@@ -374,7 +380,10 @@ def test_no_candles_rejected():
         setup_rows_used=[],
         engine_eval=engine_eval,
         facts=[],
-        queries=[]
+        queries=[],
+        db_mode="local",
+        no_lookahead_check="PASS",
+        strategy_ids=[]
     )
 
     result = guarded_chat_answer(
@@ -440,6 +449,9 @@ def test_enter_signal_with_prices_allows_response():
             "ORB: $2700.00 - $2706.00 (size: 6.00)"
         ],
         queries=["SELECT FROM validated_setups WHERE instrument='MGC'"],
+        db_mode="local",
+        no_lookahead_check="PASS",
+        strategy_ids=[5],
         current_price=2706.0,
         orb_data={"2300 ORB": {"low": 2700.0, "high": 2706.0, "size": 6.0}}
     )
