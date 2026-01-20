@@ -339,7 +339,8 @@ def add_setup_to_production(
 
     try:
         # Step 1: Insert into database
-        con = duckdb.connect(db_path, read_only=False)
+        from cloud_mode import get_database_connection
+        con = get_database_connection(read_only=False)
 
         # Check if setup already exists
         check_query = """

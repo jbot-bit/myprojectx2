@@ -455,7 +455,7 @@ def render_setup_scanner_tab(
 
         st.dataframe(
             styled_df,
-            use_container_width=True,
+            width="stretch",
             height=600
         )
 

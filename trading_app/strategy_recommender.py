@@ -99,7 +99,7 @@ def recommend_strategy(con, instrument, now_local, orb_name, config, orb_data):
             if orb_size_ticks <= max_ticks:
                 result['confidence'] = 'HIGH'
                 result['recommendation'] = 'TRADE'
-                result['reason'] = f'✓ Compressed: {orb_size_ticks:.0f}T < {max_ticks}T'
+                result['reason'] = f'[OK] Compressed: {orb_size_ticks:.0f}T < {max_ticks}T'
                 result['priority'] = 1
             else:
                 result['confidence'] = 'LOW'

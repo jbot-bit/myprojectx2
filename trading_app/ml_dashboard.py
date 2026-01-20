@@ -294,7 +294,7 @@ with tabs[1]:
 
             st.dataframe(
                 styled_df,
-                use_container_width=True,
+                width="stretch",
                 height=400
             )
 
@@ -398,7 +398,7 @@ with tabs[2]:
                 margins=True
             )
 
-            st.dataframe(confusion, use_container_width=True)
+            st.dataframe(confusion, width="stretch")
 
     except Exception as e:
         st.error(f"Error in accuracy analysis: {e}")

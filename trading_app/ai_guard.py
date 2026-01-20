@@ -98,6 +98,15 @@ class EvidencePack:
     session_levels: Optional[Dict[str, float]] = None  # Asia/London/NY highs/lows
     orb_data: Optional[Dict[str, Any]] = None  # Current ORB ranges
 
+    # OHLCV data for chart analysis (PART A fix)
+    bars_timeframe: Optional[str] = None  # e.g., "1m", "5m"
+    bars_ohlcv_sample: Optional[List[Dict[str, Any]]] = None  # List of OHLCV bars
+
+    # Data freshness metadata (live price/bar sync fix)
+    latest_bar_ts: Optional[datetime] = None  # Timestamp of latest bar
+    freshness_seconds: Optional[float] = None  # Seconds since latest bar
+    data_source: Optional[str] = None  # "ProjectX", "Database", etc.
+
     def is_complete(self) -> bool:
         """
         FAIL-CLOSED: Check if evidence pack has ALL required fields.
@@ -250,6 +259,17 @@ def validate_evidence_pack(evidence_pack: Optional[EvidencePack], user_question:
             "Fix lookahead violation: ensure all queries use as-of joins (feature_ts <= decision_ts)"
         )
 
+    # Rule 7: Block recommendations if data is stale (> 90 seconds old)
+    # Per live price/bar sync fix: refuse trade advice if data freshness > 90s
+    if is_trade_question and evidence_pack.freshness_seconds is not None:
+        if evidence_pack.freshness_seconds > 90:
+            return False, _format_refusal(
+                f"Cannot recommend trade - market data is STALE ({int(evidence_pack.freshness_seconds)}s old)",
+                [f"freshness_seconds={int(evidence_pack.freshness_seconds)} (> 90s threshold)"],
+                evidence_pack.candle_tables_used,
+                "Wait for data refresh - latest bar must be < 90 seconds old"
+            )
+
     # All validations passed
     return True, None
 
@@ -364,6 +384,27 @@ def _format_evidence_for_prompt(evidence_pack: EvidencePack) -> str:
                 output.append(f"    ORB Filter: <{setup.orb_size_filter:.3f}×ATR")
             if setup.notes:
                 output.append(f"    Notes: {setup.notes}")
+
+    output.append("")
+
+    # OHLCV Bars (PART A/D: Chart analysis data)
+    if evidence_pack.bars_ohlcv_sample and len(evidence_pack.bars_ohlcv_sample) > 0:
+        output.append(f"OHLCV BAR DATA ({evidence_pack.bars_timeframe} bars):")
+        output.append(f"  Total bars: {len(evidence_pack.bars_ohlcv_sample)}")
+        output.append(f"  First bar: {evidence_pack.bars_ohlcv_sample[0]['ts']}")
+        output.append(f"  Last bar: {evidence_pack.bars_ohlcv_sample[-1]['ts']}")
+        output.append("")
+        output.append("  Bar data (last 50 bars for analysis):")
+        output.append("  ts,open,high,low,close,volume")
+
+        # Include last 50 bars (to keep prompt size manageable)
+        last_n_bars = evidence_pack.bars_ohlcv_sample[-50:]
+        for bar in last_n_bars:
+            output.append(f"  {bar['ts']},{bar['open']:.2f},{bar['high']:.2f},{bar['low']:.2f},{bar['close']:.2f},{bar['volume']:.0f}")
+
+        output.append("")
+        output.append("  INSTRUCTION: Use this OHLCV data to analyze chart patterns, support/resistance, trends.")
+        output.append("  You MUST NOT make pattern claims without this data. If bars_ohlcv_sample is absent, refuse chart analysis.")
 
     output.append("")
 
@@ -521,8 +562,13 @@ def guarded_chat_answer(
 
         # APPEND EVIDENCE FOOTER (per AI_EDGE_ENGINE_PROMPT.txt Section 1)
         # This makes the data sources visible to the user
-        evidence_footer = _format_evidence_footer(evidence_pack)
-        full_response = assistant_message + evidence_footer
+        # PART C: Check if footer already exists (prevent duplicates)
+        if "**Evidence Footer:**" not in assistant_message:
+            evidence_footer = _format_evidence_footer(evidence_pack)
+            full_response = assistant_message + evidence_footer
+        else:
+            logger.warning("Evidence Footer already present in AI response, skipping duplicate")
+            full_response = assistant_message
 
         return full_response
 

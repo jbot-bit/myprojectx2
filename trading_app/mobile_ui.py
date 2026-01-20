@@ -554,8 +554,8 @@ def get_setup_config(instrument: str, orb_time: str, db_path: str = None):
     """
     try:
         if db_path is None:
-            # Auto-detect gold.db
-            db_path = Path(__file__).parent.parent / "gold.db"
+            # Auto-detect gold.db (use canonical path)
+            db_path = Path(__file__).parent.parent / "data/db/gold.db"
             if not db_path.exists():
                 return None
 
@@ -1095,9 +1095,9 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
         <div class="mobile-metric">
             <div class="mobile-metric-value" style="font-size: 32px; color: {status_color};">{status_text}</div>
             <div class="mobile-metric-subtitle">
-                Data: {'✓' if is_data_safe else '✗'} |
-                Market: {'✓' if market_safe else '✗'} |
-                Risk: {'✓' if risk_safe else '✗'}
+                Data: {'[OK]' if is_data_safe else '[X]'} |
+                Market: {'[OK]' if market_safe else '[X]'} |
+                Risk: {'[OK]' if risk_safe else '[X]'}
             </div>
         </div>
         """, unsafe_allow_html=True)

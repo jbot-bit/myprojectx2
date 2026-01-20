@@ -134,13 +134,17 @@ class TradingAIAssistant:
         strategy_state: Dict,
         current_price: float,
         session_levels: Dict,
-        orb_data: Dict
+        orb_data: Dict,
+        user_question: str = ""
     ) -> Optional[EvidencePack]:
         """
         Build EvidencePack from current context.
 
         This is the core evidence assembly function - converts live trading context
         into the Evidence Pack format required by the AI guard.
+
+        Args:
+            user_question: User's question text (used to detect chart analysis intent)
         """
         try:
             # Load validated setups
@@ -192,7 +196,7 @@ class TradingAIAssistant:
                         facts.append(f"{orb_name}: ${orb_info['low']:.2f} - ${orb_info['high']:.2f} (size: {orb_info.get('size', 0):.2f})")
 
             # Detect db_mode (cloud-aware)
-            from cloud_mode import is_cloud_deployment
+            from cloud_mode import is_cloud_deployment, get_database_connection
             db_mode = "motherduck" if is_cloud_deployment() else "local"
 
             # Extract strategy IDs from setup_rows
@@ -201,6 +205,107 @@ class TradingAIAssistant:
             # no_lookahead_check: PASS for validated historical queries
             # (All queries use validated_setups and historical data only)
             no_lookahead_check = "PASS"
+
+            # PART A: Detect chart analysis intent and fetch OHLCV bars
+            chart_keywords = ["chart", "pattern", "support", "resistance", "trend", "structure",
+                            "what does the chart suggest", "technical", "level", "breakout"]
+            is_chart_question = any(keyword in user_question.lower() for keyword in chart_keywords)
+
+            bars_timeframe = None
+            bars_ohlcv_sample = None
+
+            if is_chart_question:
+                try:
+                    # Query last 600 bars (10 hours of 1m data)
+                    conn = get_database_connection(read_only=True)
+
+                    # First, find the latest bar time
+                    max_time_result = conn.execute("""
+                        SELECT MAX(ts_utc)
+                        FROM bars_1m
+                        WHERE symbol = ?
+                    """, [instrument]).fetchone()
+
+                    if max_time_result and max_time_result[0] is not None:
+                        latest_bar_time = max_time_result[0]
+
+                        # Check freshness (warn if > 2 minutes old)
+                        time_diff = (datetime.utcnow() - latest_bar_time).total_seconds()
+                        if time_diff > 120:  # 2 minutes
+                            logger.warning(f"Bars appear stale: latest bar is {time_diff:.0f}s old")
+                            facts.append(f"⚠️ Market data is {time_diff/60:.1f} minutes old")
+
+                        # Query last 600 bars
+                        bars_result = conn.execute("""
+                            SELECT ts_utc, open, high, low, close, volume
+                            FROM bars_1m
+                            WHERE symbol = ?
+                              AND ts_utc >= (
+                                  SELECT MAX(ts_utc)
+                                  FROM bars_1m
+                                  WHERE symbol = ?
+                              ) - INTERVAL '10 hours'
+                            ORDER BY ts_utc ASC
+                        """, [instrument, instrument]).fetchall()
+
+                        if bars_result and len(bars_result) > 0:
+                            bars_ohlcv_sample = []
+                            for row in bars_result:
+                                bars_ohlcv_sample.append({
+                                    'ts': row[0].isoformat() if hasattr(row[0], 'isoformat') else str(row[0]),
+                                    'open': float(row[1]),
+                                    'high': float(row[2]),
+                                    'low': float(row[3]),
+                                    'close': float(row[4]),
+                                    'volume': float(row[5]) if row[5] is not None else 0
+                                })
+
+                            bars_timeframe = "1m"
+
+                            # Update current_price from latest bar
+                            latest_bar = bars_ohlcv_sample[-1]
+                            current_price = latest_bar['close']
+                            facts.append(f"OHLCV bars loaded: {len(bars_ohlcv_sample)} bars (last 10 hours)")
+                            facts.append(f"Latest bar: {latest_bar['ts']} close=${latest_bar['close']:.2f}")
+
+                            logger.info(f"Loaded {len(bars_ohlcv_sample)} OHLCV bars for chart analysis")
+                        else:
+                            logger.warning(f"No OHLCV bars found for {instrument}")
+                            facts.append("⚠️ No OHLCV bar data available")
+                    else:
+                        # No bars in table at all
+                        logger.warning(f"No OHLCV bars in database for {instrument}")
+                        facts.append("⚠️ No OHLCV bar data available")
+
+                    conn.close()
+
+                except Exception as e:
+                    logger.error(f"Error fetching OHLCV bars: {e}")
+                    facts.append(f"⚠️ Error fetching chart data: {e}")
+
+            # PART B: Calculate data freshness metadata
+            latest_bar_ts = None
+            freshness_seconds = None
+            data_source = None
+
+            if bars_ohlcv_sample and len(bars_ohlcv_sample) > 0:
+                # Extract latest bar timestamp from OHLCV sample
+                latest_bar_ts = bars_ohlcv_sample[-1]['ts']
+                now_utc = datetime.utcnow()
+                # Make both offset-aware for comparison
+                if latest_bar_ts.tzinfo is None:
+                    from config import TZ_UTC
+                    latest_bar_ts = latest_bar_ts.replace(tzinfo=TZ_UTC)
+                if now_utc.tzinfo is None:
+                    now_utc = now_utc.replace(tzinfo=TZ_UTC)
+                freshness_seconds = (now_utc - latest_bar_ts).total_seconds()
+                data_source = "ProjectX" if os.getenv("PROJECTX_API_KEY") else "Database"
+
+                # Add freshness warning to facts if data is stale
+                if freshness_seconds > 90:
+                    facts.append(f"WARNING: Data is {int(freshness_seconds)}s old (STALE)")
+                else:
+                    facts.append(f"[OK] Data freshness: {int(freshness_seconds)}s")
 
             # Build evidence pack
             evidence_pack = EvidencePack(
@@ -218,7 +323,12 @@ class TradingAIAssistant:
                 strategy_ids=strategy_ids,
                 current_price=current_price if current_price > 0 else None,
                 session_levels=session_levels if session_levels else None,
-                orb_data=orb_data if orb_data else None
+                orb_data=orb_data if orb_data else None,
+                bars_timeframe=bars_timeframe,
+                bars_ohlcv_sample=bars_ohlcv_sample,
+                latest_bar_ts=latest_bar_ts,
+                freshness_seconds=freshness_seconds,
+                data_source=data_source
             )
 
             return evidence_pack
@@ -256,7 +366,8 @@ class TradingAIAssistant:
                 strategy_state=strategy_state or {},
                 current_price=current_price,
                 session_levels=session_levels or {},
-                orb_data=orb_data or {}
+                orb_data=orb_data or {},
+                user_question=user_message  # Pass user question for chart detection
             )
 
             # Log evidence pack creation for audit
@@ -265,6 +376,81 @@ class TradingAIAssistant:
             else:
                 logger.warning("Failed to build evidence pack")
 
+            # INTENT ROUTING: EDGE_PIPELINE vs MARKET_QUERY
+            # Detect if this is an edge discovery/testing request
+            user_lower = user_message.lower()
+            edge_keywords = ["edge", "candidate", "promote", "evaluate", "backtest theory", "test theory"]
+            is_edge_pipeline = any(keyword in user_lower for keyword in edge_keywords)
+
+            # If edge pipeline intent detected, provide simple routing response
+            # (Full pipeline integration would require more sophisticated parsing)
+            if is_edge_pipeline:
+                logger.info(f"Edge pipeline intent detected: {user_message[:50]}...")
+
+                # Provide guidance on using edge pipeline features
+                if "create" in user_lower or "test theory" in user_lower:
+                    return (
+                        "**Edge Pipeline: Create Candidate**\n\n"
+                        "To test a new edge theory:\n"
+                        "1. Use the Edge Candidates UI panel\n"
+                        "2. Or call: `from edge_pipeline import create_edge_candidate_from_theory`\n\n"
+                        "Example:\n"
+                        "```python\n"
+                        "candidate_id = create_edge_candidate_from_theory(\n"
+                        "    theory_text='MGC 0900 ORB with 3.0 RR shows strong performance',\n"
+                        "    instrument='MGC',\n"
+                        "    metadata={'orb_time': '0900', 'name': 'My Theory'}\n"
+                        ")\n"
+                        "```\n\n"
+                        "Then evaluate with: `evaluate_candidate(candidate_id)`"
+                    )
+
+                elif "promote" in user_lower:
+                    return (
+                        "**Edge Pipeline: Promote Candidate**\n\n"
+                        "To promote an APPROVED candidate to validated_setups:\n"
+                        "1. Go to Edge Candidates UI panel\n"
+                        "2. Select an APPROVED candidate\n"
+                        "3. Click 'PROMOTE TO VALIDATED_SETUPS' button\n\n"
+                        "Or use Python:\n"
+                        "```python\n"
+                        "from edge_pipeline import promote_candidate_to_validated_setups\n"
+                        "validated_setup_id = promote_candidate_to_validated_setups(candidate_id, 'Josh')\n"
+                        "```\n\n"
+                        "⚠️ Candidate must be APPROVED first!"
+                    )
+
+                elif "evaluate" in user_lower:
+                    return (
+                        "**Edge Pipeline: Evaluate Candidate**\n\n"
+                        "To run backtest evaluation on a candidate:\n"
+                        "```python\n"
+                        "from edge_pipeline import evaluate_candidate\n"
+                        "results = evaluate_candidate(candidate_id)\n"
+                        "```\n\n"
+                        "This will:\n"
+                        "- Run StrategyDiscovery heuristic backtest\n"
+                        "- Update metrics_json, robustness_json\n"
+                        "- Set status to 'PENDING'\n\n"
+                        "⚠️ Note: Current evaluation uses heuristic method (optimistic fills).\n"
+                        "True walk-forward backtest integration is pending."
+                    )
+
+                else:
+                    # Generic edge pipeline info
+                    return (
+                        "**Edge Pipeline Available**\n\n"
+                        "Edge discovery workflow:\n"
+                        "1. **Create** candidate (status: DRAFT)\n"
+                        "2. **Evaluate** with backtest (status: PENDING)\n"
+                        "3. **Approve** if results good (status: APPROVED)\n"
+                        "4. **Promote** to validated_setups (production)\n\n"
+                        "Access via Edge Candidates UI panel or Python API.\n\n"
+                        "Functions: `create_edge_candidate_from_theory`, `evaluate_candidate`, "
+                        "`approve_candidate`, `promote_candidate_to_validated_setups`"
+                    )
+
+            # MARKET_QUERY intent: Continue to normal LLM flow with Evidence Pack
             # Call guarded function (THE ONLY WAY TO CALL THE MODEL)
             assistant_message = guarded_chat_answer(
                 question=user_message,

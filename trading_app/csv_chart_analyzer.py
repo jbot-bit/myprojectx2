@@ -606,9 +606,9 @@ class CSVChartAnalyzer:
             if orb_filter and atr_20:
                 ratio = orb_size / atr_20
                 if ratio < orb_filter:
-                    reasons.append(f"✓ Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
+                    reasons.append(f"[PASS] Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
                 else:
-                    reasons.append(f"✗ Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
+                    reasons.append(f"[FAIL] Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
             else:
                 reasons.append("No filter")
 
@@ -635,9 +635,9 @@ class CSVChartAnalyzer:
             if orb_filter and atr_20:
                 ratio = orb_size / atr_20
                 if ratio < orb_filter:
-                    reasons.append(f"✓ Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
+                    reasons.append(f"[PASS] Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
                 else:
-                    reasons.append(f"✗ Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
+                    reasons.append(f"[FAIL] Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
             else:
                 reasons.append("No filter")
 

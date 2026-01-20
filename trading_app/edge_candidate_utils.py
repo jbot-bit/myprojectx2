@@ -165,13 +165,13 @@ def approve_edge_candidate(candidate_id: int, approver: str) -> None:
             WHERE candidate_id = ?
         """, [approver, candidate_id])
 
+        conn.commit()
         logger.info(f"Edge candidate {candidate_id} approved by {approver}")
 
     except Exception as e:
         logger.error(f"Failed to approve candidate {candidate_id}: {e}")
         raise
-    finally:
-        conn.close()
+    # Note: Don't close connection - it may be managed by caller or connection pool
 
 
 def set_candidate_status(
@@ -255,8 +255,9 @@ def set_candidate_status(
 
             logger.info(f"Edge candidate {candidate_id} status set to {status}" + (f" by {actor}" if actor else ""))
 
+        conn.commit()
+
     except Exception as e:
         logger.error(f"Failed to set candidate {candidate_id} status to {status}: {e}")
         raise
-    finally:
-        conn.close()
+    # Note: Don't close connection - it may be managed by caller or connection pool
