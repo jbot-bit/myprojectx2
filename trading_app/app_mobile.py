@@ -103,6 +103,18 @@ except Exception as e:
     st.stop()
 
 # ============================================================================
+# DATABASE BOOTSTRAP (Ensure required tables exist)
+# ============================================================================
+try:
+    from db_bootstrap import bootstrap_database
+    bootstrap_success = bootstrap_database()
+    if not bootstrap_success:
+        logger.warning("Database bootstrap completed with warnings (some tables may be missing)")
+except Exception as e:
+    logger.error(f"Database bootstrap error: {e}")
+    # Don't stop app - continue with best effort
+
+# ============================================================================
 # PAGE CONFIG - MOBILE OPTIMIZED
 # ============================================================================
 st.set_page_config(
@@ -242,7 +254,7 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
                         st.info("Connecting to ProjectX API...")
                         try:
                             loader.refresh()
-                            st.success("✓ Fetched live data from ProjectX API")
+                            st.success("[OK] Fetched live data from ProjectX API")
                         except Exception as e:
                             st.error(f"ProjectX API error: {str(e)[:100]}")
                             logger.error(f"ProjectX refresh failed: {e}", exc_info=True)
@@ -279,19 +291,21 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
                         from ml_inference.inference_engine import MLInferenceEngine
                         ml_engine = MLInferenceEngine()
                         logger.info("ML engine initialized successfully")
-                        st.success("ML models loaded ✓")
-                    except ImportError as e:
-                        logger.warning(f"ML inference not available: {e}")
-                        st.warning("ML predictions disabled (models not found)")
+                        st.success("ML models loaded [OK]")
+                    except ImportError:
+                        logger.error("ML enabled but ml_inference module not found. Install ML dependencies or disable with ENABLE_ML=0")
+                        st.error("⚠️ ML enabled but not installed. Set ENABLE_ML=0 or install ML dependencies.")
                     except Exception as e:
-                        logger.warning(f"ML engine initialization failed: {e}")
-                        st.warning(f"ML predictions disabled ({str(e)[:50]}...)")
+                        logger.error(f"ML engine initialization failed: {e}")
+                        st.error(f"⚠️ ML initialization failed: {e}")
+                else:
+                    logger.info("ML disabled (ENABLE_ML not set)")
 
                 # Initialize strategy engine
                 st.info("Initializing strategy engine...")
                 st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
 
-                st.success(f"✓ Loaded data for {PRIMARY_INSTRUMENT}")
+                st.success(f"[OK] Loaded data for {PRIMARY_INSTRUMENT}")
                 logger.info(f"Data initialized for {PRIMARY_INSTRUMENT}")
 
                 # Small delay to show success message

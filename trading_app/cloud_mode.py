@@ -9,22 +9,38 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Track if we've logged DB mode already (to avoid spam)
+_db_mode_logged = False
+
 
 def is_cloud_deployment() -> bool:
-    """Detect if running in Streamlit Cloud"""
-    # Check for explicit cloud mode setting first
+    """
+    Detect if running in Streamlit Cloud.
+
+    Returns True only if:
+    - FORCE_LOCAL_DB override is NOT set, AND
+    - CLOUD_MODE is explicitly enabled OR Streamlit Cloud env vars indicate cloud
+
+    Local dev defaults to local DuckDB always.
+    """
+    # A) FORCE_LOCAL_DB override - ALWAYS LOCAL
+    force_local = os.getenv("FORCE_LOCAL_DB", "0")
+    if force_local.lower() in ["1", "true", "yes"]:
+        return False
+
+    # B) Check for explicit cloud mode setting
     cloud_mode = os.getenv("CLOUD_MODE", "0")
-    if cloud_mode == "1" or cloud_mode.lower() == "true":
+    if cloud_mode.lower() in ["1", "true", "yes"]:
         return True
 
-    # Streamlit Cloud sets STREAMLIT_SHARING_MODE or has specific env vars
+    # B) Streamlit Cloud sets STREAMLIT_SHARING_MODE or has specific env vars
     if (os.getenv("STREAMLIT_SHARING_MODE") is not None or
         os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"):
         return True
 
-    # Check if local database exists (relative to trading_app/ directory)
-    local_db = Path(__file__).parent.parent / "data" / "db" / "gold.db"
-    return not local_db.exists()
+    # C) Removed bad heuristic: "if data/db/gold.db does not exist => cloud"
+    # Local dev defaults to local DuckDB always
+    return False
 
 
 def get_motherduck_connection(read_only: bool = True):
@@ -77,13 +93,57 @@ def get_database_connection(read_only: bool = True):
     Returns:
         duckdb.Connection - MotherDuck in cloud, local gold.db otherwise
     """
-    if is_cloud_deployment():
+    global _db_mode_logged
+
+    # Determine mode and log once
+    is_cloud = is_cloud_deployment()
+
+    if not _db_mode_logged:
+        # F) Log DB mode on first connection
+        if is_cloud:
+            # Determine cloud reason
+            if os.getenv("CLOUD_MODE", "0").lower() in ["1", "true", "yes"]:
+                reason = "CLOUD_MODE env"
+            elif os.getenv("STREAMLIT_SHARING_MODE") is not None:
+                reason = "streamlit cloud env (STREAMLIT_SHARING_MODE)"
+            elif os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud":
+                reason = "streamlit cloud env (STREAMLIT_RUNTIME_ENV)"
+            else:
+                reason = "unknown"
+            logger.info(f"DB MODE: CLOUD (reason: {reason})")
+        else:
+            # Determine local reason
+            force_local = os.getenv("FORCE_LOCAL_DB", "0")
+            if force_local.lower() in ["1", "true", "yes"]:
+                reason = "FORCE_LOCAL_DB"
+            else:
+                reason = "default local dev"
+            logger.info(f"DB MODE: LOCAL (reason: {reason})")
+
+        _db_mode_logged = True
+
+    if is_cloud:
         # Cloud mode - use MotherDuck
         return get_motherduck_connection(read_only=read_only)
     else:
-        # Local mode - use gold.db
+        # D) Local mode - use gold.db
         app_dir = Path(__file__).parent
-        db_path = app_dir.parent / "data/db/gold.db"
+        db_path = app_dir.parent / "data" / "db" / "gold.db"
+
+        # Log resolved path
+        logger.info(f"Using local DuckDB at: {db_path}")
+
+        # E) Create parent directory and DB file if it doesn't exist
+        if not db_path.exists():
+            logger.info(f"Local DB file does not exist, creating: {db_path}")
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Create DB file by connecting once with read_only=False
+            temp_conn = duckdb.connect(str(db_path), read_only=False)
+            temp_conn.close()
+            logger.info(f"Created local DB file: {db_path}")
+
+        # Now connect with requested read_only flag
         return duckdb.connect(str(db_path), read_only=read_only)
 
 
@@ -248,13 +308,23 @@ def test_motherduck_connection():
 
 if __name__ == "__main__":
     # Test connection
-    print("Testing MotherDuck connection...")
+    import logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
+
+    print("Testing database connection...")
+
+    # Test get_database_connection (will trigger logging)
+    try:
+        conn = get_database_connection()
+        result = conn.execute("SELECT 1").fetchone()
+        print(f"[OK] Connection successful, test query result: {result}")
+        conn.close()
+    except Exception as e:
+        print(f"[FAIL] Connection failed: {e}")
 
     if is_cloud_deployment():
-        print("Cloud deployment detected")
-        result = test_motherduck_connection()
-        print(f"Result: {result}")
+        print("\n[INFO] Cloud mode active")
     else:
-        print("Local deployment detected")
+        print("\n[INFO] Local mode active")
         db_path = get_database_path()
-        print(f"Using local database: {db_path}")
+        print(f"[INFO] Database path: {db_path}")

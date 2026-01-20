@@ -175,7 +175,9 @@ RISK_LIMITS = {
 # ============================================================================
 # DATABASE
 # ============================================================================
-DB_PATH = "data/db/live_data.db"  # Live market data (LiveDataLoader writes here)
+# Use absolute path - database is one level up from trading_app/
+from pathlib import Path
+DB_PATH = str(Path(__file__).parent.parent / "data" / "db" / "gold.db")
 JOURNAL_TABLE = "live_journal"
 
 # ============================================================================
@@ -204,9 +206,11 @@ SNAP_TO_CARDS = True  # CSS scroll-snap for card alignment
 # ============================================================================
 # ML/AI CONFIGURATION
 # ============================================================================
-# Disable ML in cloud by default for faster loading (can override in secrets with ML_ENABLED="true")
-_is_cloud = os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
-ML_ENABLED = os.getenv("ML_ENABLED", "false" if _is_cloud else "true").lower() == "true"
+# ML is disabled by default (Phase 1 does not include ML)
+# Enable via env var: ENABLE_ML=1 or ML_ENABLED=true
+# Accept both ENABLE_ML and ML_ENABLED for backward compatibility
+_enable_ml_flag = os.getenv("ENABLE_ML", os.getenv("ML_ENABLED", "0"))
+ML_ENABLED = _enable_ml_flag.lower() in ["1", "true", "yes"]
 ML_CONFIDENCE_THRESHOLD = float(os.getenv("ML_CONFIDENCE_THRESHOLD", "0.55"))  # Minimum confidence to show
 ML_HIGH_CONFIDENCE = float(os.getenv("ML_HIGH_CONFIDENCE", "0.65"))  # High confidence threshold
 ML_CACHE_TTL = int(os.getenv("ML_CACHE_TTL", "300"))  # Cache TTL in seconds (5 minutes)

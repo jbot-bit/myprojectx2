@@ -31,3 +31,19 @@ fix.txt
 maintenance.txt
 scope.txt
 candidate_claude.txt
+
+# runtime logs
+trading_app.log
+log.txt
+
+# audit outputs (generated)
+audit_reports/
+
+
+# runtime logs
+trading_app.log
+log.txt
+
+# audit outputs (generated)
+audit_reports/
+

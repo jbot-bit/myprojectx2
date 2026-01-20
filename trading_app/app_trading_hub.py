@@ -92,6 +92,18 @@ except Exception as e:
     st.stop()
 
 # ============================================================================
+# DATABASE BOOTSTRAP (Ensure required tables exist)
+# ============================================================================
+try:
+    from db_bootstrap import bootstrap_database
+    bootstrap_success = bootstrap_database()
+    if not bootstrap_success:
+        logger.warning("Database bootstrap completed with warnings (some tables may be missing)")
+except Exception as e:
+    logger.error(f"Database bootstrap error: {e}")
+    # Don't stop app - continue with best effort
+
+# ============================================================================
 # PAGE CONFIG
 # ============================================================================
 st.set_page_config(
@@ -290,9 +302,14 @@ with st.sidebar:
 
                         ml_engine = MLInferenceEngine()
                         logger.info("ML engine initialized successfully")
+                    except ImportError:
+                        logger.error("ML enabled but ml_inference module not found. Install ML dependencies or disable with ENABLE_ML=0")
+                        st.error("⚠️ ML enabled but not installed. Set ENABLE_ML=0 or install ML dependencies.")
                     except Exception as e:
-                        logger.warning(f"ML engine initialization failed: {e}")
-                        st.warning("⚠️ ML predictions unavailable (model not found)")
+                        logger.error(f"ML engine initialization failed: {e}")
+                        st.error(f"⚠️ ML initialization failed: {e}")
+                else:
+                    logger.info("ML disabled (ENABLE_ML not set)")
 
                 st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
 
@@ -539,8 +556,12 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
 
                 ml_engine = MLInferenceEngine()
                 logger.info("ML engine initialized successfully")
+            except ImportError:
+                logger.error("ML enabled but ml_inference module not found. Install ML dependencies or disable with ENABLE_ML=0")
             except Exception as e:
-                logger.warning(f"ML engine initialization failed: {e}")
+                logger.error(f"ML engine initialization failed: {e}")
+        else:
+            logger.info("ML disabled (ENABLE_ML not set)")
 
         st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
 
@@ -572,11 +593,25 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
 # ========================================================================
 
 # Get current price and ATR
+# CRITICAL: Refresh data BEFORE getting latest bar to ensure fresh price
+st.session_state.data_loader.refresh()
 latest_bar = st.session_state.data_loader.get_latest_bar()
 current_price = latest_bar['close'] if latest_bar else 0
 current_atr = st.session_state.data_loader.get_today_atr() or 40.0
 
-if current_price > 0:
+# CRITICAL: Hard freshness gate - refuse stale data
+data_is_stale = False
+if latest_bar:
+    latest_bar_ts = latest_bar['ts_utc']
+    now_utc = datetime.now(TZ_UTC)
+    freshness_seconds = (now_utc - latest_bar_ts).total_seconds()
+
+    if freshness_seconds > 90:
+        data_is_stale = True
+        st.error(f"DATA STALE - REFRESHING (last bar: {int(freshness_seconds)}s ago)")
+        st.warning("Trade recommendations blocked due to stale data. Please wait for refresh.")
+
+if current_price > 0 and not data_is_stale:
     # Compact price/ATR display
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1310,58 +1345,125 @@ else:
 
     # File uploader
     uploaded_file = st.file_uploader(
-        "Choose a chart image",
-        type=["png", "jpg", "jpeg"],
-        help="Upload a TradingView screenshot for AI analysis"
+        "Choose a chart image or CSV",
+        type=["png", "jpg", "jpeg", "csv"],
+        help="Upload a TradingView screenshot (image) or CSV export for AI analysis"
     )
 
     if uploaded_file is not None:
-        # Display uploaded image
-        st.image(uploaded_file, caption="Uploaded Chart", use_column_width=True)
+        # Detect file type
+        is_csv = uploaded_file.name.endswith('.csv')
 
-        # Analyze button
-        if st.button("🔍 Analyze Chart", type="primary"):
-            with st.spinner("Analyzing chart with Claude Vision..."):
-                try:
-                    # Read image bytes
-                    image_bytes = uploaded_file.read()
+        if is_csv:
+            # ===== CSV HANDLING =====
+            st.info("📊 CSV file detected. Parsing TradingView chart data...")
 
-                    # Determine image type
-                    image_type = "image/jpeg" if uploaded_file.name.endswith(('.jpg', '.jpeg')) else "image/png"
+            try:
+                import pandas as pd
+                import io
 
-                    # Call vision API
-                    analysis = chart_analyzer.analyze_chart_image(image_bytes, image_type)
+                # Read CSV
+                csv_data = uploaded_file.read()
+                df = pd.read_csv(io.BytesIO(csv_data))
 
-                    if analysis:
-                        st.success("✅ Analysis complete!")
+                # Show preview
+                st.subheader("📋 CSV Preview")
+                st.dataframe(df.head(10), use_container_width=True)
 
-                        # Display results
-                        st.subheader("📊 Analysis Results")
+                # Validate required columns (case-insensitive check)
+                df_columns_lower = [col.lower() for col in df.columns]
+                required_cols = ['time', 'open', 'high', 'low', 'close']
+                missing_cols = [col for col in required_cols if col not in df_columns_lower]
 
-                        if "pattern" in analysis:
-                            st.markdown(f"**Pattern Detected:** {analysis['pattern']}")
+                if missing_cols:
+                    st.error(f"❌ CSV validation failed. Missing required columns: {', '.join(missing_cols)}")
+                    st.info("Required columns: time, open, high, low, close (volume is optional)")
+                    st.warning("⚠️ CSV NOT ingested. Fix the file and upload again.")
+                else:
+                    st.success(f"✅ CSV validation passed! Found {len(df)} rows.")
+                    st.info("**Columns detected:** " + ", ".join(df.columns.tolist()))
 
-                        if "levels" in analysis:
-                            st.markdown("**Key Levels:**")
-                            for level in analysis['levels']:
-                                st.write(f"- {level}")
+                    # Analyze button for CSV
+                    if st.button("🔍 Analyze CSV Chart Data", type="primary"):
+                        with st.spinner("Analyzing CSV data with Claude Vision..."):
+                            try:
+                                # Convert CSV to text summary for analysis
+                                csv_summary = f"""
+TradingView CSV Data Summary:
+- Rows: {len(df)}
+- Columns: {', '.join(df.columns.tolist())}
+- Date Range: {df.iloc[0]['time'] if 'time' in df.columns else 'N/A'} to {df.iloc[-1]['time'] if 'time' in df.columns else 'N/A'}
 
-                        if "strategy" in analysis:
-                            st.markdown(f"**Recommended Strategy:** {analysis['strategy']}")
+First 5 rows:
+{df.head().to_string()}
 
-                        if "setup" in analysis:
-                            st.markdown(f"**Setup:** {analysis['setup']}")
+Last 5 rows:
+{df.tail().to_string()}
+"""
 
-                        if "raw_response" in analysis:
-                            with st.expander("📝 Full Analysis"):
-                                st.markdown(analysis['raw_response'])
+                                # Use chart analyzer with CSV text (no image)
+                                # For now, just show the summary since chart_analyzer expects image bytes
+                                st.subheader("📊 CSV Data Summary")
+                                st.text(csv_summary)
+                                st.info("💡 CSV ingestion into database coming soon. For now, use image uploads for AI analysis.")
 
-                    else:
-                        st.error("❌ Analysis failed. Check logs for details.")
+                            except Exception as e:
+                                st.error(f"❌ Error analyzing CSV: {e}")
+                                logger.error(f"CSV analysis error: {e}", exc_info=True)
 
-                except Exception as e:
-                    st.error(f"❌ Error analyzing chart: {e}")
-                    logger.error(f"Chart analysis error: {e}", exc_info=True)
+            except Exception as e:
+                st.error(f"❌ Failed to parse CSV file: {e}")
+                st.warning("⚠️ Ensure the file is a valid CSV with headers: time, open, high, low, close")
+                logger.error(f"CSV parse error: {e}", exc_info=True)
+
+        else:
+            # ===== IMAGE HANDLING (EXISTING LOGIC) =====
+            # Display uploaded image
+            st.image(uploaded_file, caption="Uploaded Chart", use_column_width=True)
+
+            # Analyze button
+            if st.button("🔍 Analyze Chart", type="primary"):
+                with st.spinner("Analyzing chart with Claude Vision..."):
+                    try:
+                        # Read image bytes
+                        image_bytes = uploaded_file.read()
+
+                        # Determine image type
+                        image_type = "image/jpeg" if uploaded_file.name.endswith(('.jpg', '.jpeg')) else "image/png"
+
+                        # Call vision API
+                        analysis = chart_analyzer.analyze_chart_image(image_bytes, image_type)
+
+                        if analysis:
+                            st.success("✅ Analysis complete!")
+
+                            # Display results
+                            st.subheader("📊 Analysis Results")
+
+                            if "pattern" in analysis:
+                                st.markdown(f"**Pattern Detected:** {analysis['pattern']}")
+
+                            if "levels" in analysis:
+                                st.markdown("**Key Levels:**")
+                                for level in analysis['levels']:
+                                    st.write(f"- {level}")
+
+                            if "strategy" in analysis:
+                                st.markdown(f"**Recommended Strategy:** {analysis['strategy']}")
+
+                            if "setup" in analysis:
+                                st.markdown(f"**Setup:** {analysis['setup']}")
+
+                            if "raw_response" in analysis:
+                                with st.expander("📝 Full Analysis"):
+                                    st.markdown(analysis['raw_response'])
+
+                        else:
+                            st.error("❌ Analysis failed. Check logs for details.")
+
+                    except Exception as e:
+                        st.error(f"❌ Error analyzing chart: {e}")
+                        logger.error(f"Chart analysis error: {e}", exc_info=True)
 
 # ============================================================================
 # AI CHAT - STREAMLINED AT BOTTOM OF PAGE

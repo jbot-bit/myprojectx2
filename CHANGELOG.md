@@ -6,6 +6,197 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2026-01-20 PM 7] - Feature-Flag ML Initialization (Disable by Default)
+
+### Fixed
+- **ML Disabled by Default** - `trading_app/config.py`
+  - Changed ML_ENABLED to default to False (was True in local dev)
+  - ML now OFF unless explicitly enabled via ENABLE_ML=1 or ML_ENABLED=true
+  - Accepts both ENABLE_ML and ML_ENABLED for backward compatibility
+  - Eliminates "ML engine initialization failed: No module named 'ml_inference'" errors
+
+### Changed
+- **Improved ML Error Handling** - `trading_app/app_trading_hub.py`, `trading_app/app_mobile.py`
+  - When ML disabled: Logs "ML disabled (ENABLE_ML not set)" at INFO level (not WARNING)
+  - When ML enabled but missing: Logs clear ERROR with instructions to install or disable
+  - Distinguishes ImportError (missing module) from other exceptions
+  - No more confusing warnings when ML is intentionally disabled
+
+### Impact
+- Phase 1 apps now run cleanly without ML modules
+- No "ML engine initialization failed" errors in logs by default
+- Clear path to enable ML in Phase 2: Set ENABLE_ML=1 and install ml_inference
+
+---
+
+## [2026-01-20 PM 6] - Fix Cloud Mode Auto-Detection (LOCALFIX)
+
+### Fixed
+- **Local DuckDB Forced on Windows Dev** - `trading_app/cloud_mode.py`
+  - Removed bad heuristic: "if data/db/gold.db doesn't exist → cloud mode"
+  - Added FORCE_LOCAL_DB environment variable override (values: 1/true/yes)
+  - Cloud mode now ONLY when CLOUD_MODE or Streamlit Cloud env vars are set
+  - Local dev defaults to local DuckDB always (no more unexpected MotherDuck connections)
+
+### Added
+- **DB Mode Logging** - `trading_app/cloud_mode.py`
+  - Logs "DB MODE: LOCAL (reason: ...)" or "DB MODE: CLOUD (reason: ...)" on first connection
+  - Shows which env var or heuristic triggered the mode
+  - Logs resolved local database path
+
+- **Auto-Create Local DB** - `trading_app/cloud_mode.py`
+  - If data/db/gold.db doesn't exist, creates parent directory and empty DB file
+  - Prevents file-not-found errors on fresh dev environments
+  - Does NOT migrate/create tables (that's done by separate migration scripts)
+
+### Changed
+- **is_cloud_deployment()** logic simplified and made explicit
+  - No more implicit file-existence checks
+  - Respects FORCE_LOCAL_DB override first
+  - Falls back to default local dev mode
+
+---
+
+## [2026-01-20 PM 5] - AI Chart Analysis with OHLCV Data
+
+### Added
+- **OHLCV Data in EvidencePack** - `trading_app/ai_guard.py`
+  - Added `bars_timeframe` and `bars_ohlcv_sample` fields to EvidencePack dataclass
+  - AI can now analyze actual price bars instead of just saying "no OHLCV bar data"
+  - Chart questions trigger automatic loading of last 600 1-minute bars (10 hours)
+
+- **Chart Question Detection** - `trading_app/ai_assistant.py`
+  - Detects chart-related keywords: chart, pattern, support, resistance, trend, structure, etc.
+  - Automatically queries bars_1m when chart analysis is requested
+  - Returns OHLCV bars as list of dicts with ts, open, high, low, close, volume
+
+- **Fresh Price Update** - `trading_app/ai_assistant.py`
+  - current_price now derived from latest bar close (not stale parameter)
+  - Freshness check warns if bars are > 2 minutes old
+  - Prevents AI from using outdated prices
+
+- **OHLCV Display in Evidence** - `trading_app/ai_guard.py`
+  - _format_evidence_for_prompt() now includes last 50 OHLCV bars
+  - Formatted as CSV for AI analysis: ts,open,high,low,close,volume
+  - Clear instructions to AI on how to use bar data
+
+- **Chart Analysis System Prompt** - `trading_app/prompts/LOCKED_SYSTEM_PROMPT.txt`
+  - Added CHART ANALYSIS RULE section
+  - AI may only analyze charts when OHLCV BAR DATA section is present
+  - Enforces fail-closed: refuses chart analysis if bars_ohlcv_sample is absent
+  - Permits pattern description but not performance claims without validated setups
+
+- **Test Suites**
+  - `tests/test_ai_chart_evidence_pack.py` - 6 tests for OHLCV loading
+  - `tests/test_evidence_footer_singleton.py` - 6 tests for footer deduplication
+  - Tests verify: bar loading, price freshness, keyword detection, empty table handling
+
+### Changed
+- **trading_app/ai_guard.py** - Evidence Footer deduplication
+  - Checks if footer already present in AI response before appending
+  - Prevents duplicate "**Evidence Footer:**" markers
+  - Logs warning if duplicate detected
+
+- **trading_app/ai_assistant.py** - Enhanced _build_evidence_pack
+  - Now accepts user_question parameter for chart detection
+  - Queries bars_1m when chart keywords detected
+  - Updates current_price from latest bar close
+  - Adds warning to facts if bars are stale or unavailable
+
+### Fixed
+- **AI says "no OHLCV bar data provided"**
+  - Root cause: EvidencePack only listed table names, didn't include actual bars
+  - Fix: Query and include OHLCV rows when chart questions asked
+  - Result: AI can now analyze actual price data
+
+- **Stale current_price in EvidencePack**
+  - Root cause: current_price parameter passed to _build_evidence_pack was stale
+  - Fix: Query latest bar and update current_price from bar close
+  - Result: current_price now matches latest bar in UI
+
+- **Duplicate Evidence Footer**
+  - Root cause: No check if footer already in response
+  - Fix: Check for "**Evidence Footer:**" marker before appending
+  - Result: Exactly one footer per response
+
+### Technical Details
+- OHLCV data bounded: max 600 bars (10 hours of 1m data)
+- Prompt size managed: only last 50 bars shown to AI (others available in sample)
+- Fail-closed: warns if bars unavailable, refuses chart analysis
+- No lookahead: all bars are historical (ts <= current time)
+- All 33 tests passing:
+  - test_ai_source_lock.py: 11/11
+  - test_edge_approval.py: 10/10
+  - test_ai_chart_evidence_pack.py: 6/6
+  - test_evidence_footer_singleton.py: 6/6
+
+---
+
+## [2026-01-20 PM 4] - Database Bootstrap & CSV Upload Fix
+
+### Added
+- **Database Bootstrap Module** - `trading_app/db_bootstrap.py`
+  - Ensures required tables exist in both local and MotherDuck databases at app startup
+  - `ensure_required_tables(conn)`: Creates edge_candidates table if not exists
+  - `bootstrap_database()`: Runs bootstrap with canonical DB connection
+  - Uses CREATE TABLE IF NOT EXISTS (idempotent, safe to run multiple times)
+  - Fixes "Catalog Error: Table with name edge_candidates does not exist" in MotherDuck
+
+- **CSV Upload Support** - `app_trading_hub.py`
+  - Chart upload now accepts CSV files in addition to images
+  - File uploader allowlist: ["png", "jpg", "jpeg", "csv"]
+  - CSV parsing with pandas (validates TradingView format)
+  - Required columns: time, open, high, low, close (volume optional)
+  - Shows preview of uploaded CSV data
+  - Fail-closed validation: blocks ingestion if required columns missing
+  - Clear user-visible error messages for invalid CSV format
+
+- **Test Suite** - `tests/test_db_bootstrap.py`
+  - 9 comprehensive tests for database bootstrap
+  - Tests table creation, schema validation, idempotency
+  - Tests write connection usage (read_only=False)
+  - Tests error handling and default values
+  - All tests passing (9/9)
+
+### Changed
+- **trading_app/app_trading_hub.py** - Enhanced startup and upload
+  - Added database bootstrap call before page config
+  - CSV upload detection and parsing logic
+  - Branches between image analysis and CSV preview based on file type
+  - Updated help text: "Upload a TradingView screenshot (image) or CSV export"
+
+- **trading_app/app_mobile.py** - Enhanced startup
+  - Added database bootstrap call before page config
+  - Ensures edge_candidates table exists in both local and cloud modes
+
+- **trading_app/edge_candidates_ui.py** - Deprecation fix
+  - Replaced `use_container_width=True` with `width="stretch"` for st.dataframe
+  - Fixes Streamlit deprecation warning (use_container_width removed after 2025-12-31)
+
+### Fixed
+- **MotherDuck Schema Error** - edge_candidates table missing
+  - Error: "Catalog Error: Table with name edge_candidates does not exist!"
+  - Cause: Cloud database (MotherDuck) didn't have edge_candidates table
+  - Fix: db_bootstrap.py ensures table exists at app startup
+  - Works in both local (gold.db) and cloud (MotherDuck) modes
+
+- **CSV Upload Blocked** - text/csv files rejected
+  - Error: "text/csv files are not allowed"
+  - Cause: File uploader only accepted image types
+  - Fix: Updated type allowlist to include "csv"
+  - Added CSV parsing and validation logic
+
+### Technical Details
+- Bootstrap uses get_database_connection(read_only=False) for schema changes
+- CSV validation is fail-closed (rejects partial/invalid data)
+- No changes to trading logic or AI Source Lock
+- All 30 tests passing:
+  - test_db_bootstrap.py: 9/9
+  - test_edge_approval.py: 10/10
+  - test_ai_source_lock.py: 11/11
+
+---
+
 ## [2026-01-20 PM 3] - Edge Candidates UI Panel (Review & Approval)
 
 ### Added
