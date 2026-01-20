@@ -1270,6 +1270,19 @@ else:
     )
 
 # ============================================================================
+# EDGE CANDIDATES REVIEW & APPROVAL
+# ============================================================================
+st.divider()
+
+with st.expander("🔬 Edge Candidates (Research)", expanded=False):
+    try:
+        from edge_candidates_ui import render_edge_candidates_panel
+        render_edge_candidates_panel()
+    except Exception as e:
+        st.error(f"Error loading Edge Candidates panel: {e}")
+        logger.error(f"Edge Candidates panel error: {e}")
+
+# ============================================================================
 # CHART UPLOAD & VISION ANALYSIS
 # ============================================================================
 st.divider()

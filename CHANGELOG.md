@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2026-01-20 PM 3] - Edge Candidates UI Panel (Review & Approval)
+
+### Added
+- **Edge Candidates UI Panel** - `edge_candidates_ui.py`
+  - Interactive table for viewing edge candidates from database
+  - Filtering by status (ALL, DRAFT, PENDING, APPROVED, REJECTED)
+  - Filtering by instrument (ALL, MGC, NQ, MPL)
+  - Limit selector (50, 100, 200, 500 rows)
+  - Expandable details for each candidate (hypothesis, metrics, robustness, specs)
+  - Action buttons: Approve, Set Pending, Reject
+  - Optional notes field for status changes
+  - Auto-reload after actions
+
+- **UI Integration** - Both desktop and mobile apps
+  - `app_trading_hub.py`: Added Edge Candidates expandable panel
+  - `app_mobile.py`: Added Edge Candidates expandable panel
+  - Accessible via "🔬 Edge Candidates (Research)" expander
+  - Uses existing backend functions (approve_edge_candidate, set_candidate_status)
+
+### Technical Details
+- Uses canonical DB routing (`cloud_mode.get_database_connection`)
+- No direct duckdb.connect calls in UI code
+- Works in both local and MotherDuck modes
+- All actions auditable (approved_by, approved_at, notes)
+- No changes to trading logic or AI Source Lock
+
+---
+
 ## [2026-01-20 PM 2] - Edge Candidate Approval & Write-Safe DB Connection
 
 ### Added

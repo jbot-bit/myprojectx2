@@ -424,6 +424,20 @@ except Exception as e:
         st.metric("ORB Size", f"{orb_size:.2f} points")
 
 # ============================================================================
+# EDGE CANDIDATES REVIEW & APPROVAL (Research)
+# ============================================================================
+
+st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+with st.expander("🔬 Edge Candidates (Research)", expanded=False):
+    try:
+        from edge_candidates_ui import render_edge_candidates_panel
+        render_edge_candidates_panel()
+    except Exception as e:
+        st.error(f"Error loading Edge Candidates panel: {e}")
+        logger.error(f"Edge Candidates panel error: {e}")
+
+# ============================================================================
 # SETTINGS MODAL (OPTIONAL - ACCESSIBLE VIA BOTTOM BUTTON)
 # ============================================================================
 
