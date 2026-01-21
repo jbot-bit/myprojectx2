@@ -38,3 +38,10 @@ log.txt
 
 # Audit outputs (generated)
 audit_reports/
+
+# Runtime checkpoints
+data/checkpoints/*.lock
+
+# Local scratch files
+fix*.txt
+

@@ -154,14 +154,45 @@ def get_instrument_configs(instrument: str):
     else:
         raise ValueError(f"Unknown instrument: {instrument}")
 
-# Backward compatibility: expose configs as module variables
-# These will be populated on first access by strategy_engine
-MGC_ORB_CONFIGS = {}
-MGC_ORB_SIZE_FILTERS = {}
-NQ_ORB_CONFIGS = {}
-NQ_ORB_SIZE_FILTERS = {}
-MPL_ORB_CONFIGS = {}
-MPL_ORB_SIZE_FILTERS = {}
+# Backward compatibility: Module-level attribute accessors
+# These lazy-load on first access to avoid DB connection at import time
+class _LazyModuleGlobals:
+    """Lazy loader for module-level config globals."""
+
+    def __init__(self):
+        self._loaded = {}
+
+    def __getattr__(self, name):
+        # Map attribute names to instruments and types
+        attr_map = {
+            'MGC_ORB_CONFIGS': ('MGC', 'configs'),
+            'MGC_ORB_SIZE_FILTERS': ('MGC', 'filters'),
+            'NQ_ORB_CONFIGS': ('NQ', 'configs'),
+            'NQ_ORB_SIZE_FILTERS': ('NQ', 'filters'),
+            'MPL_ORB_CONFIGS': ('MPL', 'configs'),
+            'MPL_ORB_SIZE_FILTERS': ('MPL', 'filters'),
+        }
+
+        if name not in attr_map:
+            raise AttributeError(f"module has no attribute '{name}'")
+
+        # Load instrument configs if not already loaded
+        instrument, config_type = attr_map[name]
+        cache_key = f"{instrument}_{config_type}"
+
+        if cache_key not in self._loaded:
+            configs, filters = get_instrument_configs(instrument)
+            self._loaded[f"{instrument}_configs"] = configs
+            self._loaded[f"{instrument}_filters"] = filters
+
+        return self._loaded[cache_key]
+
+_lazy_globals = _LazyModuleGlobals()
+
+# Expose as module-level attributes (lazy-loaded on access)
+def __getattr__(name):
+    """Module-level lazy attribute access."""
+    return getattr(_lazy_globals, name)
 
 # NQ (Micro Nasdaq) - DYNAMICALLY LOADED FROM DATABASE
 # Source: validated_setups table (extended scan window validation 2024-01-01 to 2026-01-10)
@@ -184,8 +215,8 @@ MPL_ORB_SIZE_FILTERS = {}
 # Note: Database may contain RR=1.0 configs for reference, but not recommended for live trading
 
 # Dynamic configs (loaded based on selected instrument)
-ORB_CONFIGS = MGC_ORB_CONFIGS  # Default to MGC
-ORB_SIZE_FILTERS = MGC_ORB_SIZE_FILTERS
+# Note: ORB_CONFIGS and ORB_SIZE_FILTERS are accessed via MGC_/NQ_/MPL_ variants
+# which are lazy-loaded on first access
 
 # Enable/disable filters globally
 ENABLE_ORB_SIZE_FILTERS = True

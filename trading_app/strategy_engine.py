@@ -15,6 +15,74 @@ from data_loader import LiveDataLoader
 logger = logging.getLogger(__name__)
 
 
+def select_primary_setup(setups: list) -> dict:
+    """
+    Select the primary setup from multiple setups using deterministic scoring.
+
+    When multiple validated setups exist for the same ORB time, this function
+    selects the best one based on available performance metrics.
+
+    Priority (higher score = better):
+    1. Expectancy (avg_r, mean_r, total_r_per_trade) - higher is better
+    2. Win rate (win_rate, wr) - higher is better
+    3. Sample size (trades, n, sample_size) - larger is better
+    4. Stop loss mode (HALF > FULL) - tighter stops preferred
+    5. Risk/reward ratio (rr) - higher is better
+    6. Setup ID - stable tie-breaker (alphabetically last)
+
+    Args:
+        setups: List of setup dicts
+
+    Returns:
+        Selected setup dict
+
+    Raises:
+        ValueError: If setups list is empty
+    """
+    if not setups:
+        raise ValueError("Cannot select primary setup from empty list")
+
+    if len(setups) == 1:
+        return setups[0]
+
+    # Build score tuple for each setup (all fields optional, use 0 if missing)
+    def score_setup(setup):
+        # 1. Expectancy metric (higher = better)
+        expectancy = setup.get('avg_r') or setup.get('mean_r') or setup.get('total_r_per_trade') or 0.0
+
+        # 2. Win rate (higher = better)
+        win_rate = setup.get('win_rate') or setup.get('wr') or 0.0
+
+        # 3. Sample size (larger = better)
+        sample_size = setup.get('trades') or setup.get('n') or setup.get('sample_size') or 0
+
+        # 4. Stop loss mode (HALF=1, FULL=0)
+        sl_mode = setup.get('sl_mode', '')
+        sl_score = 1 if sl_mode == 'HALF' else 0
+
+        # 5. Risk/reward ratio (higher = better)
+        rr = setup.get('rr', 0.0)
+
+        # 6. Setup ID as stable tie-breaker (alphabetically last)
+        setup_id = setup.get('setup_id') or setup.get('id') or ''
+
+        return (expectancy, win_rate, sample_size, sl_score, rr, setup_id)
+
+    # Sort by score tuple (descending) and pick first
+    scored_setups = [(score_setup(s), s) for s in setups]
+    scored_setups.sort(reverse=True)
+
+    selected = scored_setups[0][1]
+
+    # Log selection for debugging
+    if len(setups) > 1:
+        logger.info(f"Selected primary setup from {len(setups)} options: "
+                   f"RR={selected.get('rr')}, SL={selected.get('sl_mode')}, "
+                   f"avg_r={selected.get('avg_r')}, WR={selected.get('win_rate')}")
+
+    return selected
+
+
 def resolve_orb_config(config):
     """
     Resolve ORB config to single dict.
@@ -40,13 +108,8 @@ def resolve_orb_config(config):
     if isinstance(config, list):
         if len(config) == 0:
             return None
-        if len(config) == 1:
-            return config[0]
-
-        # Multiple configs - pick first one (primary setup)
-        # In the future, we could add priority logic here
-        logger.warning(f"Multiple configs found, selecting first: {config[0]}")
-        return config[0]
+        # Use deterministic selection logic
+        return select_primary_setup(config)
 
     raise ValueError(f"Invalid config type: {type(config)}")
 

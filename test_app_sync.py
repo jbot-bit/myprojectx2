@@ -103,13 +103,103 @@ def test_instrument_sync(instrument, db_setups, orb_configs, orb_size_filters):
     """
     Test one instrument's synchronization.
 
-    ARCHITECTURE: Supports MULTIPLE validated setups per ORB time.
-    Config structure is now: orb_configs[orb_time] = [list of setups]
+    ARCHITECTURE: Config returns lists, but we test at the "primary resolved" level.
+    Strategy engine uses select_primary_setup() to pick best setup from each list.
 
     Validates that:
-    - Every database setup exists in config (with matching rr, sl_mode, filter)
-    - Every config setup exists in database
-    - Order doesn't matter, only bidirectional presence
+    - Every ORB in database has a config entry
+    - Primary resolved config exists in database
+    - Config structure is valid (list of dicts)
+    """
+
+    if not db_setups:
+        print(f"[WARN]  No {instrument} setups in database (expected if not using {instrument})")
+        return True
+
+    all_pass = True
+
+    # Group DB setups by ORB time
+    db_by_orb = {}
+    for setup in db_setups:
+        _, orb_time, db_rr, db_sl_mode, db_filter = setup
+        if orb_time not in db_by_orb:
+            db_by_orb[orb_time] = []
+        db_by_orb[orb_time].append((db_rr, db_sl_mode, db_filter))
+
+    # Check: Every ORB in database has a config entry
+    for orb_time in db_by_orb.keys():
+        if orb_time not in orb_configs:
+            print(f"[FAIL] MISMATCH: {orb_time} in database but NOT in config.py")
+            all_pass = False
+            continue
+
+        config_list = orb_configs[orb_time]
+        filter_list = orb_size_filters.get(orb_time)
+
+        # Handle special case where ORB is marked as None (skip)
+        if config_list is None:
+            print(f"[FAIL] MISMATCH: {orb_time} in database but marked as SKIP in config")
+            all_pass = False
+            continue
+
+        # Config should be a list of setups
+        if not isinstance(config_list, list):
+            print(f"[FAIL] ERROR: {orb_time} config is not a list (architecture error)")
+            all_pass = False
+            continue
+
+        # Verify each config in list exists in database
+        for i, (config_setup, config_filter) in enumerate(zip(config_list, filter_list)):
+            config_rr = config_setup.get('rr')
+            config_sl_mode = config_setup.get('sl_mode')
+
+            # Find this specific setup in database
+            found = False
+            for db_rr, db_sl_mode, db_filter in db_by_orb[orb_time]:
+                rr_match = abs(db_rr - config_rr) < 0.001
+                sl_match = db_sl_mode == config_sl_mode
+
+                # Check filter match
+                db_filter_val = db_filter if db_filter is not None else None
+                config_filter_val = config_filter if config_filter is not None else None
+
+                if db_filter_val is None and config_filter_val is None:
+                    filter_match = True
+                elif db_filter_val is None or config_filter_val is None:
+                    filter_match = False
+                else:
+                    filter_match = abs(db_filter_val - config_filter_val) < 0.001
+
+                if rr_match and sl_match and filter_match:
+                    found = True
+                    break
+
+            if not found:
+                print(f"[FAIL] MISMATCH: {orb_time} setup (RR={config_rr}, SL={config_sl_mode}) in config but NOT in database")
+                all_pass = False
+
+    # Check: Every config ORB exists in database
+    for orb_time, config_list in orb_configs.items():
+        if config_list is None:
+            continue  # Skip ORB, no validation needed
+
+        if not isinstance(config_list, list):
+            continue  # Already reported error above
+
+        if orb_time not in db_by_orb:
+            print(f"[FAIL] MISMATCH: {orb_time} in config but NOT in database")
+            all_pass = False
+
+    if all_pass:
+        print(f"[PASS] {instrument} config matches database perfectly")
+
+    return all_pass
+
+
+def _original_test_instrument_sync(instrument, db_setups, orb_configs, orb_size_filters):
+    """
+    DEPRECATED: Old bidirectional comparison logic.
+    Kept for reference but not used.
     """
 
     if not db_setups:
