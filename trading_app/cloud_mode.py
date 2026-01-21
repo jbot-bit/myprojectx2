@@ -126,7 +126,7 @@ def get_database_connection(read_only: bool = True):
         # Cloud mode - use MotherDuck
         return get_motherduck_connection(read_only=read_only)
     else:
-        # D) Local mode - use gold.db
+        # D) Local mode - use gold.db (always read/write to avoid mixed configs)
         app_dir = Path(__file__).parent
         db_path = app_dir.parent / "data" / "db" / "gold.db"
 
@@ -143,8 +143,8 @@ def get_database_connection(read_only: bool = True):
             temp_conn.close()
             logger.info(f"Created local DB file: {db_path}")
 
-        # Now connect with requested read_only flag
-        return duckdb.connect(str(db_path), read_only=read_only)
+        # Always open in read/write to avoid mixed-config conflicts
+        return duckdb.connect(str(db_path), read_only=False)
 
 
 def get_database_path() -> str:
