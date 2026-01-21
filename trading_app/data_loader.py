@@ -506,7 +506,12 @@ class LiveDataLoader:
         try:
             # Use absolute path to avoid working directory issues
             gold_db_path = os.getenv("GOLD_DB_PATH", str(Path(__file__).parent.parent / "data/db/gold.db"))
-            gold_con = duckdb.connect(gold_db_path, read_only=True)
+            if Path(gold_db_path).resolve() == Path(DB_PATH).resolve():
+                gold_con = self.con
+                close_con = False
+            else:
+                gold_con = duckdb.connect(gold_db_path, read_only=True)
+                close_con = True
             result = gold_con.execute(f"""
                 SELECT atr_20
                 FROM {features_table}
@@ -514,7 +519,8 @@ class LiveDataLoader:
             """, [today, instrument]).fetchone()
 
             if result and result[0] is not None:
-                gold_con.close()
+                if close_con:
+                    gold_con.close()
                 return float(result[0])
 
             # Try yesterday if today not available yet
@@ -525,7 +531,8 @@ class LiveDataLoader:
                 WHERE date_local = ? AND instrument = ?
             """, [yesterday, instrument]).fetchone()
 
-            gold_con.close()
+            if close_con:
+                gold_con.close()
 
             if result and result[0] is not None:
                 return float(result[0])

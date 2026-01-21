@@ -9,7 +9,10 @@ from typing import List, Dict, Optional
 import json
 import logging
 
-from cloud_mode import get_database_connection
+import duckdb
+
+from cloud_mode import get_database_connection, is_cloud_deployment
+from config import DB_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ class AIMemoryManager:
     def _init_schema(self):
         """Create ai_chat_history table if not exists"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ai_chat_history (
                     id INTEGER PRIMARY KEY,
@@ -44,23 +47,36 @@ class AIMemoryManager:
         except Exception as e:
             logger.error(f"Error initializing AI memory schema: {e}")
 
+    def _get_write_connection(self):
+        """Get a write-capable connection, with a local fallback if needed."""
+        conn = get_database_connection(read_only=False)
+        if not is_cloud_deployment():
+            try:
+                conn.execute("SELECT 1")
+            except Exception as exc:
+                logger.warning(f"Primary DB connection unavailable, falling back to DB_PATH: {exc}")
+                conn = duckdb.connect(DB_PATH, read_only=False)
+        return conn
+
     def save_message(self, session_id: str, role: str, content: str,
                      context_data: Dict = None, instrument: str = "MGC", tags: List[str] = None):
         """Save a single message to history"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
             conn.execute("""
                 INSERT INTO ai_chat_history (session_id, role, content, context_data, instrument, tags)
                 VALUES ($1, $2, $3, $4, $5, $6)
             """, [session_id, role, content, json.dumps(context_data or {}), instrument, tags or []])
             conn.close()
         except Exception as e:
+            if "ai_chat_history" in str(e):
+                self._init_schema()
             logger.error(f"Error saving message to memory: {e}")
 
     def load_session_history(self, session_id: str, limit: int = 50) -> List[Dict]:
         """Load conversation history for a session"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
             result = conn.execute("""
                 SELECT role, content, timestamp, context_data, tags
                 FROM ai_chat_history
@@ -82,13 +98,15 @@ class AIMemoryManager:
                 for row in reversed(result)
             ]
         except Exception as e:
+            if "ai_chat_history" in str(e):
+                self._init_schema()
             logger.error(f"Error loading session history: {e}")
             return []
 
     def search_history(self, query: str, instrument: str = None, limit: int = 10) -> List[Dict]:
         """Search conversation history by content"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
 
             # Use DuckDB parameter syntax ($1, $2, etc.)
             if instrument:
@@ -123,13 +141,15 @@ class AIMemoryManager:
                 for row in result
             ]
         except Exception as e:
+            if "ai_chat_history" in str(e):
+                self._init_schema()
             logger.error(f"Error searching history: {e}")
             return []
 
     def get_recent_trades(self, session_id: str = None, days: int = 7) -> List[Dict]:
         """Get recent trade-related conversations"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
 
             # INTERVAL syntax doesn't support parameters in DuckDB/MotherDuck
             # Use string formatting for the interval value (safe since days is an int)
@@ -165,15 +185,19 @@ class AIMemoryManager:
                 for row in result
             ]
         except Exception as e:
+            if "ai_chat_history" in str(e):
+                self._init_schema()
             logger.error(f"Error getting recent trades: {e}")
             return []
 
     def clear_session(self, session_id: str):
         """Clear all messages for a session"""
         try:
-            conn = get_database_connection()
+            conn = self._get_write_connection()
             conn.execute("DELETE FROM ai_chat_history WHERE session_id = $1", [session_id])
             conn.close()
             logger.info(f"Cleared session: {session_id}")
         except Exception as e:
+            if "ai_chat_history" in str(e):
+                self._init_schema()
             logger.error(f"Error clearing session: {e}")
