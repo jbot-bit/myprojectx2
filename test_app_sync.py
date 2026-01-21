@@ -26,20 +26,18 @@ import duckdb
 sys.path.insert(0, str(Path(__file__).parent / "trading_app"))
 
 from config import MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS, NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS, MPL_ORB_CONFIGS, MPL_ORB_SIZE_FILTERS
+from cloud_mode import get_database_connection
 
 
 def test_config_matches_database():
     """Verify config.py matches validated_setups database"""
 
-    db_path = Path(__file__).parent / "data" / "db" / "gold.db"
-
-    if not db_path.exists():
-        print("[FAIL] FAILED: gold.db not found")
-        print(f"   Expected: {db_path}")
-        return False
-
+    # Use cloud-aware connection (same as config_generator.py)
     try:
-        con = duckdb.connect(str(db_path), read_only=True)
+        con = get_database_connection(read_only=True)
+        if con is None:
+            print("[FAIL] FAILED: Could not connect to database")
+            return False
     except Exception as e:
         print(f"[FAIL] FAILED: Cannot connect to database: {e}")
         return False
