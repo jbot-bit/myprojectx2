@@ -51,41 +51,25 @@ def get_database_connection():
     """
     Get database connection (cloud-aware).
 
+    Uses the same logic as trading_app/cloud_mode.py to ensure consistency.
+
     Returns:
         duckdb.Connection - MotherDuck if in cloud, else local gold.db
     """
-    # Check if we're in cloud deployment
-    is_cloud = (
-        os.getenv("STREAMLIT_SHARING_MODE") is not None
-        or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
-        or not DB_PATH.exists()
-    )
-
-    if is_cloud:
-        # Cloud mode - use MotherDuck
-        try:
-            import streamlit as st
-            token = st.secrets.get("MOTHERDUCK_TOKEN", os.getenv("MOTHERDUCK_TOKEN"))
-        except:
-            token = os.getenv("MOTHERDUCK_TOKEN")
-
-        if not token:
-            logger.error("MOTHERDUCK_TOKEN not found in cloud deployment")
-            return None
-
-        try:
-            conn = duckdb.connect(f'md:projectx_prod?motherduck_token={token}')
-            logger.info("Connected to MotherDuck for config loading")
-            return conn
-        except Exception as e:
-            logger.error(f"Failed to connect to MotherDuck: {e}")
-            return None
-    else:
-        # Local mode - use gold.db
+    # Try to import cloud_mode from trading_app
+    try:
+        import sys
+        trading_app_path = Path(__file__).parent.parent / "trading_app"
+        if str(trading_app_path) not in sys.path:
+            sys.path.insert(0, str(trading_app_path))
+        from cloud_mode import get_database_connection as cloud_get_connection
+        return cloud_get_connection(read_only=True)
+    except ImportError:
+        # Fallback to local implementation if cloud_mode not available
+        logger.warning("Could not import cloud_mode, using local DB")
         if not DB_PATH.exists():
             logger.warning(f"Database not found at {DB_PATH}")
             return None
-
         return duckdb.connect(str(DB_PATH), read_only=True)
 
 
@@ -131,6 +115,7 @@ def load_instrument_configs(
 
         # Query validated_setups for this instrument
         # Exclude special strategy types (CASCADE, SINGLE_LIQ) that aren't time-based ORBs
+        # ORDER BY ensures deterministic ordering (matches select_primary_setup priority)
         query = """
             SELECT
                 orb_time,
@@ -140,7 +125,13 @@ def load_instrument_configs(
             FROM validated_setups
             WHERE instrument = ?
               AND orb_time NOT IN ('CASCADE', 'SINGLE_LIQ')
-            ORDER BY orb_time, rr
+            ORDER BY orb_time,
+                     COALESCE(avg_r, 0) DESC,
+                     COALESCE(win_rate, 0) DESC,
+                     COALESCE(trades, 0) DESC,
+                     CASE WHEN sl_mode = 'HALF' THEN 1 ELSE 0 END DESC,
+                     rr DESC,
+                     setup_id DESC
         """
 
         results = conn.execute(query, [instrument]).fetchall()

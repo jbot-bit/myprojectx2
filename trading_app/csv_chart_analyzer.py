@@ -50,14 +50,33 @@ class CSVChartAnalyzer:
             # Read CSV
             df = pd.read_csv(BytesIO(csv_data))
 
-            # Validate columns
-            required_cols = ['time', 'open', 'high', 'low', 'close']
-            if not all(col in df.columns for col in required_cols):
-                logger.error(f"CSV missing required columns. Got: {df.columns.tolist()}")
+            # Normalize columns and validate
+            df = self._normalize_csv_columns(df)
+            if df is None:
                 return None
 
             # Parse timestamps
-            df['time'] = pd.to_datetime(df['time'])
+            df['time'] = self._parse_time_column(df['time'])
+            if df['time'].isna().all():
+                logger.error("CSV time column could not be parsed")
+                return None
+
+            # Drop rows with invalid time or OHLC data
+            df = df.dropna(subset=['time', 'open', 'high', 'low', 'close'])
+
+            # Ensure numeric columns
+            for col in ['open', 'high', 'low', 'close', 'volume']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+            # Drop rows with invalid OHLC values after coercion
+            df = df.dropna(subset=['open', 'high', 'low', 'close'])
+
+            # Ensure timezone-aware timestamps in UTC
+            if df['time'].dt.tz is None:
+                df['time'] = df['time'].dt.tz_localize(TZ_LOCAL).dt.tz_convert(pytz.UTC)
+            else:
+                df['time'] = df['time'].dt.tz_convert(pytz.UTC)
 
             # Sort by time
             df = df.sort_values('time')
@@ -88,6 +107,45 @@ class CSVChartAnalyzer:
         except Exception as e:
             logger.error(f"CSV analysis failed: {e}")
             return None
+
+    def _normalize_csv_columns(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """Normalize CSV column names for TradingView exports and common aliases."""
+        df.columns = [str(col).strip().lower() for col in df.columns]
+
+        column_aliases = {
+            "time": ["time", "timestamp", "date", "datetime"],
+            "open": ["open", "o"],
+            "high": ["high", "h"],
+            "low": ["low", "l"],
+            "close": ["close", "c", "last"],
+            "volume": ["volume", "vol", "v"],
+        }
+
+        rename_map = {}
+        for canonical, aliases in column_aliases.items():
+            for alias in aliases:
+                if alias in df.columns:
+                    rename_map[alias] = canonical
+                    break
+
+        df = df.rename(columns=rename_map)
+
+        required_cols = ['time', 'open', 'high', 'low', 'close']
+        missing = [col for col in required_cols if col not in df.columns]
+        if missing:
+            logger.error(f"CSV missing required columns. Missing: {missing}. Got: {df.columns.tolist()}")
+            return None
+
+        return df
+
+    def _parse_time_column(self, series: pd.Series) -> pd.Series:
+        """Parse time column from TradingView exports (supports strings or epoch)."""
+        if np.issubdtype(series.dtype, np.number):
+            median_val = series.dropna().median()
+            unit = "ms" if median_val and median_val > 1e12 else "s"
+            return pd.to_datetime(series, unit=unit, errors="coerce")
+
+        return pd.to_datetime(series, errors="coerce")
 
     def _analyze_data_summary(self, df: pd.DataFrame) -> Dict:
         """Analyze basic data summary."""
