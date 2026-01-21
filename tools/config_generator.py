@@ -30,7 +30,21 @@ import os
 logger = logging.getLogger(__name__)
 
 # Database path (relative to project root)
-DB_PATH = Path(__file__).parent / "gold.db"
+# Try multiple locations: data/db/ (primary), root (fallback), tools/ (old)
+_repo_root = Path(__file__).parent.parent
+_possible_db_paths = [
+    _repo_root / "data" / "db" / "gold.db",  # Primary location
+    _repo_root / "gold.db",  # Fallback
+    Path(__file__).parent / "gold.db"  # Legacy
+]
+DB_PATH = None
+for path in _possible_db_paths:
+    if path.exists():
+        DB_PATH = path
+        break
+if DB_PATH is None:
+    # Default to root location if none found
+    DB_PATH = _repo_root / "gold.db"
 
 
 def get_database_connection():

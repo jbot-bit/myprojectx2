@@ -25,8 +25,14 @@ import duckdb
 # Add trading_app to path
 sys.path.insert(0, str(Path(__file__).parent / "trading_app"))
 
-from config import MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS, NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS, MPL_ORB_CONFIGS, MPL_ORB_SIZE_FILTERS
+# Import config module and load configs (lazy loading)
+import config
 from cloud_mode import get_database_connection
+
+# Populate configs (lazy loading now requires explicit call)
+MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS = config.get_instrument_configs('MGC')
+NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS = config.get_instrument_configs('NQ')
+MPL_ORB_CONFIGS, MPL_ORB_SIZE_FILTERS = config.get_instrument_configs('MPL')
 
 
 def test_config_matches_database():
@@ -260,8 +266,8 @@ def test_strategy_engine_loads():
     """Test that StrategyEngine loads configs"""
     try:
         from trading_app.strategy_engine import StrategyEngine
-        from trading_app.config import MGC_ORB_CONFIGS
 
+        # Use the configs loaded at module level
         if not MGC_ORB_CONFIGS:
             print("[FAIL] FAILED: MGC_ORB_CONFIGS is empty")
             return False

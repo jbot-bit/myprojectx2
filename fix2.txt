@@ -1,0 +1,178 @@
+✅ CLAUDE PROMPT (COPY–PASTE)
+
+ROLE & AUTHORITY
+
+You are operating under CLAUDE.md as the single source of truth.
+If files conflict, obey this hierarchy strictly:
+
+CLAUDE.md
+
+README_MIGRATION.md
+
+Canonical code in trading_app/
+
+Everything else is legacy or experimental
+
+Do not preserve broken patterns for backward compatibility unless explicitly instructed.
+
+🎯 OBJECTIVES (IN ORDER)
+1️⃣ FIX THE CONFIG BUG CORRECTLY (NO BAND-AIDS)
+
+Problem
+Some ORB configs are lists of dicts, but the UI assumes a single dict, causing:
+
+AttributeError: 'list' object has no attribute 'get'
+
+
+Required Fix (MANDATORY)
+
+Normalize configs ONCE, at the boundary.
+
+The UI must NEVER need isinstance(..., dict) guards.
+
+Rules
+
+strategy_engine.orb_configs must expose:
+
+dict[str, dict]   # one resolved config per ORB
+
+
+If raw configs are lists:
+
+Select the active / highest-priority / approved config
+
+Or raise a clear error if ambiguity exists
+
+Actions
+
+Add a resolver function (example):
+
+def resolve_orb_config(config):
+    ...
+
+
+Apply resolution inside:
+
+strategy_engine
+
+OR config loader
+
+Remove all defensive isinstance guards added to the UI
+
+Fail if:
+
+Lists reach app_trading_hub.py
+
+UI code performs type checking
+
+2️⃣ README CONSOLIDATION (MANDATORY CLEANUP)
+
+Current Problem
+Multiple READMEs exist:
+
+README.md
+
+README (1).md
+
+README.rst
+
+legacy / duplicate variants
+
+Required End State
+
+✅ ONE canonical README only:
+
+README.md
+
+
+Content must:
+
+Explain what the app is
+
+How to run it
+
+Where authority rules live (point to CLAUDE.md)
+
+All other README variants must be:
+
+Deleted, OR
+
+Merged then removed
+
+Explicit Instructions
+
+Decide which README is best as the base
+
+Merge useful content
+
+Delete the rest
+
+Update .gitignore if needed
+
+3️⃣ ENFORCE SINGLE-SOURCE ARCHITECTURE
+
+Verify and enforce:
+
+✅ ONE canonical backtest engine:
+
+trading_app/backtest/engine.py
+
+
+✅ No sys.path.insert() in:
+
+trading_app/
+
+tests/
+
+scripts/
+
+✅ Research folder may remain messy (explicitly non-production)
+
+If violations exist:
+
+Fix them
+
+Or fail with a clear explanation
+
+4️⃣ FINAL VERIFICATION (REQUIRED OUTPUT)
+
+You MUST run and report results for:
+
+pytest -q
+python test_app_sync.py
+python -c "from trading_app.backtest import engine; print(engine.__file__)"
+
+
+All must pass.
+
+📦 REQUIRED DELIVERABLES
+
+At completion, output only:
+
+Files changed (list)
+
+Files deleted (list)
+
+Final README path
+
+Confirmation that:
+
+No lists reach the UI
+
+README duplication is resolved
+
+Tests are green
+
+No commentary. No speculation.
+
+🚫 HARD RULES
+
+Do NOT add guards in the UI
+
+Do NOT preserve broken shapes for convenience
+
+Do NOT create new README variants
+
+Do NOT introduce new config ambiguity
+
+If something is unclear, STOP and ask.

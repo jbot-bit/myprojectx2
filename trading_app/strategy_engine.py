@@ -15,6 +15,42 @@ from data_loader import LiveDataLoader
 logger = logging.getLogger(__name__)
 
 
+def resolve_orb_config(config):
+    """
+    Resolve ORB config to single dict.
+
+    The config_generator returns lists to support multiple setups per ORB,
+    but the strategy engine and UI need a single resolved config per ORB.
+
+    Args:
+        config: None, dict, or list of dicts
+
+    Returns:
+        dict or None
+
+    Raises:
+        ValueError: If config is ambiguous (multiple setups without clear priority)
+    """
+    if config is None:
+        return None
+
+    if isinstance(config, dict):
+        return config
+
+    if isinstance(config, list):
+        if len(config) == 0:
+            return None
+        if len(config) == 1:
+            return config[0]
+
+        # Multiple configs - pick first one (primary setup)
+        # In the future, we could add priority logic here
+        logger.warning(f"Multiple configs found, selecting first: {config[0]}")
+        return config[0]
+
+    raise ValueError(f"Invalid config type: {type(config)}")
+
+
 class StrategyState(Enum):
     """Strategy states (lifecycle)."""
     INVALID = "INVALID"          # Strategy not applicable right now
@@ -79,24 +115,37 @@ class StrategyEngine:
 
     def _load_instrument_configs(self):
         """Load instrument-specific configuration parameters."""
+        # Lazy load configs from database (only happens at runtime, not import time)
+        from config import get_instrument_configs
+
         if self.instrument in ["NQ", "MNQ"]:
             # Load NQ configs
-            self.orb_configs = NQ_ORB_CONFIGS
-            self.orb_size_filters = NQ_ORB_SIZE_FILTERS
+            raw_orb_configs, raw_orb_filters = get_instrument_configs('NQ')
             self.cascade_min_gap = 15.0  # NQ needs larger gaps (13x more volatile)
             logger.info(f"Loaded NQ-specific configs: CASCADE gap={self.cascade_min_gap}pts")
         elif self.instrument in ["MPL", "PL"]:
             # Load MPL configs
-            self.orb_configs = MPL_ORB_CONFIGS
-            self.orb_size_filters = MPL_ORB_SIZE_FILTERS
+            raw_orb_configs, raw_orb_filters = get_instrument_configs('MPL')
             self.cascade_min_gap = CASCADE_MIN_GAP_POINTS  # 9.5pts for MPL (similar to MGC)
             logger.info(f"Loaded MPL-specific configs: CASCADE gap={self.cascade_min_gap}pts")
         else:
             # Default to MGC configs
-            self.orb_configs = MGC_ORB_CONFIGS
-            self.orb_size_filters = MGC_ORB_SIZE_FILTERS
+            raw_orb_configs, raw_orb_filters = get_instrument_configs('MGC')
             self.cascade_min_gap = CASCADE_MIN_GAP_POINTS  # 9.5pts for MGC
             logger.info(f"Loaded MGC-specific configs: CASCADE gap={self.cascade_min_gap}pts")
+
+        # Normalize configs: resolve lists to single dicts
+        # This ensures UI and strategy code always work with dict[str, dict]
+        self.orb_configs = {
+            orb_time: resolve_orb_config(config)
+            for orb_time, config in raw_orb_configs.items()
+        }
+
+        # Normalize filters: resolve lists to single values
+        self.orb_size_filters = {
+            orb_time: filter_val[0] if isinstance(filter_val, list) and len(filter_val) > 0 else filter_val
+            for orb_time, filter_val in raw_orb_filters.items()
+        }
 
     # ========================================================================
     # MAIN EVALUATION LOOP

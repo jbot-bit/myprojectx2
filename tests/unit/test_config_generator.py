@@ -14,8 +14,9 @@ import pytest
 from pathlib import Path
 import sys
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Add tools directory to path for config_generator
+repo_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(repo_root / "tools"))
 from config_generator import (
     load_instrument_configs,
     load_all_instrument_configs,

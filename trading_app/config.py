@@ -10,9 +10,17 @@ from pathlib import Path
 from dotenv import load_dotenv
 import sys
 
-# Add tools directory to path for config_generator import
-sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
-from config_generator import load_instrument_configs
+# Lazy import for config_generator to avoid DB connection at import time
+_config_generator = None
+
+def _get_config_generator():
+    """Lazy import config_generator to avoid DB connection at import time."""
+    global _config_generator
+    if _config_generator is None:
+        sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
+        import config_generator
+        _config_generator = config_generator
+    return _config_generator
 
 # Load .env from parent directory
 env_path = Path(__file__).parent.parent / ".env"
@@ -106,7 +114,54 @@ PROXIMITY_TAG_WINDOW_MIN = 5  # Minutes to tag second level
 #   2300: RR=1.5, HALF SL, Filter=0.155 (S+ TIER - BEST OVERALL!) ~+105R/year
 #   0030: RR=3.0, HALF SL, Filter=0.112 (S TIER) ~+66R/year
 
-MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS = load_instrument_configs('MGC')
+# Lazy-loaded configs (loaded at runtime, not import time)
+_mgc_orb_configs = None
+_mgc_orb_size_filters = None
+_nq_orb_configs = None
+_nq_orb_size_filters = None
+_mpl_orb_configs = None
+_mpl_orb_size_filters = None
+
+def get_instrument_configs(instrument: str):
+    """
+    Lazy load instrument configs from database.
+
+    Args:
+        instrument: 'MGC', 'NQ', or 'MPL'
+
+    Returns:
+        Tuple of (orb_configs dict, orb_size_filters dict)
+    """
+    global _mgc_orb_configs, _mgc_orb_size_filters
+    global _nq_orb_configs, _nq_orb_size_filters
+    global _mpl_orb_configs, _mpl_orb_size_filters
+
+    if instrument == 'MGC':
+        if _mgc_orb_configs is None:
+            config_gen = _get_config_generator()
+            _mgc_orb_configs, _mgc_orb_size_filters = config_gen.load_instrument_configs('MGC')
+        return _mgc_orb_configs, _mgc_orb_size_filters
+    elif instrument == 'NQ':
+        if _nq_orb_configs is None:
+            config_gen = _get_config_generator()
+            _nq_orb_configs, _nq_orb_size_filters = config_gen.load_instrument_configs('NQ')
+        return _nq_orb_configs, _nq_orb_size_filters
+    elif instrument == 'MPL':
+        if _mpl_orb_configs is None:
+            config_gen = _get_config_generator()
+            _mpl_orb_configs, _mpl_orb_size_filters = config_gen.load_instrument_configs('MPL')
+        return _mpl_orb_configs, _mpl_orb_size_filters
+    else:
+        raise ValueError(f"Unknown instrument: {instrument}")
+
+# Backward compatibility: expose configs as module variables
+# These will be populated on first access by strategy_engine
+MGC_ORB_CONFIGS = {}
+MGC_ORB_SIZE_FILTERS = {}
+NQ_ORB_CONFIGS = {}
+NQ_ORB_SIZE_FILTERS = {}
+MPL_ORB_CONFIGS = {}
+MPL_ORB_SIZE_FILTERS = {}
 
 # NQ (Micro Nasdaq) - DYNAMICALLY LOADED FROM DATABASE
 # Source: validated_setups table (extended scan window validation 2024-01-01 to 2026-01-10)
@@ -118,8 +173,6 @@ MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS = load_instrument_configs('MGC')
 # - RECOMMENDATION: Focus on MGC which has RR=3.0-8.0 with huge slippage buffers
 # Note: Database may contain RR=1.0 configs for reference, but not recommended for live trading
 
-NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS = load_instrument_configs('NQ')
-
 # MPL (Platinum) - DYNAMICALLY LOADED FROM DATABASE
 # Source: validated_setups table (extended scan window validation 2025-01-13 to 2026-01-12)
 # History: NOT SUITABLE FOR ORB STRATEGY (2026-01-16 ANALYSIS)
@@ -129,8 +182,6 @@ NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS = load_instrument_configs('NQ')
 # - CONCLUSION: MPL moves are too tight/choppy for this ORB strategy
 # - RECOMMENDATION: Focus on MGC which has RR=3.0-8.0 with huge slippage buffers
 # Note: Database may contain RR=1.0 configs for reference, but not recommended for live trading
-
-MPL_ORB_CONFIGS, MPL_ORB_SIZE_FILTERS = load_instrument_configs('MPL')
 
 # Dynamic configs (loaded based on selected instrument)
 ORB_CONFIGS = MGC_ORB_CONFIGS  # Default to MGC
