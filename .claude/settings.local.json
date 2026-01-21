@@ -23,7 +23,8 @@
       "Bash(tee:*)",
       "Bash(git rev-parse:*)",
       "Bash(git commit:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(timeout 15 streamlit run:*)"
     ]
   }
 }
