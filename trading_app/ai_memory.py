@@ -24,7 +24,7 @@ class AIMemoryManager:
     def _init_schema(self):
         """Create ai_chat_history table if not exists"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ai_chat_history (
                     id INTEGER PRIMARY KEY,
@@ -48,7 +48,7 @@ class AIMemoryManager:
                      context_data: Dict = None, instrument: str = "MGC", tags: List[str] = None):
         """Save a single message to history"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
             conn.execute("""
                 INSERT INTO ai_chat_history (session_id, role, content, context_data, instrument, tags)
                 VALUES ($1, $2, $3, $4, $5, $6)
@@ -60,7 +60,7 @@ class AIMemoryManager:
     def load_session_history(self, session_id: str, limit: int = 50) -> List[Dict]:
         """Load conversation history for a session"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
             result = conn.execute("""
                 SELECT role, content, timestamp, context_data, tags
                 FROM ai_chat_history
@@ -88,7 +88,7 @@ class AIMemoryManager:
     def search_history(self, query: str, instrument: str = None, limit: int = 10) -> List[Dict]:
         """Search conversation history by content"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
 
             # Use DuckDB parameter syntax ($1, $2, etc.)
             if instrument:
@@ -129,7 +129,7 @@ class AIMemoryManager:
     def get_recent_trades(self, session_id: str = None, days: int = 7) -> List[Dict]:
         """Get recent trade-related conversations"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
 
             # INTERVAL syntax doesn't support parameters in DuckDB/MotherDuck
             # Use string formatting for the interval value (safe since days is an int)
@@ -171,7 +171,7 @@ class AIMemoryManager:
     def clear_session(self, session_id: str):
         """Clear all messages for a session"""
         try:
-            conn = get_database_connection()
+            conn = get_database_connection(read_only=False)
             conn.execute("DELETE FROM ai_chat_history WHERE session_id = $1", [session_id])
             conn.close()
             logger.info(f"Cleared session: {session_id}")
