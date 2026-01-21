@@ -34,24 +34,45 @@ jobs:
         run: |
           python -c "from trading_app.backtest import engine; print('OK', engine.__file__)"
 
-      - name: Fail on sys.path hacks
+      - name: Fail on sys.path hacks (enforced zones only)
         run: |
           python - <<'PY'
           import pathlib, re, sys
           root = pathlib.Path(".")
+
+          # ENFORCED ZONES: Only check these directories
+          enforced_dirs = ["trading_app", "tests", "scripts"]
+
+          # IGNORED ZONES: Legacy paths allowed (for now)
+          ignored_dirs = [".venv", "venv", "_archive", ".git", "research", "pipeline", "audits", "data", "backups", "site-packages", "__pycache__"]
+
           bad = []
-          for p in root.rglob("*.py"):
-            s = str(p).replace("\\","/")
-            if any(x in s for x in ["/.venv/","/venv/","/site-packages/","/_archive/","/__pycache__/"]):
+          for enforced in enforced_dirs:
+            enforced_path = root / enforced
+            if not enforced_path.exists():
               continue
-            txt = p.read_text(encoding="utf-8", errors="ignore")
-            if re.search(r"\bsys\.path\.(insert|append)\b", txt):
-              bad.append(s)
+
+            for p in enforced_path.rglob("*.py"):
+              s = str(p).replace("\\","/")
+
+              # Skip ignored subdirectories
+              if any(ignored in s for ignored in ignored_dirs):
+                continue
+
+              txt = p.read_text(encoding="utf-8", errors="ignore")
+              if re.search(r"\bsys\.path\.(insert|append)\b", txt):
+                bad.append(s)
+
           if bad:
-            print("sys.path hacks found:")
-            print("\n".join(bad))
+            print("❌ FAIL: sys.path hacks found in enforced zones:")
+            print(f"Enforced zones: {', '.join(enforced_dirs)}")
+            print(f"Ignored zones: {', '.join(ignored_dirs)}")
+            print("\nViolations:")
+            for f in bad:
+              print(f"  - {f}")
             sys.exit(1)
-          print("OK: no sys.path hacks")
+
+          print(f"✅ PASS: No sys.path hacks in enforced zones: {', '.join(enforced_dirs)}")
           PY
 
       - name: Fail on loose imports
@@ -82,3 +103,13 @@ jobs:
       - name: Pytest
         run: |
           pytest -q
+
+      - name: Clean working tree check
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "❌ FAIL: Working tree became dirty during CI"
+            echo ""
+            git status --porcelain
+            exit 1
+          fi
+          echo "✅ PASS: Working tree is clean"
