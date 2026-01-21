@@ -94,7 +94,17 @@ def test_config_matches_database():
 
 
 def test_instrument_sync(instrument, db_setups, orb_configs, orb_size_filters):
-    """Test one instrument's synchronization"""
+    """
+    Test one instrument's synchronization.
+
+    ARCHITECTURE: Supports MULTIPLE validated setups per ORB time.
+    Config structure is now: orb_configs[orb_time] = [list of setups]
+
+    Validates that:
+    - Every database setup exists in config (with matching rr, sl_mode, filter)
+    - Every config setup exists in database
+    - Order doesn't matter, only bidirectional presence
+    """
 
     if not db_setups:
         print(f"[WARN]  No {instrument} setups in database (expected if not using {instrument})")
@@ -102,6 +112,7 @@ def test_instrument_sync(instrument, db_setups, orb_configs, orb_size_filters):
 
     all_pass = True
 
+    # Check: Every database setup must exist in config
     for setup in db_setups:
         _, orb_time, db_rr, db_sl_mode, db_filter = setup
 
@@ -111,47 +122,92 @@ def test_instrument_sync(instrument, db_setups, orb_configs, orb_size_filters):
             all_pass = False
             continue
 
-        config_data = orb_configs[orb_time]
-        config_rr = config_data.get('rr')
-        config_sl_mode = config_data.get('sl_mode')
-        config_filter = orb_size_filters.get(orb_time)
+        config_list = orb_configs[orb_time]
+        filter_list = orb_size_filters.get(orb_time)
 
-        # Check RR
-        if abs(db_rr - config_rr) > 0.001:
-            print(f"[FAIL] MISMATCH: {orb_time} RR")
-            print(f"   Database: {db_rr}")
-            print(f"   Config:   {config_rr}")
+        # Handle special case where ORB is marked as None (skip)
+        if config_list is None:
+            print(f"[FAIL] MISMATCH: {orb_time} in database but marked as SKIP in config")
+            all_pass = False
+            continue
+
+        # Config should be a list of setups
+        if not isinstance(config_list, list):
+            print(f"[FAIL] ERROR: {orb_time} config is not a list (architecture error)")
+            all_pass = False
+            continue
+
+        # Find this specific setup in the config list
+        found = False
+        for i, (config_setup, config_filter) in enumerate(zip(config_list, filter_list)):
+            config_rr = config_setup.get('rr')
+            config_sl_mode = config_setup.get('sl_mode')
+
+            # Check if this setup matches
+            rr_match = abs(db_rr - config_rr) < 0.001
+            sl_match = db_sl_mode == config_sl_mode
+
+            # Check filter match
+            db_filter_val = db_filter if db_filter is not None else None
+            config_filter_val = config_filter if config_filter is not None else None
+
+            if db_filter_val is None and config_filter_val is None:
+                filter_match = True
+            elif db_filter_val is None or config_filter_val is None:
+                filter_match = False
+            else:
+                filter_match = abs(db_filter_val - config_filter_val) < 0.001
+
+            if rr_match and sl_match and filter_match:
+                found = True
+                break
+
+        if not found:
+            print(f"[FAIL] MISMATCH: {orb_time} setup (RR={db_rr}, SL={db_sl_mode}) in database but NOT in config")
             all_pass = False
 
-        # Check SL mode
-        if db_sl_mode != config_sl_mode:
-            print(f"[FAIL] MISMATCH: {orb_time} SL Mode")
-            print(f"   Database: {db_sl_mode}")
-            print(f"   Config:   {config_sl_mode}")
-            all_pass = False
+    # Check: Every config setup must exist in database
+    for orb_time, config_list in orb_configs.items():
+        if config_list is None:
+            continue  # Skip ORB, no validation needed
 
-        # Check filter (handle None vs NULL)
-        db_filter_val = db_filter if db_filter is not None else None
-        config_filter_val = config_filter if config_filter is not None else None
+        if not isinstance(config_list, list):
+            continue  # Already reported error above
 
-        if db_filter_val is None and config_filter_val is None:
-            filter_match = True
-        elif db_filter_val is None or config_filter_val is None:
-            filter_match = False
-        else:
-            filter_match = abs(db_filter_val - config_filter_val) < 0.001
+        filter_list = orb_size_filters.get(orb_time, [])
 
-        if not filter_match:
-            print(f"[FAIL] MISMATCH: {orb_time} ORB Size Filter")
-            print(f"   Database: {db_filter_val}")
-            print(f"   Config:   {config_filter_val}")
-            all_pass = False
+        for i, (config_setup, config_filter) in enumerate(zip(config_list, filter_list)):
+            config_rr = config_setup.get('rr')
+            config_sl_mode = config_setup.get('sl_mode')
 
-    # Check for config entries not in database
-    for orb_time in orb_configs:
-        if not any(s[1] == orb_time for s in db_setups):
-            print(f"[WARN]  WARNING: {orb_time} in config.py but NOT in database")
-            # Not a failure - config can have more entries
+            # Find this specific setup in database
+            found = False
+            for setup in db_setups:
+                _, db_orb_time, db_rr, db_sl_mode, db_filter = setup
+
+                if db_orb_time != orb_time:
+                    continue
+
+                rr_match = abs(db_rr - config_rr) < 0.001
+                sl_match = db_sl_mode == config_sl_mode
+
+                db_filter_val = db_filter if db_filter is not None else None
+                config_filter_val = config_filter if config_filter is not None else None
+
+                if db_filter_val is None and config_filter_val is None:
+                    filter_match = True
+                elif db_filter_val is None or config_filter_val is None:
+                    filter_match = False
+                else:
+                    filter_match = abs(db_filter_val - config_filter_val) < 0.001
+
+                if rr_match and sl_match and filter_match:
+                    found = True
+                    break
+
+            if not found:
+                print(f"[FAIL] MISMATCH: {orb_time} setup (RR={config_rr}, SL={config_sl_mode}) in config but NOT in database")
+                all_pass = False
 
     if all_pass:
         print(f"[PASS] {instrument} config matches database perfectly")
