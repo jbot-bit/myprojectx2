@@ -78,10 +78,14 @@ def get_database_connection():
 def load_instrument_configs(
     instrument: str,
     db_path: Optional[Path] = None
-) -> Tuple[Dict[str, Dict[str, any]], Dict[str, Optional[float]]]:
+) -> Tuple[Dict[str, list], Dict[str, list]]:
     """
     Load ORB configurations and size filters for an instrument from database.
     Cloud-aware: Uses MotherDuck in cloud, local gold.db otherwise.
+
+    ARCHITECTURE: Supports MULTIPLE validated setups per ORB time.
+    This is the correct behavior - different RR/SL combinations for the same ORB
+    are legitimate trading strategies that should coexist.
 
     Args:
         instrument: Instrument symbol (e.g., 'MGC', 'NQ', 'MPL')
@@ -90,18 +94,18 @@ def load_instrument_configs(
     Returns:
         Tuple of (orb_configs, orb_size_filters)
 
-        orb_configs: Dict mapping ORB time to config
-            Example: {"0900": {"rr": 6.0, "sl_mode": "FULL"}, ...}
+        orb_configs: Dict mapping ORB time to LIST of configs
+            Example: {"1000": [{"rr": 1.0, "sl_mode": "FULL"}, {"rr": 2.0, "sl_mode": "HALF"}]}
 
-        orb_size_filters: Dict mapping ORB time to filter value (or None)
-            Example: {"0900": None, "2300": 0.155, ...}
+        orb_size_filters: Dict mapping ORB time to LIST of filter values
+            Example: {"1000": [None, None], "2300": [0.155]}
 
     Example:
         >>> mgc_configs, mgc_filters = load_instrument_configs('MGC')
         >>> mgc_configs["1000"]
-        {"rr": 8.0, "sl_mode": "FULL"}
+        [{"rr": 1.0, "sl_mode": "FULL"}, {"rr": 2.0, "sl_mode": "HALF"}]
         >>> mgc_filters["1000"]
-        None
+        [None, None]
     """
     try:
         # Get connection (cloud-aware)
@@ -112,6 +116,7 @@ def load_instrument_configs(
             return {}, {}
 
         # Query validated_setups for this instrument
+        # Exclude special strategy types (CASCADE, SINGLE_LIQ) that aren't time-based ORBs
         query = """
             SELECT
                 orb_time,
@@ -120,13 +125,14 @@ def load_instrument_configs(
                 orb_size_filter
             FROM validated_setups
             WHERE instrument = ?
-            ORDER BY orb_time
+              AND orb_time NOT IN ('CASCADE', 'SINGLE_LIQ')
+            ORDER BY orb_time, rr
         """
 
         results = conn.execute(query, [instrument]).fetchall()
         conn.close()
 
-        # Build config dictionaries
+        # Build config dictionaries (using lists to support multiple setups per ORB)
         orb_configs = {}
         orb_size_filters = {}
 
@@ -137,16 +143,25 @@ def load_instrument_configs(
                 orb_size_filters[orb_time] = None
                 continue
 
-            # Build config dict
-            orb_configs[orb_time] = {
+            # Initialize lists if first setup for this ORB time
+            if orb_time not in orb_configs:
+                orb_configs[orb_time] = []
+                orb_size_filters[orb_time] = []
+
+            # Append this setup's config
+            orb_configs[orb_time].append({
                 "rr": float(rr),
                 "sl_mode": sl_mode
-            }
+            })
 
-            # Filter value (None or float)
-            orb_size_filters[orb_time] = float(filter_val) if filter_val is not None else None
+            # Append this setup's filter value
+            orb_size_filters[orb_time].append(
+                float(filter_val) if filter_val is not None else None
+            )
 
-        logger.info(f"Loaded {len(orb_configs)} ORB configs for {instrument}")
+        total_setups = sum(len(configs) if isinstance(configs, list) else 0
+                          for configs in orb_configs.values())
+        logger.info(f"Loaded {total_setups} validated setups across {len(orb_configs)} ORB times for {instrument}")
         return orb_configs, orb_size_filters
 
     except Exception as e:
@@ -201,9 +216,11 @@ def get_orb_config(
     instrument: str,
     orb_time: str,
     db_path: Optional[Path] = None
-) -> Optional[Dict[str, any]]:
+) -> Optional[list]:
     """
-    Get configuration for a specific ORB.
+    Get configurations for a specific ORB.
+
+    ARCHITECTURE: Returns a LIST of configs since multiple setups per ORB are supported.
 
     Args:
         instrument: Instrument symbol (e.g., 'MGC')
@@ -211,11 +228,11 @@ def get_orb_config(
         db_path: Optional path to database
 
     Returns:
-        Config dict with 'rr' and 'sl_mode', or None if ORB should be skipped
+        List of config dicts, or None if ORB should be skipped
 
     Example:
         >>> get_orb_config('MGC', '1000')
-        {"rr": 8.0, "sl_mode": "FULL"}
+        [{"rr": 1.0, "sl_mode": "FULL"}, {"rr": 2.0, "sl_mode": "HALF"}]
     """
     configs, _ = load_instrument_configs(instrument, db_path)
     return configs.get(orb_time)
@@ -225,9 +242,11 @@ def get_orb_size_filter(
     instrument: str,
     orb_time: str,
     db_path: Optional[Path] = None
-) -> Optional[float]:
+) -> Optional[list]:
     """
-    Get ORB size filter for a specific ORB.
+    Get ORB size filters for a specific ORB.
+
+    ARCHITECTURE: Returns a LIST of filters since multiple setups per ORB are supported.
 
     Args:
         instrument: Instrument symbol (e.g., 'MGC')
@@ -235,13 +254,13 @@ def get_orb_size_filter(
         db_path: Optional path to database
 
     Returns:
-        Filter value (float) or None if no filter
+        List of filter values (float or None), or None if ORB should be skipped
 
     Example:
         >>> get_orb_size_filter('MGC', '2300')
-        0.155
+        [0.155]
         >>> get_orb_size_filter('MGC', '1000')
-        None
+        [None, None]
     """
     _, filters = load_instrument_configs(instrument, db_path)
     return filters.get(orb_time)
@@ -250,6 +269,7 @@ def get_orb_size_filter(
 def print_all_configs():
     """
     Print all instrument configurations (useful for debugging).
+    Supports multiple setups per ORB time.
     """
     all_configs = load_all_instrument_configs()
 
@@ -258,15 +278,24 @@ def print_all_configs():
         print("=" * 60)
 
         for orb_time in sorted(configs.keys()):
-            config = configs[orb_time]
-            filter_val = filters[orb_time]
+            config_list = configs[orb_time]
+            filter_list = filters[orb_time]
 
-            if config is None:
+            if config_list is None:
                 print(f"  {orb_time}: SKIP (not suitable)")
+            elif isinstance(config_list, list):
+                # Multiple setups for this ORB time
+                print(f"  {orb_time}: {len(config_list)} setup(s)")
+                for i, (config, filter_val) in enumerate(zip(config_list, filter_list)):
+                    rr = config['rr']
+                    sl_mode = config['sl_mode']
+                    filter_str = f"{filter_val:.3f}" if filter_val else "None"
+                    print(f"    [{i+1}] RR={rr}, SL={sl_mode}, Filter={filter_str}")
             else:
-                rr = config['rr']
-                sl_mode = config['sl_mode']
-                filter_str = f"{filter_val:.3f}" if filter_val else "None"
+                # Legacy single setup (shouldn't happen with new code)
+                rr = config_list['rr']
+                sl_mode = config_list['sl_mode']
+                filter_str = f"{filter_list:.3f}" if filter_list else "None"
                 print(f"  {orb_time}: RR={rr}, SL={sl_mode}, Filter={filter_str}")
 
 

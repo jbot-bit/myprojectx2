@@ -1,0 +1,1752 @@
+[
+  {
+    "research_id": "PHASE2.5_MGC_001",
+    "name": "1800 ORB Extended - RR1.5",
+    "instrument": "MGC",
+    "hypothesis_text": "London open breaks resolve over 5+ hours into NY futures session",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.58,
+      "expected_avg_r": 0.4,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_002",
+    "name": "1800 ORB Extended - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "London open breaks resolve over 5+ hours into NY futures session",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.5,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_003",
+    "name": "1800 ORB Extended - RR3.0",
+    "instrument": "MGC",
+    "hypothesis_text": "London open breaks resolve over 5+ hours into NY futures session",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.4,
+      "expected_avg_r": 0.32,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_004",
+    "name": "1800 ORB + ORB Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs (0.2-0.5%) produce cleaner setups",
+    "filter_spec": {
+      "type": "Extended window + size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.62,
+      "expected_avg_r": 0.48,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_005",
+    "name": "1800 Asia Rejection Fade",
+    "instrument": "MGC",
+    "hypothesis_text": "1800 sweep of Asia high/low \u00e2\u2020\u2019 rejection \u00e2\u2020\u2019 mean reversion",
+    "filter_spec": {
+      "type": "2-step sweep + rejection",
+      "description": "1800 ORB must sweep Asia high OR low",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 18:35 (30 min rejection window)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close back inside Asia range after sweep",
+      "stop_rule": "1R beyond sweep extreme",
+      "target_rule": "1.5-2.0R (to Asia/ORB mid)",
+      "scan_window": "18:05 \u00e2\u2020\u2019 18:35 (30 min rejection window)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.65,
+      "expected_avg_r": 0.52,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_006",
+    "name": "2300 ORB Extended - RR1.0",
+    "instrument": "MGC",
+    "hypothesis_text": "NY futures open breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.0R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.69,
+      "expected_avg_r": 0.39,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_007",
+    "name": "2300 ORB Extended - RR1.5",
+    "instrument": "MGC",
+    "hypothesis_text": "NY futures open breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.56,
+      "expected_avg_r": 0.4,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_008",
+    "name": "2300 ORB Extended - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "NY futures open breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.45,
+      "expected_avg_r": 0.36,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_009",
+    "name": "2300 ORB + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs (0.2-0.5%) + overnight = better edge",
+    "filter_spec": {
+      "type": "Extended window + size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.65,
+      "expected_avg_r": 0.5,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_010",
+    "name": "0030 ORB Extended - RR1.0",
+    "instrument": "MGC",
+    "hypothesis_text": "NYSE ORB breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.62,
+      "expected_avg_r": 0.23,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_011",
+    "name": "0030 ORB Extended - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "NYSE ORB breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.4,
+      "expected_avg_r": 0.21,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_012",
+    "name": "0030 ORB Extended - RR3.0",
+    "instrument": "MGC",
+    "hypothesis_text": "NYSE ORB breaks resolve overnight (proven from CSV)",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.31,
+      "expected_avg_r": 0.25,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_013",
+    "name": "0030 ORB + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs (0.2-0.5%) + overnight = better edge",
+    "filter_spec": {
+      "type": "Extended window + size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.42,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_014",
+    "name": "1100 ORB + Directional Bias",
+    "instrument": "MGC",
+    "hypothesis_text": "Bias-aligned breaks have higher win rate (production system)",
+    "filter_spec": {
+      "type": "Directional bias gating",
+      "description": "Directional bias (computed at 10:55) must match break direction",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.7,
+      "expected_avg_r": 0.55,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_015",
+    "name": "1100 ORB + Bias + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Bias + normal ORB size = cleanest setup",
+    "filter_spec": {
+      "type": "Directional bias + size filter",
+      "description": "Directional bias match + ORB size 0.2-0.5%",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.75,
+      "expected_avg_r": 0.62,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_016",
+    "name": "0900 ORB + Overnight Compression",
+    "instrument": "MGC",
+    "hypothesis_text": "Overnight compression releases at Asia open (rewrite from Phase 2)",
+    "filter_spec": {
+      "type": "Session dependency filter",
+      "description": "2300 break_dir = NONE AND 0030 break_dir = NONE",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.5R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.65,
+      "expected_avg_r": 0.48,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_017",
+    "name": "1000 ORB + 0900 Alignment",
+    "instrument": "MGC",
+    "hypothesis_text": "Sequential ORB alignment = momentum persistence (rewrite from Phase 2)",
+    "filter_spec": {
+      "type": "Session dependency filter",
+      "description": "0900 break_dir = 1000 break_dir AND 0900 break_dir != NONE",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB (only if 0900 broke same direction)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.5R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.68,
+      "expected_avg_r": 0.52,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_018",
+    "name": "0900 ORB Baseline - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Asia open baseline (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.5,
+      "expected_avg_r": 0.28,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_019",
+    "name": "0900 ORB + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs produce cleaner Asia setups",
+    "filter_spec": {
+      "type": "Size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.58,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_020",
+    "name": "1000 ORB Baseline - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Late Asia baseline (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.48,
+      "expected_avg_r": 0.24,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_021",
+    "name": "1000 ORB + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs produce cleaner late Asia setups",
+    "filter_spec": {
+      "type": "Size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.56,
+      "expected_avg_r": 0.35,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_022",
+    "name": "1100 ORB Baseline - RR2.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Late Asia baseline (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.5,
+      "expected_avg_r": 0.28,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_023",
+    "name": "1100 ORB + Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Normal-sized ORBs produce cleaner late Asia setups",
+    "filter_spec": {
+      "type": "Size filter",
+      "description": "ORB size 0.2-0.5% of price",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.58,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_024",
+    "name": "1800 ORB Extended + Bias",
+    "instrument": "MGC",
+    "hypothesis_text": "London open + directional bias = higher confidence",
+    "filter_spec": {
+      "type": "Extended window + bias gating",
+      "description": "Directional bias (computed using Asia range + prior ORBs) matches break",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.65,
+      "expected_avg_r": 0.48,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_025",
+    "name": "2300 ORB + Asia Expansion Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "2300 breaks better after Asia expansion (energy already present)",
+    "filter_spec": {
+      "type": "Extended window + session filter",
+      "description": "Asia session had high range (> 80th percentile)",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.6,
+      "expected_avg_r": 0.42,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_026",
+    "name": "0030 ORB + Asia Compression Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "0030 breaks better after Asia compression (coiled energy)",
+    "filter_spec": {
+      "type": "Extended window + session filter",
+      "description": "Asia session had low range (< 20th percentile)",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.45,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_027",
+    "name": "1800 ORB + Asia Rejection (Full)",
+    "instrument": "MGC",
+    "hypothesis_text": "1800 sweep of Asia high \u00e2\u2020\u2019 rejection \u00e2\u2020\u2019 fade DOWN",
+    "filter_spec": {
+      "type": "2-step sweep + rejection",
+      "description": "1800 ORB high > Asia high (UP sweep)",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 18:35 (30 min)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close back below Asia high after sweep",
+      "stop_rule": "1R above Asia high",
+      "target_rule": "2.0R (to ORB mid or Asia mid)",
+      "scan_window": "18:05 \u00e2\u2020\u2019 18:35 (30 min)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.68,
+      "expected_avg_r": 0.55,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_028",
+    "name": "1800 ORB + Asia Rejection (Low)",
+    "instrument": "MGC",
+    "hypothesis_text": "1800 sweep of Asia low \u00e2\u2020\u2019 rejection \u00e2\u2020\u2019 fade UP",
+    "filter_spec": {
+      "type": "2-step sweep + rejection",
+      "description": "1800 ORB low < Asia low (DOWN sweep)",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 18:35 (30 min)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close back above Asia low after sweep",
+      "stop_rule": "1R below Asia low",
+      "target_rule": "2.0R (to ORB mid or Asia mid)",
+      "scan_window": "18:05 \u00e2\u2020\u2019 18:35 (30 min)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.68,
+      "expected_avg_r": 0.55,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_029",
+    "name": "2300 ORB + Tight Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Tighter size filter (0.25-0.4%) = highest quality setups",
+    "filter_spec": {
+      "type": "Extended window + tight size filter",
+      "description": "ORB size 0.25-0.4% of price (tighter than 0.2-0.5%)",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.68,
+      "expected_avg_r": 0.52,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_030",
+    "name": "0030 ORB + Tight Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Tighter size filter (0.25-0.4%) = highest quality setups",
+    "filter_spec": {
+      "type": "Extended window + tight size filter",
+      "description": "ORB size 0.25-0.4% of price (tighter than 0.2-0.5%)",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.45,
+      "expected_avg_r": 0.42,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_031",
+    "name": "1100 ORB + Bias RR3.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Bias-aligned breaks with higher RR target",
+    "filter_spec": {
+      "type": "Directional bias + extended target",
+      "description": "Directional bias match",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.55,
+      "expected_avg_r": 0.48,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_032",
+    "name": "0900 + Compression RR3.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Overnight compression + higher RR target",
+    "filter_spec": {
+      "type": "Session dependency + extended target",
+      "description": "2300 break_dir = NONE AND 0030 break_dir = NONE",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.52,
+      "expected_avg_r": 0.42,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_033",
+    "name": "1000 + Alignment RR3.0",
+    "instrument": "MGC",
+    "hypothesis_text": "Sequential alignment + higher RR target",
+    "filter_spec": {
+      "type": "Session dependency + extended target",
+      "description": "0900 break_dir = 1000 break_dir AND 0900 break_dir != NONE",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB (only if 0900 aligned)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.55,
+      "expected_avg_r": 0.45,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_034",
+    "name": "1800 Extended FULL-SL",
+    "instrument": "MGC",
+    "hypothesis_text": "London open with full ORB as stop (bigger moves)",
+    "filter_spec": {
+      "type": "Extended window + FULL stop mode",
+      "description": "None",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "target_rule": "1.5R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.62,
+      "expected_avg_r": 0.42,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_035",
+    "name": "2300 Extended FULL-SL",
+    "instrument": "MGC",
+    "hypothesis_text": "NY futures open with full ORB stop (overnight big moves)",
+    "filter_spec": {
+      "type": "Extended window + FULL stop mode",
+      "description": "None",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "target_rule": "1.0R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.72,
+      "expected_avg_r": 0.44,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_036",
+    "name": "0030 Extended FULL-SL",
+    "instrument": "MGC",
+    "hypothesis_text": "NYSE ORB with full stop (overnight big moves)",
+    "filter_spec": {
+      "type": "Extended window + FULL stop mode",
+      "description": "None",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "target_rule": "2.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.58,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_037",
+    "name": "1800 + Double Filter (Size + Bias)",
+    "instrument": "MGC",
+    "hypothesis_text": "Combining size filter + bias = highest quality",
+    "filter_spec": {
+      "type": "Size filter + bias gating",
+      "description": "ORB size 0.2-0.5% AND directional bias match",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.72,
+      "expected_avg_r": 0.58,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_038",
+    "name": "2300 + Double Filter (Size + Asia)",
+    "instrument": "MGC",
+    "hypothesis_text": "Size filter + Asia expansion = highest quality",
+    "filter_spec": {
+      "type": "Size filter + session filter",
+      "description": "ORB size 0.2-0.5% AND Asia range > 80th percentile",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.68,
+      "expected_avg_r": 0.52,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_039",
+    "name": "0900 + Double Filter (Compression + Size)",
+    "instrument": "MGC",
+    "hypothesis_text": "Overnight compression + normal ORB size = highest quality",
+    "filter_spec": {
+      "type": "Session dependency + size filter",
+      "description": "2300/0030 no break AND ORB size 0.2-0.5%",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.5R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.72,
+      "expected_avg_r": 0.58,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_040",
+    "name": "1000 + Double Filter (Alignment + Size)",
+    "instrument": "MGC",
+    "hypothesis_text": "Sequential alignment + normal ORB size = highest quality",
+    "filter_spec": {
+      "type": "Session dependency + size filter",
+      "description": "0900 alignment AND ORB size 0.2-0.5%",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB (only if 0900 aligned)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.5R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.75,
+      "expected_avg_r": 0.62,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_041",
+    "name": "1100 + Triple Filter (Bias + Size + Asia)",
+    "instrument": "MGC",
+    "hypothesis_text": "Maximum filtering = ultra-selective, highest quality",
+    "filter_spec": {
+      "type": "Bias + size + session filter",
+      "description": "Bias match AND ORB size 0.2-0.5% AND Asia range normal (20-80th percentile)",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB (only if bias matches)",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "2.0R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.78,
+      "expected_avg_r": 0.68,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_042",
+    "name": "1800 ORB Extended - RR1.0",
+    "instrument": "MGC",
+    "hypothesis_text": "London open with conservative target",
+    "filter_spec": {
+      "type": "Extended scan window",
+      "description": "None",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close outside 1800 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.0R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 02:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.65,
+      "expected_avg_r": 0.38,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_043",
+    "name": "2300 ORB + Wide Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Wider size range (0.15-0.6%) captures more setups",
+    "filter_spec": {
+      "type": "Extended window + wide size filter",
+      "description": "ORB size 0.15-0.6% of price",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.58,
+      "expected_avg_r": 0.42,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_044",
+    "name": "0030 ORB + Wide Size Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "Wider size range (0.15-0.6%) captures more setups",
+    "filter_spec": {
+      "type": "Extended window + wide size filter",
+      "description": "ORB size 0.15-0.6% of price",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.35,
+      "expected_avg_r": 0.28,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_045",
+    "name": "1800 + London Sweep Fade",
+    "instrument": "MGC",
+    "hypothesis_text": "1800 sweep of London prior high/low \u00e2\u2020\u2019 rejection",
+    "filter_spec": {
+      "type": "2-step sweep + rejection",
+      "description": "1800 ORB must sweep London high OR low (if London session data available)",
+      "scan_window_start": "18:05 \u00e2\u2020\u2019 18:35 (30 min)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1800",
+      "entry_rule": "First 1m close back inside London range after sweep",
+      "stop_rule": "1R beyond sweep extreme",
+      "target_rule": "1.5R",
+      "scan_window": "18:05 \u00e2\u2020\u2019 18:35 (30 min)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.62,
+      "expected_avg_r": 0.48,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_046",
+    "name": "0900 ORB RR1.5 Baseline",
+    "instrument": "MGC",
+    "hypothesis_text": "Asia open with moderate target (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "entry_rule": "First 1m close outside 0900 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "09:05 \u00e2\u2020\u2019 17:00 (8 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.54,
+      "expected_avg_r": 0.32,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_047",
+    "name": "1000 ORB RR1.5 Baseline",
+    "instrument": "MGC",
+    "hypothesis_text": "Late Asia with moderate target (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "entry_rule": "First 1m close outside 1000 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "10:05 \u00e2\u2020\u2019 17:00 (7 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.52,
+      "expected_avg_r": 0.28,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_048",
+    "name": "1100 ORB RR1.5 Baseline",
+    "instrument": "MGC",
+    "hypothesis_text": "Late Asia with moderate target (no filters)",
+    "filter_spec": {
+      "type": "Standard breakout",
+      "description": "None",
+      "scan_window_start": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "1100",
+      "entry_rule": "First 1m close outside 1100 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "11:05 \u00e2\u2020\u2019 17:00 (6 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.54,
+      "expected_avg_r": 0.32,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_049",
+    "name": "2300 ORB + Asia Tight Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "2300 after tight Asia range (< 10th percentile) = coiled energy",
+    "filter_spec": {
+      "type": "Extended window + tight session filter",
+      "description": "Asia range < 10th percentile (very tight)",
+      "scan_window_start": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "2300",
+      "entry_rule": "First 1m close outside 2300 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "1.5R",
+      "scan_window": "23:05 \u00e2\u2020\u2019 09:00 (10 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.62,
+      "expected_avg_r": 0.45,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  },
+  {
+    "research_id": "PHASE2.5_MGC_050",
+    "name": "0030 ORB + Asia Wide Filter",
+    "instrument": "MGC",
+    "hypothesis_text": "0030 after wide Asia range (> 90th percentile) = exhaustion fade",
+    "filter_spec": {
+      "type": "Extended window + session filter",
+      "description": "Asia range > 90th percentile (very wide)",
+      "scan_window_start": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)",
+      "scan_window_end": "N/A"
+    },
+    "test_config": {
+      "orb_time": "0030",
+      "entry_rule": "First 1m close outside 0030 ORB",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "target_rule": "3.0R",
+      "scan_window": "00:35 \u00e2\u2020\u2019 09:00 (8.5 hours)"
+    },
+    "metrics": {
+      "expected_win_rate": 0.38,
+      "expected_avg_r": 0.32,
+      "status": "UNTESTED",
+      "note": "Systematically generated in Phase 2.5 MGC discovery"
+    },
+    "slippage_assumptions": {
+      "entry_slippage_ticks": 1,
+      "exit_slippage_ticks": 1,
+      "commission_per_side": 2.5,
+      "note": "Standard MGC assumptions"
+    },
+    "code_version": "phase2.5_systematic_discovery",
+    "data_version": "2020-12-20_to_2026-01-10",
+    "survival_score": null,
+    "confidence_level": "UNTESTED"
+  }
+]

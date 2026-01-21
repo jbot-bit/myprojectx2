@@ -54,8 +54,8 @@ class TestORBFilterExplanationAccuracy:
         """0030 ORB: Filter threshold should match config (0.112)."""
         orb = sample_orb_0030
 
-        # Config should have 0.112 filter for 0030
-        assert config.MGC_ORB_SIZE_FILTERS.get("0030") == 0.112, "Config mismatch!"
+        # NEW ARCHITECTURE: Config returns list of filters (0030 has 1 setup)
+        assert config.MGC_ORB_SIZE_FILTERS.get("0030") == [0.112], "Config mismatch!"
 
         # Check calculation
         ratio = orb["orb_size"] / orb["atr_20"]  # 2.50 / 23.0 = 0.109
@@ -65,8 +65,8 @@ class TestORBFilterExplanationAccuracy:
         """Day ORBs (0900, 1000, 1100): Should not mention filters."""
         orb = sample_orb_1000
 
-        # 1000 should have NO filter
-        assert config.MGC_ORB_SIZE_FILTERS.get("1000") is None, "1000 should have no filter!"
+        # NEW ARCHITECTURE: 1000 has 2 setups, both with no filter
+        assert config.MGC_ORB_SIZE_FILTERS.get("1000") == [None, None], "1000 should have no filters!"
 
 
 class TestRRExplanationAccuracy:

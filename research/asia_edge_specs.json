@@ -1,0 +1,183 @@
+{
+  "metadata": {
+    "source": "asia_orb_research",
+    "date_generated": "2026-01-21",
+    "source_files": [
+      "research/quick_asia/asia_results_365d.csv",
+      "research/quick_asia/asia_results_splits.csv",
+      "research/quick_asia/asia_stability_summary.md"
+    ],
+    "date_range": "2025-01-11 to 2026-01-10",
+    "total_days": 365,
+    "determinism_hash": "acd0323cde0db7457897fb7a266d2f27",
+    "zero_lookahead_verified": true,
+    "criteria": "avg_r > 0, passed sanity checks, considered split stability"
+  },
+  "viable_edges": [
+    {
+      "id": "MGC_0900_RR2.0_HALF_ISOLATION",
+      "instrument": "MGC",
+      "orb_time": "0900",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 09:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "rr": 2.0,
+      "scan_window": {
+        "start": "09:05",
+        "end": "11:00",
+        "description": "ISOLATION mode: force exit at 11:00"
+      },
+      "filters": [],
+      "expected_metrics": {
+        "365d_trades": 254,
+        "365d_win_rate": 0.465,
+        "365d_avg_r": 0.099,
+        "365d_total_r": 25.1,
+        "split_stability": "2/3 positive",
+        "split1_avg_r": -0.218,
+        "split2_avg_r": 0.121,
+        "split3_avg_r": 0.383
+      },
+      "recommendation": "VIABLE - Moderate stability (2/3), good 365d performance",
+      "notes": "0900 performs best with HALF SL. Split 1 was negative, but splits 2-3 strongly positive."
+    },
+    {
+      "id": "MGC_0900_RR3.0_HALF_ISOLATION",
+      "instrument": "MGC",
+      "orb_time": "0900",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 09:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "rr": 3.0,
+      "scan_window": {
+        "start": "09:05",
+        "end": "11:00",
+        "description": "ISOLATION mode: force exit at 11:00"
+      },
+      "filters": [],
+      "expected_metrics": {
+        "365d_trades": 254,
+        "365d_win_rate": 0.382,
+        "365d_avg_r": 0.097,
+        "365d_total_r": 24.6,
+        "split_stability": "2/3 positive",
+        "split1_avg_r": -0.307,
+        "split2_avg_r": 0.202,
+        "split3_avg_r": 0.379
+      },
+      "recommendation": "VIABLE - Similar to RR=2.0, slightly higher RR with lower WR",
+      "notes": "Alternative to RR=2.0. Split 1 more negative. Consider RR=2.0 as primary."
+    },
+    {
+      "id": "MGC_1000_RR1.0_FULL_ISOLATION",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "sl_mode": "FULL",
+      "rr": 1.0,
+      "scan_window": {
+        "start": "10:05",
+        "end": "12:00",
+        "description": "ISOLATION mode: force exit at 12:00"
+      },
+      "filters": [],
+      "expected_metrics": {
+        "365d_trades": 257,
+        "365d_win_rate": 0.528,
+        "365d_avg_r": 0.055,
+        "365d_total_r": 14.1,
+        "split_stability": "3/3 positive",
+        "split1_avg_r": 0.042,
+        "split2_avg_r": 0.061,
+        "split3_avg_r": 0.062
+      },
+      "recommendation": "VIABLE - MOST STABLE (3/3 splits positive)",
+      "notes": "1000 performs best with FULL SL (opposite of 0900!). Low avg_r but very stable."
+    },
+    {
+      "id": "MGC_1000_RR2.0_HALF_ISOLATION",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "rr": 2.0,
+      "scan_window": {
+        "start": "10:05",
+        "end": "12:00",
+        "description": "ISOLATION mode: force exit at 12:00"
+      },
+      "filters": [],
+      "expected_metrics": {
+        "365d_trades": 257,
+        "365d_win_rate": 0.389,
+        "365d_avg_r": 0.054,
+        "365d_total_r": 13.9,
+        "split_stability": "3/3 positive",
+        "split1_avg_r": 0.130,
+        "split2_avg_r": 0.005,
+        "split3_avg_r": 0.027
+      },
+      "recommendation": "VIABLE - MOST STABLE (3/3 splits positive)",
+      "notes": "Alternative to RR=1.0 FULL. Also 3/3 splits. HALF SL not typical for 1000 but works."
+    },
+    {
+      "id": "MGC_1000_RR1.5_FULL_ISOLATION",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "sl_mode": "FULL",
+      "rr": 1.5,
+      "scan_window": {
+        "start": "10:05",
+        "end": "12:00",
+        "description": "ISOLATION mode: force exit at 12:00"
+      },
+      "filters": [],
+      "expected_metrics": {
+        "365d_trades": 257,
+        "365d_win_rate": 0.493,
+        "365d_avg_r": 0.084,
+        "365d_total_r": 21.6,
+        "split_stability": "2/3 positive",
+        "split1_avg_r": -0.040,
+        "split2_avg_r": 0.116,
+        "split3_avg_r": 0.172
+      },
+      "recommendation": "VIABLE - Higher avg_r than RR=1.0, 2/3 stable",
+      "notes": "Best 365d performance for 1000. FULL SL mode. Split 1 slightly negative."
+    }
+  ],
+  "rejected_edges": [
+    {
+      "orb_time": "1100",
+      "reason": "Excluded per task instructions (only 0900/1000 allowed)",
+      "notes": "1100 showed +0.114R (RR=1.0 HALF) on 365d but 2/3 split stability. Split 3 negative. Needs more analysis before considering."
+    }
+  ],
+  "summary": {
+    "total_viable": 5,
+    "breakdown": {
+      "0900": 2,
+      "1000": 3
+    },
+    "stability_profile": {
+      "3_of_3_splits": 2,
+      "2_of_3_splits": 3
+    },
+    "recommendations": {
+      "priority_1": "MGC_1000_RR1.0_FULL_ISOLATION (most stable, 3/3 splits)",
+      "priority_2": "MGC_1000_RR2.0_HALF_ISOLATION (also 3/3 splits)",
+      "priority_3": "MGC_1000_RR1.5_FULL_ISOLATION (highest 365d avg_r)",
+      "priority_4": "MGC_0900_RR2.0_HALF_ISOLATION (good performance, 2/3 splits)",
+      "priority_5": "MGC_0900_RR3.0_HALF_ISOLATION (alternative to RR=2.0)"
+    }
+  }
+}

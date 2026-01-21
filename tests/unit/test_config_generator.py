@@ -34,25 +34,47 @@ class TestConfigLoading:
         # Should have 6 ORB configs
         assert len(configs) == 6
 
-        # Check specific ORB configs (CROWN JEWELS)
-        assert configs['1000']['rr'] == 8.0
-        assert configs['1000']['sl_mode'] == 'FULL'
+        # NEW ARCHITECTURE: configs[orb_time] is a LIST of setups
+        # MGC 1000 has 2 setups (candidates 47 and 48)
+        assert isinstance(configs['1000'], list)
+        assert len(configs['1000']) == 2
+        # Verify both candidates present
+        rr_values = sorted([c['rr'] for c in configs['1000']])
+        assert rr_values == [1.0, 2.0]
 
-        assert configs['2300']['rr'] == 1.5
-        assert configs['2300']['sl_mode'] == 'HALF'
+        # MGC 2300 has 1 setup
+        assert isinstance(configs['2300'], list)
+        assert len(configs['2300']) == 1
+        assert configs['2300'][0]['rr'] == 1.5
+        assert configs['2300'][0]['sl_mode'] == 'HALF'
 
-        assert configs['0030']['rr'] == 3.0
-        assert configs['0030']['sl_mode'] == 'HALF'
+        # MGC 0030 has 1 setup
+        assert isinstance(configs['0030'], list)
+        assert len(configs['0030']) == 1
+        assert configs['0030'][0]['rr'] == 3.0
+        assert configs['0030'][0]['sl_mode'] == 'HALF'
 
     def test_mgc_filters_load_correctly(self):
         """MGC filters should match database values."""
         configs, filters = load_instrument_configs('MGC')
 
-        # Check filter values
-        assert filters['0900'] is None  # No filter
-        assert filters['1000'] is None  # No filter (CROWN JEWEL)
-        assert filters['2300'] == pytest.approx(0.155, abs=0.001)
-        assert filters['0030'] == pytest.approx(0.112, abs=0.001)
+        # NEW ARCHITECTURE: filters[orb_time] is a LIST aligned by index with configs
+        # Check filter values (lists)
+        assert isinstance(filters['0900'], list)
+        assert len(filters['0900']) == 1
+        assert filters['0900'][0] is None  # No filter
+
+        assert isinstance(filters['1000'], list)
+        assert len(filters['1000']) == 2  # 2 setups
+        assert all(f is None for f in filters['1000'])  # Both have no filter
+
+        assert isinstance(filters['2300'], list)
+        assert len(filters['2300']) == 1
+        assert filters['2300'][0] == pytest.approx(0.155, abs=0.001)
+
+        assert isinstance(filters['0030'], list)
+        assert len(filters['0030']) == 1
+        assert filters['0030'][0] == pytest.approx(0.112, abs=0.001)
 
     def test_nq_configs_load(self):
         """NQ configs should load (even though not suitable for trading)."""
@@ -61,9 +83,13 @@ class TestConfigLoading:
         # Should have 5 ORB configs
         assert len(configs) == 5
 
+        # NEW ARCHITECTURE: each config is a LIST
         # All NQ ORBs have RR=1.0 (not suitable for live trading)
-        for orb_time, config in configs.items():
-            assert config['rr'] == 1.0
+        for orb_time, config_list in configs.items():
+            assert isinstance(config_list, list)
+            # Each setup in the list should have RR=1.0
+            for config in config_list:
+                assert config['rr'] == 1.0
 
     def test_mpl_configs_load(self):
         """MPL configs should load (even though not suitable for trading)."""
@@ -72,9 +98,13 @@ class TestConfigLoading:
         # Should have 6 ORB configs
         assert len(configs) == 6
 
+        # NEW ARCHITECTURE: each config is a LIST
         # All MPL ORBs have RR=1.0 (not suitable for live trading)
-        for orb_time, config in configs.items():
-            assert config['rr'] == 1.0
+        for orb_time, config_list in configs.items():
+            assert isinstance(config_list, list)
+            # Each setup in the list should have RR=1.0
+            for config in config_list:
+                assert config['rr'] == 1.0
 
     def test_all_instruments_load(self):
         """All instruments should load successfully."""
@@ -96,22 +126,33 @@ class TestOrbLookup:
     """Test individual ORB config/filter lookup."""
 
     def test_get_orb_config(self):
-        """get_orb_config should return specific ORB config."""
-        config = get_orb_config('MGC', '1000')
+        """get_orb_config should return specific ORB config list."""
+        config_list = get_orb_config('MGC', '1000')
 
-        assert config is not None
-        assert config['rr'] == 8.0
-        assert config['sl_mode'] == 'FULL'
+        # NEW ARCHITECTURE: returns LIST of setups
+        assert config_list is not None
+        assert isinstance(config_list, list)
+        assert len(config_list) == 2  # MGC 1000 has 2 setups (candidates 47+48)
+
+        # Check that both RR values are present
+        rr_values = sorted([c['rr'] for c in config_list])
+        assert rr_values == [1.0, 2.0]
 
     def test_get_orb_size_filter(self):
-        """get_orb_size_filter should return specific filter value."""
-        # ORB with filter
-        filter_2300 = get_orb_size_filter('MGC', '2300')
-        assert filter_2300 == pytest.approx(0.155, abs=0.001)
+        """get_orb_size_filter should return specific filter list."""
+        # NEW ARCHITECTURE: returns LIST of filter values
 
-        # ORB without filter
+        # ORB with filter (2300 has 1 setup)
+        filter_2300 = get_orb_size_filter('MGC', '2300')
+        assert isinstance(filter_2300, list)
+        assert len(filter_2300) == 1
+        assert filter_2300[0] == pytest.approx(0.155, abs=0.001)
+
+        # ORB without filter (1000 has 2 setups, both None)
         filter_1000 = get_orb_size_filter('MGC', '1000')
-        assert filter_1000 is None
+        assert isinstance(filter_1000, list)
+        assert len(filter_1000) == 2
+        assert all(f is None for f in filter_1000)
 
     def test_invalid_orb_time_returns_none(self):
         """Invalid ORB time should return None."""
@@ -126,22 +167,36 @@ class TestDatabaseSync:
     """Test that configs match validated_setups database."""
 
     def test_mgc_1000_crown_jewel(self):
-        """MGC 1000 ORB should be RR=8.0 FULL (CROWN JEWEL)."""
-        config = get_orb_config('MGC', '1000')
-        filter_val = get_orb_size_filter('MGC', '1000')
+        """MGC 1000 ORB has multiple setups including Asia candidates."""
+        config_list = get_orb_config('MGC', '1000')
+        filter_list = get_orb_size_filter('MGC', '1000')
 
-        assert config['rr'] == 8.0
-        assert config['sl_mode'] == 'FULL'
-        assert filter_val is None  # No filter on CROWN JEWEL
+        # NEW ARCHITECTURE: MGC 1000 has 2 setups (candidates 47+48)
+        assert isinstance(config_list, list)
+        assert len(config_list) == 2
+
+        # Verify both RR values present
+        rr_values = sorted([c['rr'] for c in config_list])
+        assert rr_values == [1.0, 2.0]
+
+        # All filters should be None
+        assert all(f is None for f in filter_list)
 
     def test_mgc_2300_best_overall(self):
         """MGC 2300 ORB should be RR=1.5 HALF with filter (BEST OVERALL)."""
-        config = get_orb_config('MGC', '2300')
-        filter_val = get_orb_size_filter('MGC', '2300')
+        config_list = get_orb_config('MGC', '2300')
+        filter_list = get_orb_size_filter('MGC', '2300')
 
+        # NEW ARCHITECTURE: returns lists (2300 has 1 setup)
+        assert isinstance(config_list, list)
+        assert len(config_list) == 1
+
+        config = config_list[0]
         assert config['rr'] == 1.5
         assert config['sl_mode'] == 'HALF'
-        assert filter_val == pytest.approx(0.155, abs=0.001)
+
+        assert len(filter_list) == 1
+        assert filter_list[0] == pytest.approx(0.155, abs=0.001)
 
     def test_all_mgc_orbs_have_valid_configs(self):
         """All 6 MGC ORBs should have valid configs."""
@@ -152,11 +207,17 @@ class TestDatabaseSync:
             assert orb_time in configs
             assert orb_time in filters
 
-            config = configs[orb_time]
-            assert 'rr' in config
-            assert 'sl_mode' in config
-            assert config['rr'] > 0
-            assert config['sl_mode'] in ['FULL', 'HALF']
+            # NEW ARCHITECTURE: each ORB time has a LIST of setups
+            config_list = configs[orb_time]
+            assert isinstance(config_list, list)
+            assert len(config_list) > 0
+
+            # Check each setup in the list
+            for config in config_list:
+                assert 'rr' in config
+                assert 'sl_mode' in config
+                assert config['rr'] > 0
+                assert config['sl_mode'] in ['FULL', 'HALF']
 
 
 if __name__ == "__main__":
