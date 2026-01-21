@@ -191,7 +191,7 @@ def render_edge_candidates_panel():
 
     st.dataframe(
         df[available_cols],
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 
