@@ -1,10 +1,10 @@
 {
   "version": "2.0.0",
   "databases": {
-    "main": "gold.db",
+    "main": "data/db/gold.db",
     "cache": "live_data.db",
     "allowed_locations": [
-      "gold.db",
+      "data/db/gold.db",
       "live_data.db",
       "trades.db",
       "trading_app.db"

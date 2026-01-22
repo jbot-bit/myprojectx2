@@ -925,10 +925,11 @@ class StrategyEngine:
         # Check for breakout
         if current_price > orb_high:
             # LONG breakout
-            # Entry: First close outside ORB (aligned with canonical engine)
-            entry = current_price
+            # Entry: At ORB high (breakout level), not current price
+            # Trader enters at ORB high when first close breaks above
+            entry = orb_high
             stop = orb_mid if config["sl_mode"] == "HALF" else orb_low
-            risk = abs(entry - stop)  # Risk from ENTRY to STOP (not ORB high to stop)
+            risk = abs(entry - stop)  # Risk from ENTRY to STOP
             target = entry + (config["rr"] * risk)
 
             # Calculate position sizing with Kelly multiplier
@@ -948,9 +949,9 @@ class StrategyEngine:
                 action=ActionType.ENTER,
                 reasons=[
                     f"{orb_name} ORB formed (High: ${orb_high:.2f}, Low: ${orb_low:.2f}, Size: {orb_size:.2f} pts)",
-                    f"ORB size filter PASSED ({orb_size:.2f} pts / {filter_result.get('atr', 0):.1f} ATR < threshold)" if filter_result["pass"] else f"ORB filter N/A (no filter on {orb_name})",
+                    f"ORB size filter PASSED ({orb_size:.2f} pts / {filter_result.get('atr') or 0:.1f} ATR < threshold)" if filter_result["pass"] else f"ORB filter N/A (no filter on {orb_name})",
                     f"First close outside ORB detected (Close: ${current_price:.2f} > High: ${orb_high:.2f})",
-                    f"{setup_info.get('tier', 'N/A')} tier setup ({setup_info.get('win_rate', 0):.1f}% win rate, {setup_info.get('annual_expectancy', 0):.0f}R/year expectancy)" if setup_info else f"Config: RR={config['rr']}, SL={config['sl_mode']}{size_note}"
+                    f"{setup_info.get('tier', 'N/A')} tier setup ({setup_info.get('win_rate', 0) or 0:.1f}% win rate, {setup_info.get('annual_expectancy', 0) or 0:.0f}R/year expectancy)" if setup_info else f"Config: RR={config['rr']}, SL={config['sl_mode']}{size_note}"
                 ],
                 next_instruction=f"Enter long at ${entry:.2f}, stop at ${stop:.2f} (ORB {config['sl_mode'].lower()}), target at ${target:.2f} ({config['rr']}R)",
                 entry_price=entry,
@@ -972,10 +973,10 @@ class StrategyEngine:
 
         elif current_price < orb_low:
             # SHORT breakout
-            # Entry: First close outside ORB (aligned with canonical engine)
-            entry = current_price
+            # Entry: At ORB low (breakout level), not current price
+            entry = orb_low
             stop = orb_mid if config["sl_mode"] == "HALF" else orb_high
-            risk = abs(entry - stop)  # Risk from ENTRY to STOP (not ORB low to stop)
+            risk = abs(entry - stop)  # Risk from ENTRY to STOP
             target = entry - (config["rr"] * risk)
 
             # Calculate position sizing with Kelly multiplier
@@ -1118,7 +1119,7 @@ class StrategyEngine:
             sl_mode = config.get("sl_mode")
 
             # Query database for this setup
-            detector = SetupDetector(instrument=self.instrument)
+            detector = SetupDetector()
             all_setups = detector.get_all_validated_setups(self.instrument)
 
             # Find matching setup

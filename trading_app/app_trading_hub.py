@@ -401,36 +401,7 @@ with st.sidebar:
     if auto_refresh:
         st.info(f"Refreshing every {DATA_REFRESH_SECONDS}s")
 
-    # Safety features
-    st.divider()
-    st.subheader("[SAFETY] System Status")
-
-    # Data quality monitor
-    with st.expander("Data Quality", expanded=False):
-        instruments_to_check = [symbol]
-        st.components.v1.html(
-            render_data_quality_panel(
-                st.session_state.data_quality_monitor,
-                instruments_to_check
-            ),
-            height=200
-        )
-
-    # Market hours monitor
-    with st.expander("Market Hours", expanded=False):
-        conditions = st.session_state.market_hours_monitor.get_market_conditions(symbol)
-        st.components.v1.html(
-            render_market_hours_indicator(conditions),
-            height=150
-        )
-
-    # Risk manager dashboard
-    with st.expander("Risk Management", expanded=False):
-        metrics = st.session_state.risk_manager.get_risk_metrics()
-        st.components.v1.html(
-            render_risk_dashboard(metrics),
-            height=250
-        )
+    # Safety features removed per user request
 
 # ============================================================================
 # SINGLE PAGE - NO TABS (User requested streamlined view)
@@ -586,7 +557,8 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
     except Exception as e:
         st.error(f"❌ Error loading data: {e}")
         logger.error(f"Data load error: {e}", exc_info=True)
-        st.stop()
+        # Don't stop - allow AI chat to still work
+        pass
 
 # ========================================================================
 # CLEAN MARKET SNAPSHOT (TOP OF PAGE)
@@ -612,18 +584,24 @@ if latest_bar:
         st.warning("Trade recommendations blocked due to stale data. Please wait for refresh.")
 
 if current_price > 0 and not data_is_stale:
-    # Compact price/ATR display
+    # MGC tick size: 0.10 points = 1 tick
+    TICK_SIZE = 0.10
+
+    # Compact price/ATR display with TICKS
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("MGC Price", f"${current_price:.2f}")
     with col2:
-        st.metric("ATR (20)", f"{current_atr:.2f} pts")
+        atr_ticks = int(current_atr / TICK_SIZE)
+        st.metric("ATR (20)", f"{atr_ticks} ticks", help=f"{current_atr:.2f} pts")
     with col3:
         filter_2300 = 0.155 * current_atr
-        st.metric("2300 Filter", f"<{filter_2300:.2f} pts", help="ORB must be smaller than this")
+        filter_2300_ticks = int(filter_2300 / TICK_SIZE)
+        st.metric("2300 Filter", f"<{filter_2300_ticks} ticks", help=f"ORB < {filter_2300:.2f} pts (15.5% ATR)")
     with col4:
         filter_0030 = 0.112 * current_atr
-        st.metric("0030 Filter", f"<{filter_0030:.2f} pts", help="ORB must be smaller than this")
+        filter_0030_ticks = int(filter_0030 / TICK_SIZE)
+        st.metric("0030 Filter", f"<{filter_0030_ticks} ticks", help=f"ORB < {filter_0030:.2f} pts (11.2% ATR)")
 
 st.divider()
 
@@ -640,23 +618,27 @@ try:
 except Exception as e:
     st.error(f"Strategy evaluation error: {e}")
     logger.error(f"Evaluation error: {e}", exc_info=True)
-    st.stop()
+    # Don't stop - allow rest of app (including AI chat) to render
+    evaluation = None
 
 # ========================================================================
 # 🚦 DECISION PANEL - WHAT TO DO NOW (MOST IMPORTANT - ALWAYS VISIBLE)
 # ========================================================================
-st.markdown('<div style="background: linear-gradient(to bottom, #ffffff, #f8f9fa); padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin: 20px 0;">', unsafe_allow_html=True)
 
-# Color-code by action
-action_styles = {
-    ActionType.STAND_DOWN: {"color": "#6c757d", "bg": "#f8f9fa", "emoji": "⏸️"},
-    ActionType.PREPARE: {"color": "#0d6efd", "bg": "#cfe2ff", "emoji": "⚡"},
-    ActionType.ENTER: {"color": "#198754", "bg": "#d1e7dd", "emoji": "🎯"},
-    ActionType.MANAGE: {"color": "#fd7e14", "bg": "#ffe5d0", "emoji": "📊"},
-    ActionType.EXIT: {"color": "#dc3545", "bg": "#f8d7da", "emoji": "🚪"},
-}
+# Only show decision panel if evaluation succeeded
+if evaluation:
+    st.markdown('<div style="background: linear-gradient(to bottom, #ffffff, #f8f9fa); padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin: 20px 0;">', unsafe_allow_html=True)
 
-style = action_styles.get(evaluation.action, action_styles[ActionType.STAND_DOWN])
+    # Color-code by action
+    action_styles = {
+        ActionType.STAND_DOWN: {"color": "#6c757d", "bg": "#f8f9fa", "emoji": "⏸️"},
+        ActionType.PREPARE: {"color": "#0d6efd", "bg": "#cfe2ff", "emoji": "⚡"},
+        ActionType.ENTER: {"color": "#198754", "bg": "#d1e7dd", "emoji": "🎯"},
+        ActionType.MANAGE: {"color": "#fd7e14", "bg": "#ffe5d0", "emoji": "📊"},
+        ActionType.EXIT: {"color": "#dc3545", "bg": "#f8d7da", "emoji": "🚪"},
+    }
+
+    style = action_styles.get(evaluation.action, action_styles[ActionType.STAND_DOWN])
 
 # Large prominent status banner
 st.markdown(f"""
@@ -1116,99 +1098,8 @@ except Exception as e:
     st.error(f"Chart error: {e}")
     logger.error(f"Chart error: {e}", exc_info=True)
 
-# Entry details if READY or ACTIVE - ENHANCED VISUAL
-if evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
-    st.divider()
-
-    # ====================================================================
-    # CRITICAL SAFETY CHECKS
-    # ====================================================================
-    st.markdown("### 🛡️ SAFETY CHECKLIST")
-
-    safety_checks = []
-
-    # Check 1: Data quality
-    is_data_safe, data_reason = st.session_state.data_quality_monitor.is_safe_to_trade(symbol)
-    safety_checks.append({
-        "check": "Data Quality",
-        "passed": is_data_safe,
-        "reason": data_reason
-    })
-
-    # Check 2: Market hours & liquidity
-    market_conditions = st.session_state.market_hours_monitor.get_market_conditions(symbol)
-    is_market_safe = market_conditions.is_safe_to_trade()
-    market_reason = market_conditions.get_status_text() if is_market_safe else "Markets closed or thin liquidity"
-    safety_checks.append({
-        "check": "Market Hours",
-        "passed": is_market_safe,
-        "reason": market_reason
-    })
-
-    # Check 3: Risk limits
-    is_risk_safe, risk_reason = st.session_state.risk_manager.is_trading_allowed()
-    safety_checks.append({
-        "check": "Risk Limits",
-        "passed": is_risk_safe,
-        "reason": risk_reason
-    })
-
-    # Display safety checks
-    all_checks_passed = all(check["passed"] for check in safety_checks)
-
-    if all_checks_passed:
-        safety_color = "#198754"
-        safety_bg = "#d1e7dd"
-        safety_status = "[SAFE TO TRADE]"
-    else:
-        safety_color = "#dc3545"
-        safety_bg = "#f8d7da"
-        safety_status = "[DO NOT TRADE - SAFETY BLOCK]"
-
-    safety_html = f"""
-    <div style="
-        background: {safety_bg};
-        border: 3px solid {safety_color};
-        border-radius: 12px;
-        padding: 20px;
-        margin: 16px 0;
-    ">
-        <div style="font-size: 20px; font-weight: bold; color: {safety_color}; margin-bottom: 16px;">
-            {safety_status}
-        </div>
-    """
-
-    for check in safety_checks:
-        check_icon = "[OK]" if check["passed"] else "[FAIL]"
-        check_color = "#198754" if check["passed"] else "#dc3545"
-        safety_html += f"""
-        <div style="
-            padding: 12px;
-            margin: 8px 0;
-            background: white;
-            border-left: 4px solid {check_color};
-            border-radius: 4px;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong style="color: {check_color};">{check_icon} {check["check"]}</strong>
-                </div>
-                <div style="color: #666; font-size: 14px;">
-                    {check["reason"]}
-                </div>
-            </div>
-        </div>
-        """
-
-    safety_html += "</div>"
-
-    st.markdown(safety_html, unsafe_allow_html=True)
-
-    # Block trade if safety checks fail
-    if not all_checks_passed:
-        st.error("Trading is BLOCKED due to failed safety checks. Do not enter positions until all checks pass.")
-        st.stop()
-
+# Entry details if READY or ACTIVE - STREAMLINED
+if evaluation and evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
     st.divider()
 
     # Prominent trade details card
@@ -1272,50 +1163,32 @@ if evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
     </div>
     """, unsafe_allow_html=True)
 
-# ========================================================================
-# ACTIVE POSITIONS PANEL (if any)
-# ========================================================================
-st.divider()
-st.subheader("📊 Active Positions")
-
-# Get active positions from risk manager
-active_positions = st.session_state.risk_manager.get_active_positions()
-
-if active_positions:
-    # Get current price
-    latest_bar = st.session_state.data_loader.get_latest_bar()
-    current_price = latest_bar['close'] if latest_bar else 0
-
-    # Render each position
-    for position in active_positions:
-        st.components.v1.html(
-            render_position_panel(
-                position,
-                current_price,
-                st.session_state.position_tracker,
-                strategy=position.get('strategy', 'UNKNOWN')
-            ),
-            height=400
-        )
-else:
-    # Show empty state
-    st.components.v1.html(
-        render_empty_position_panel(),
-        height=200
-    )
+# Active positions panel removed per user request
 
 # ============================================================================
-# EDGE CANDIDATES REVIEW & APPROVAL
+# STRATEGY DISCOVERY & EDGE CANDIDATES
 # ============================================================================
 st.divider()
 
-with st.expander("🔬 Edge Candidates (Research)", expanded=False):
+# Discovery Panel - Create new candidates
+with st.expander("🔬 Strategy Discovery (Backtest New Setups)", expanded=False):
+    try:
+        from discovery_ui import render_discovery_panel
+        render_discovery_panel()
+    except Exception as e:
+        st.error(f"Error loading Discovery panel: {e}")
+        logger.error(f"Discovery panel error: {e}", exc_info=True)
+
+st.divider()
+
+# Edge Candidates Review - Approve and promote
+with st.expander("🎯 Edge Candidates Review & Approval", expanded=True):
     try:
         from edge_candidates_ui import render_edge_candidates_panel
         render_edge_candidates_panel()
     except Exception as e:
         st.error(f"Error loading Edge Candidates panel: {e}")
-        logger.error(f"Edge Candidates panel error: {e}")
+        logger.error(f"Edge Candidates panel error: {e}", exc_info=True)
 
 # ============================================================================
 # CHART UPLOAD & VISION ANALYSIS
@@ -1469,7 +1342,8 @@ Last 5 rows:
 # AI CHAT - STREAMLINED AT BOTTOM OF PAGE
 # ============================================================================
 st.divider()
-st.title("🤖 AI Trading Assistant")
+st.title("🧠 AI Strategy Advisor")
+st.caption("💡 Chat about strategy ideas → Say 'test this' → Auto-execute backtest → Create edge candidates")
 
 # Check if AI is available
 if not st.session_state.ai_assistant.is_available():
@@ -1479,7 +1353,7 @@ if not st.session_state.ai_assistant.is_available():
 else:
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.success("✅ AI Assistant ready! Claude Sonnet 4.5 - Ask about strategies, calculations, or trade decisions.")
+        st.success("✅ Strategy Advisor ready! Claude Sonnet 4.5 - Discuss strategies, auto-execute backtests")
     with col2:
         if len(st.session_state.chat_history) > 0:
             st.metric("💾 Memory", f"{len(st.session_state.chat_history)} messages")
@@ -1530,11 +1404,20 @@ else:
     st.subheader("Ask a Question")
 
     user_input = st.text_area(
-        "Your question:",
+        "Your message:",
         key="ai_chat_input",
-        placeholder="Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
+        placeholder="Example: I'm thinking about testing MGC 2300 ORB with 1.5R and HALF stop, filter at 15.5% ATR. What do you think?",
         height=100
     )
+
+    # Initialize Strategy Advisor if not exists
+    if 'strategy_advisor' not in st.session_state:
+        try:
+            from strategy_advisor import StrategyAdvisor
+            st.session_state.strategy_advisor = StrategyAdvisor()
+        except Exception as e:
+            logger.error(f"Error initializing Strategy Advisor: {e}")
+            st.session_state.strategy_advisor = None
 
     col1, col2, col3 = st.columns([1, 1, 3])
 
@@ -1542,59 +1425,82 @@ else:
         if st.button("Send", type="primary", use_container_width=True):
             if user_input.strip():
                 with st.spinner("Thinking..."):
-                    # Get current context
-                    strategy_state = None
-                    if st.session_state.get('last_evaluation'):
-                        result = st.session_state.last_evaluation
-                        strategy_state = {
-                            'strategy': getattr(result, 'strategy_name', 'None'),
-                            'action': getattr(result, 'action', 'STAND_DOWN'),
-                            'reasons': getattr(result, 'reasons', []),
-                            'next_action': getattr(result, 'next_instruction', 'Wait'),
-                            'current_session': 'Unknown'
-                        }
+                    # Use Strategy Advisor if available, fallback to basic AI
+                    if st.session_state.strategy_advisor:
+                        # Enhanced chat with strategy discovery execution
+                        response, execution_result = st.session_state.strategy_advisor.chat_with_execution(
+                            user_message=user_input,
+                            conversation_history=st.session_state.chat_history,
+                            auto_execute=True  # Auto-execute when user says "test this"
+                        )
 
-                    # Get session levels (if available)
-                    session_levels = {}
-                    # TODO: Extract from data_loader if needed
+                        # Show execution notification if backtest was run
+                        if execution_result:
+                            if execution_result["success"]:
+                                if execution_result["candidate_id"]:
+                                    st.success(f"🎯 Edge Candidate #{execution_result['candidate_id']} created!")
+                                else:
+                                    st.info("Backtest completed but not profitable enough")
+                            else:
+                                st.warning("Backtest execution had issues")
+                    else:
+                        # Fallback to basic AI assistant
+                        try:
+                            # Get current context
+                            strategy_state = None
+                            if st.session_state.get('last_evaluation'):
+                                result = st.session_state.last_evaluation
+                                strategy_state = {
+                                    'strategy': getattr(result, 'strategy_name', 'None'),
+                                    'action': getattr(result, 'action', 'STAND_DOWN'),
+                                    'reasons': getattr(result, 'reasons', []),
+                                    'next_action': getattr(result, 'next_instruction', 'Wait'),
+                                    'current_session': 'Unknown'
+                                }
 
-                    # Get ORB data (if available)
-                    orb_data = {}
-                    # TODO: Extract from data_loader if needed
+                            # Get current price
+                            current_price = 0
+                            if st.session_state.data_loader:
+                                latest = st.session_state.data_loader.get_latest_bar()
+                                if latest:
+                                    current_price = latest.get('close', 0)
 
-                    # Get backtest stats
-                    backtest_stats = {
-                        'total_r': 1153.0,
-                        'win_rate': 57.2,
-                        'avg_r': 0.43,
-                        'total_trades': 2682,
-                        'best_orb': '1100',
-                        'best_orb_r': 0.49
-                    }
-
-                    # Get current price
-                    current_price = 0
-                    if st.session_state.data_loader:
-                        latest = st.session_state.data_loader.get_latest_bar()
-                        if latest:
-                            current_price = latest.get('close', 0)
-
-                    # Call AI
-                    response = st.session_state.ai_assistant.chat(
-                        user_message=user_input,
-                        conversation_history=st.session_state.chat_history,
-                        session_id=st.session_state.session_id,
-                        instrument=st.session_state.current_symbol,
-                        current_price=current_price,
-                        strategy_state=strategy_state,
-                        session_levels=session_levels,
-                        orb_data=orb_data,
-                        backtest_stats=backtest_stats
-                    )
+                            # Call basic AI
+                            response = st.session_state.ai_assistant.chat(
+                                user_message=user_input,
+                                conversation_history=st.session_state.chat_history,
+                                session_id=st.session_state.session_id,
+                                instrument=st.session_state.current_symbol,
+                                current_price=current_price,
+                                strategy_state=strategy_state,
+                                session_levels={},
+                                orb_data={},
+                                backtest_stats={}
+                            )
+                        except Exception as e:
+                            response = f"Error: {str(e)}"
+                            logger.error(f"AI chat error: {e}", exc_info=True)
 
                     # Update history
                     st.session_state.chat_history.append({"role": "user", "content": user_input})
                     st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+                    # Save to memory
+                    try:
+                        st.session_state.ai_memory.save_message(
+                            session_id=st.session_state.session_id,
+                            role="user",
+                            content=user_input,
+                            instrument=st.session_state.current_symbol
+                        )
+                        st.session_state.ai_memory.save_message(
+                            session_id=st.session_state.session_id,
+                            role="assistant",
+                            content=response,
+                            instrument=st.session_state.current_symbol
+                        )
+                    except:
+                        pass
 
                 # Rerun to show new messages
                 st.rerun()
@@ -1611,18 +1517,21 @@ else:
 
     with col1:
         st.markdown("""
-        **Trade Calculations:**
-        - "ORB is 2700-2706, direction LONG, calculate my stop and target"
-        - "I'm in a trade at 2705, ORB was 2700-2706, am I close to stop?"
-        - "What's the risk in dollars for a $10k account?"
+        **Strategy Discovery:**
+        - "I want to test MGC 2300 ORB with 1.5R and HALF stop"
+        - "Let's try 0030 ORB with 3.0R, filter at 11.2% ATR"
+        - "What if we use FULL stop on 1000 ORB instead?"
+
+        **Then say:** "test this" or "run it" to execute!
         """)
 
     with col2:
         st.markdown("""
         **Strategy Questions:**
-        - "Why is 00:30 ORB good?"
-        - "What's the best strategy right now?"
-        - "Should I trade 09:00 or 10:00 ORB?"
+        - "Why is 2300 ORB better than 0900?"
+        - "What's the best RR for night ORBs?"
+        - "Should I use FULL or HALF stop?"
+        - "Explain ORB size filters"
         """)
 
     # Show recent trade discussions from memory

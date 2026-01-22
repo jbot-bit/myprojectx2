@@ -77,7 +77,16 @@ class SetupDetector:
                     notes
                 FROM validated_setups
                 WHERE instrument = ?
-                ORDER BY avg_r DESC
+                ORDER BY
+                    CASE tier
+                        WHEN 'S+' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'A' THEN 3
+                        WHEN 'B' THEN 4
+                        WHEN 'C' THEN 5
+                        ELSE 6
+                    END,
+                    avg_r DESC
             """, [instrument]).df()
 
             return result.to_dict('records')

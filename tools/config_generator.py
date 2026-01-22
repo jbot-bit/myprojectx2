@@ -121,7 +121,8 @@ def load_instrument_configs(
                 orb_time,
                 rr,
                 sl_mode,
-                orb_size_filter
+                orb_size_filter,
+                tier
             FROM validated_setups
             WHERE instrument = ?
               AND orb_time NOT IN ('CASCADE', 'SINGLE_LIQ')
@@ -141,7 +142,7 @@ def load_instrument_configs(
         orb_configs = {}
         orb_size_filters = {}
 
-        for orb_time, rr, sl_mode, filter_val in results:
+        for orb_time, rr, sl_mode, filter_val, tier in results:
             # Skip if RR is None (means SKIP this ORB)
             if rr is None:
                 orb_configs[orb_time] = None
@@ -156,7 +157,8 @@ def load_instrument_configs(
             # Append this setup's config
             orb_configs[orb_time].append({
                 "rr": float(rr),
-                "sl_mode": sl_mode
+                "sl_mode": sl_mode,
+                "tier": tier if tier else "DAY"  # Default to DAY if not specified
             })
 
             # Append this setup's filter value

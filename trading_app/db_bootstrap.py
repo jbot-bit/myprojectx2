@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS validated_setups (
 );
 """
 
-<<<<<<< HEAD
 AI_CHAT_HISTORY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS ai_chat_history (
     id INTEGER PRIMARY KEY,
@@ -74,9 +73,6 @@ CREATE TABLE IF NOT EXISTS ai_chat_history (
 );
 """
 
-=======
->>>>>>> origin/snapshot/full-repo-2026-01-212222
-
 def ensure_required_tables(conn, statements: Iterable[str] | None = None) -> None:
     """
     Ensure required tables exist in the target database.
@@ -88,10 +84,7 @@ def ensure_required_tables(conn, statements: Iterable[str] | None = None) -> Non
     statements_to_run = list(statements) if statements is not None else [
         EDGE_CANDIDATES_SCHEMA,
         VALIDATED_SETUPS_SCHEMA,
-<<<<<<< HEAD
         AI_CHAT_HISTORY_SCHEMA,
-=======
->>>>>>> origin/snapshot/full-repo-2026-01-212222
     ]
 
     for statement in statements_to_run:
