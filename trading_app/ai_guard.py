@@ -18,9 +18,101 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from pathlib import Path
-from anthropic import Anthropic
 
 logger = logging.getLogger(__name__)
+
+
+def _get_llm_client():
+    """
+    Internal AI wrapper - SINGLE PLACE for provider selection.
+
+    Returns (client, provider_name) where provider is "openai" or "anthropic".
+    Default: OpenAI with gpt-4o-mini (cheaper).
+
+    Environment variables:
+    - AI_PROVIDER: "openai" (default) or "anthropic"
+    - OPENAI_API_KEY: Required if provider=openai
+    - ANTHROPIC_API_KEY: Required if provider=anthropic
+    """
+    provider = os.getenv("AI_PROVIDER", "openai").lower()
+
+    if provider == "openai":
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment. Set AI_PROVIDER=anthropic or add OPENAI_API_KEY to .env")
+
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            return client, "openai"
+        except ImportError:
+            raise ImportError("openai package not installed. Run: pip install openai")
+
+    elif provider == "anthropic":
+        api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment")
+
+        try:
+            from anthropic import Anthropic
+            client = Anthropic(api_key=api_key)
+            return client, "anthropic"
+        except ImportError:
+            raise ImportError("anthropic package not installed. Run: pip install anthropic")
+
+    else:
+        raise ValueError(f"Invalid AI_PROVIDER: {provider}. Must be 'openai' or 'anthropic'")
+
+
+def _call_llm(client, provider: str, system_prompt: str, messages: List[Dict], max_tokens: int = 2048, model: Optional[str] = None) -> str:
+    """
+    Internal LLM call wrapper - supports both OpenAI and Anthropic.
+
+    Args:
+        client: OpenAI or Anthropic client
+        provider: "openai" or "anthropic"
+        system_prompt: System prompt text
+        messages: List of message dicts with 'role' and 'content'
+        max_tokens: Max response tokens
+        model: Optional model override
+
+    Returns:
+        Response text
+    """
+    if provider == "openai":
+        # Default to gpt-4o-mini (cheap and fast)
+        if model is None:
+            model = "gpt-4o-mini"
+
+        # OpenAI format: system message is part of messages array
+        openai_messages = [{"role": "system", "content": system_prompt}]
+        openai_messages.extend(messages)
+
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            messages=openai_messages
+        )
+
+        return response.choices[0].message.content
+
+    elif provider == "anthropic":
+        # Default to Claude Sonnet 4.5
+        if model is None:
+            model = "claude-sonnet-4-5-20250929"
+
+        # Anthropic format: system prompt is separate parameter
+        response = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            messages=messages
+        )
+
+        return response.content[0].text
+
+    else:
+        raise ValueError(f"Invalid provider: {provider}")
 
 # LOCKED SYSTEM PROMPT PATH (must exist)
 LOCKED_PROMPT_PATH = Path(__file__).parent / "prompts" / "LOCKED_SYSTEM_PROMPT.txt"
@@ -517,17 +609,12 @@ def guarded_chat_answer(
         logger.error(f"AI Source Lock misconfigured: {e}")
         return "AI LOCK MISCONFIGURED: LOCKED_SYSTEM_PROMPT.txt not found. AI responses disabled."
 
-    # GATE 3: Get API key and client
-    api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
-    if not api_key:
-        logger.error("No ANTHROPIC_API_KEY found in environment")
-        return "AI assistant not available. Set ANTHROPIC_API_KEY in .env file."
-
+    # GATE 3: Get LLM client (OpenAI or Anthropic via wrapper)
     try:
-        client = Anthropic(api_key=api_key)
+        client, provider = _get_llm_client()
     except Exception as e:
-        logger.error(f"Error initializing Anthropic client: {e}")
-        return f"Error initializing AI client: {e}"
+        logger.error(f"Error initializing LLM client: {e}")
+        return f"AI assistant not available: {e}"
 
     # Format evidence pack for prompt
     evidence_text = _format_evidence_for_prompt(evidence_pack)
@@ -544,18 +631,17 @@ def guarded_chat_answer(
         messages.extend(conversation_history)
     messages.append({"role": "user", "content": question})
 
-    # Call Claude API (THE ONLY PLACE THIS HAPPENS)
+    # Call LLM API (THE ONLY PLACE THIS HAPPENS)
     try:
-        logger.info(f"Calling Claude API with evidence pack (instrument={evidence_pack.instrument}, status={evidence_pack.engine_eval.status})")
+        logger.info(f"Calling {provider.upper()} API with evidence pack (instrument={evidence_pack.instrument}, status={evidence_pack.engine_eval.status})")
 
-        response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=2048,
-            system=system_prompt,
-            messages=messages
+        assistant_message = _call_llm(
+            client=client,
+            provider=provider,
+            system_prompt=system_prompt,
+            messages=messages,
+            max_tokens=2048
         )
-
-        assistant_message = response.content[0].text
 
         # Log for audit trail
         logger.info(f"AI response generated successfully (length={len(assistant_message)} chars)")
@@ -611,17 +697,12 @@ def guarded_vision_answer(
         logger.error(f"AI Source Lock misconfigured: {e}")
         return "AI LOCK MISCONFIGURED: LOCKED_SYSTEM_PROMPT.txt not found. AI responses disabled."
 
-    # GATE 2: Get API key and client
-    api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
-    if not api_key:
-        logger.error("No ANTHROPIC_API_KEY found in environment")
-        return "AI assistant not available. Set ANTHROPIC_API_KEY in .env file."
-
+    # GATE 2: Get LLM client (OpenAI or Anthropic via wrapper)
     try:
-        client = Anthropic(api_key=api_key)
+        client, provider = _get_llm_client()
     except Exception as e:
-        logger.error(f"Error initializing Anthropic client: {e}")
-        return f"Error initializing AI client: {e}"
+        logger.error(f"Error initializing LLM client: {e}")
+        return f"AI assistant not available: {e}"
 
     # Build system prompt with constraints
     vision_constraints = """
@@ -649,36 +730,67 @@ RESPOND WITH ONLY VISUAL OBSERVATIONS FROM THE CHART.
 """
 
     # Build messages with image
-    messages = [{
-        "role": "user",
-        "content": [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": image_type,
-                    "data": image_data_base64,
+    if provider == "openai":
+        # OpenAI vision format
+        messages = [{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{image_type};base64,{image_data_base64}"
+                    }
                 },
-            },
-            {
-                "type": "text",
-                "text": user_prompt
-            }
-        ],
-    }]
+                {
+                    "type": "text",
+                    "text": user_prompt
+                }
+            ],
+        }]
+    else:
+        # Anthropic vision format
+        messages = [{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": image_type,
+                        "data": image_data_base64,
+                    },
+                },
+                {
+                    "type": "text",
+                    "text": user_prompt
+                }
+            ],
+        }]
 
-    # Call Claude Vision API (THE ONLY PLACE VISION CALLS HAPPEN)
+    # Call Vision API (THE ONLY PLACE VISION CALLS HAPPEN)
     try:
-        logger.info(f"Calling Claude Vision API (instrument={instrument}, visual_only={visual_only})")
+        logger.info(f"Calling {provider.upper()} Vision API (instrument={instrument}, visual_only={visual_only})")
 
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",  # Vision model
-            max_tokens=2000,
-            system=system_prompt,
-            messages=messages
-        )
-
-        assistant_message = response.content[0].text
+        if provider == "openai":
+            # OpenAI vision: use gpt-4o (supports vision)
+            assistant_message = _call_llm(
+                client=client,
+                provider=provider,
+                system_prompt=system_prompt,
+                messages=messages,
+                max_tokens=2000,
+                model="gpt-4o"
+            )
+        else:
+            # Anthropic vision: use Claude Sonnet 4
+            assistant_message = _call_llm(
+                client=client,
+                provider=provider,
+                system_prompt=system_prompt,
+                messages=messages,
+                max_tokens=2000,
+                model="claude-sonnet-4-20250514"
+            )
 
         # Log for audit trail
         logger.info(f"Vision analysis generated (length={len(assistant_message)} chars)")
@@ -689,6 +801,47 @@ RESPOND WITH ONLY VISUAL OBSERVATIONS FROM THE CHART.
         error_msg = f"Error with vision analysis: {str(e)}"
         logger.error(error_msg)
         return error_msg
+
+
+def simple_llm_call(system_prompt: str, user_message: str, max_tokens: int = 2048, model: Optional[str] = None) -> Optional[str]:
+    """
+    Simple LLM call for non-guarded use cases (strategy advisor, etc.).
+
+    This function:
+    - Routes through the AI wrapper (OpenAI or Anthropic)
+    - Does NOT enforce Evidence Pack validation
+    - Should be used ONLY for utility functions (parameter extraction, etc.)
+    - Trading recommendations MUST use guarded_chat_answer() instead
+
+    Args:
+        system_prompt: System prompt text
+        user_message: User's message
+        max_tokens: Max response tokens
+        model: Optional model override
+
+    Returns:
+        Response text OR None if error
+    """
+    try:
+        client, provider = _get_llm_client()
+        messages = [{"role": "user", "content": user_message}]
+
+        logger.info(f"Simple LLM call via {provider.upper()} (non-guarded)")
+
+        response = _call_llm(
+            client=client,
+            provider=provider,
+            system_prompt=system_prompt,
+            messages=messages,
+            max_tokens=max_tokens,
+            model=model
+        )
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Error in simple LLM call: {e}")
+        return None
 
 
 def assert_ai_lock_enabled():

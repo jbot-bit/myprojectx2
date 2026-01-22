@@ -19,17 +19,16 @@ Output:
 - Expected performance with filters
 """
 
-import duckdb
 import pandas as pd
 import numpy as np
 import pytz
 from pathlib import Path
 from datetime import datetime, time as dt_time, timedelta, date
 from typing import Dict, List, Optional, Tuple
+from trading_app.cloud_mode import get_database_connection
 
 # Paths
 ROOT = Path(__file__).parent
-DB_PATH = str(ROOT / "data" / "db" / "gold.db")
 OUTPUT_DIR = ROOT / "research"
 
 # Timezone
@@ -44,7 +43,7 @@ def load_orb_trades(orb_time: str, rr: float, sl_mode: str, window: str) -> pd.D
     Simulate and load all trades for a specific setup.
     Returns DataFrame with trade results and date info.
     """
-    conn = duckdb.connect(DB_PATH, read_only=True)
+    conn = get_database_connection()
 
     # Get date range
     start_date = date(2020, 12, 20)

@@ -121,8 +121,11 @@ def create_test_csv_data(end_time_str: str) -> bytes:
             low = 2642.0
             close = 2645.0
 
+        # Convert to Brisbane time for CSV output (TradingView format)
+        ts_brisbane_str = ts_brisbane.strftime('%Y-%m-%d %H:%M:%S')
+
         data.append({
-            'time': ts.strftime('%Y-%m-%d %H:%M:%S'),
+            'time': ts_brisbane_str,
             'open': open_price,
             'high': high,
             'low': low,

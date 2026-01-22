@@ -41,7 +41,8 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(test:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(git log:*)"
     ]
   }
 }

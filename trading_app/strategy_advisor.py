@@ -26,12 +26,13 @@ class StrategyAdvisor:
     """AI-powered strategy advisor with discovery execution"""
 
     def __init__(self):
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
+        from trading_app.ai_guard import simple_llm_call
+        self.llm_call = simple_llm_call
         self.discovery_engine = StrategyDiscovery()
 
     def extract_strategy_params(self, conversation: str) -> Optional[Dict]:
         """
-        Extract strategy parameters from conversation using Claude.
+        Extract strategy parameters from conversation using LLM.
 
         Returns dict with:
             - instrument: str
@@ -43,13 +44,7 @@ class StrategyAdvisor:
             - test_end: str (YYYY-MM-DD)
             - hypothesis: str
         """
-        if not self.api_key:
-            return None
-
         try:
-            from anthropic import Anthropic
-            client = Anthropic(api_key=self.api_key)
-
             extraction_prompt = f"""Analyze this trading strategy conversation and extract the key parameters if present.
 
 Conversation:
@@ -71,13 +66,16 @@ Example: {{"instrument": "MGC", "orb_time": "2300", "rr": 1.5, "sl_mode": "HALF"
 If the user hasn't specified enough parameters yet, return null.
 """
 
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=500,
-                messages=[{"role": "user", "content": extraction_prompt}]
+            content = self.llm_call(
+                system_prompt="You are a parameter extraction assistant. Return only valid JSON or null.",
+                user_message=extraction_prompt,
+                max_tokens=500
             )
 
-            content = response.content[0].text.strip()
+            if not content:
+                return None
+
+            content = content.strip()
 
             # Try to parse JSON
             if content.lower() == "null" or not content:
@@ -98,17 +96,11 @@ If the user hasn't specified enough parameters yet, return null.
 
     def organize_strategy_plan(self, conversation: str) -> Optional[str]:
         """
-        Organize the conversation into a clear strategy plan using Claude.
+        Organize the conversation into a clear strategy plan using LLM.
 
         Returns markdown summary of the strategy with all parameters.
         """
-        if not self.api_key:
-            return None
-
         try:
-            from anthropic import Anthropic
-            client = Anthropic(api_key=self.api_key)
-
             organize_prompt = f"""The user and I have been discussing a trading strategy idea. Please organize our conversation into a clear, structured plan.
 
 Conversation:
@@ -122,13 +114,13 @@ Create a clear markdown summary with these sections:
 
 Keep it concise and actionable. Use bullet points."""
 
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=1000,
-                messages=[{"role": "user", "content": organize_prompt}]
+            response = self.llm_call(
+                system_prompt="You are a strategy planning assistant. Organize trading strategy discussions into clear, structured plans.",
+                user_message=organize_prompt,
+                max_tokens=1000
             )
 
-            return response.content[0].text.strip()
+            return response
 
         except Exception as e:
             logger.error(f"Error organizing plan: {e}")
@@ -238,13 +230,7 @@ Try adjusting parameters:
         Returns:
             (assistant_response: str, execution_result: Optional[Dict])
         """
-        if not self.api_key:
-            return "AI assistant not configured. Add ANTHROPIC_API_KEY to .env", None
-
         try:
-            from anthropic import Anthropic
-            client = Anthropic(api_key=self.api_key)
-
             # Build conversation context
             full_conversation = "\n".join([
                 f"{msg['role'].upper()}: {msg['content']}"
@@ -286,16 +272,15 @@ Be concise, practical, and helpful. When discussing backtests, mention you can e
             if wants_to_execute:
                 system_prompt += "\n\nThe user wants to execute a backtest. Extract parameters and confirm before execution."
 
-            # Call Claude
-            messages = [{"role": "user", "content": system_prompt + "\n\n" + full_conversation}]
-
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2000,
-                messages=messages
+            # Call LLM
+            assistant_response = self.llm_call(
+                system_prompt=system_prompt,
+                user_message=full_conversation,
+                max_tokens=2000
             )
 
-            assistant_response = response.content[0].text.strip()
+            if not assistant_response:
+                return "AI assistant not available. Check AI_PROVIDER and API keys in .env", None
 
             # Check if we should auto-execute
             execution_result = None

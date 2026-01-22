@@ -1,0 +1,17 @@
+I want to switch away from Anthropic API calls inside trading_app/ because of cost and because tests enforce an AI source lock.
+
+Please remove any direct Anthropic client usage from trading_app/ and replace it with a single internal AI wrapper (one place only) that can choose a provider via config/env.
+
+Default provider should be OpenAI using a cheap model (start with gpt-4o-mini). Keep the interface the same for the rest of the app so nothing else needs to change.
+
+Keep the diff minimal, don’t add features, and make tests green:
+
+AI source lock failure
+
+hardcoded DB path in repo root
+
+ORB temporal consistency (09:10 BROKEN_UP)
+
+single canonical engine guard
+
+After fixes, rerun pytest -q and python test_app_sync.py and paste the final one-line results.
