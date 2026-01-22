@@ -1,0 +1,31 @@
+I want to take what we discovered in Phase 1A/1B and make it usable by the app without locking anything in.
+
+The goal is not to hard-code “best setups”, but to teach the app how to:
+– understand the current market state
+– know which edges become relevant in that state
+– surface both active setups and potential setups depending on what could happen next
+
+Please think in layers, not rules.
+
+I want a clean separation between:
+
+Market state detection (e.g. where price is relative to Asia range, session context, etc.)
+
+Edge knowledge (what we learned from research: families + conditions + stats)
+
+Live scanning / ranking (which edges are eligible right now or if X happens)
+
+Very important constraints:
+– Do not assume today’s dominant condition (asia_bias) is permanent. Treat it as just one state variable.
+– The system must be able to accept new conditions later without refactoring.
+– Keep execution logic untouched. This is selection and awareness, not trade mechanics.
+– Keep research outputs as data, not code logic.
+
+What I want you to do:
+– Propose (and implement if appropriate) a single edge catalog format derived from the Phase 1B CSV that the app can read at runtime.
+– Make the live system compute market state (e.g. ABOVE / BELOW / INSIDE Asia) and match edges whose conditions are satisfied.
+– If the market is in a neutral state, show “potential setups” that would become eligible if price moves above or below key levels.
+
+Keep the changes minimal and additive.
+Don’t over-optimize. Don’t hard-wire assumptions.
+Stop and show me the structure before going further.

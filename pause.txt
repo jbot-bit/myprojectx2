@@ -1,0 +1,16 @@
+Pause for a sec. I don’t want to lose or undo any research or backtests I’ve run today — nothing should be deleted or reverted.
+
+I’m realising Phase 1B can’t be “logical derivation” — I need it to be computed, but I also don’t want to brute-force thousands of full re-backtests or touch core app logic.
+
+Think like a researcher: reuse what already exists. If trade-level data can be reused or emitted once, do that. Phase 1B should come from filtering/subsetting real trade results, not inference.
+
+Also important: don’t assume 10AM logic applies to other ORBs. Different ORBs may only work under different conditions — I don’t want to miss those.
+
+For now, don’t change execution code, UI, or core architecture. Treat the app as read-only. Work in research mode only.
+
+I want a clean, computed Phase 1B that tells me:
+– which ORB families improve under which single conditions
+– where weak baselines flip positive
+– what doesn’t work so I can confidently ignore it
+
+Do whatever is simplest and safest to get there, then stop and show me the outputs before going further.

@@ -1,0 +1,21 @@
+Looks good. Two tweaks before you implement:
+
+Don’t treat research/ as runtime. Keep research outputs there, but generate a runtime catalog to something like trading_app/data/edge_catalog.json (or data/edge_catalog.json).
+
+Make the catalog support multiple conditions per edge (list of {type,value}) even if Phase 1B is single-condition right now.
+
+Then implement:
+
+a small script that builds the runtime catalog from research/phase1B_condition_edges.csv (+ baseline stats)
+
+market_state.py + edge_matcher.py as pure modules
+
+minimal integration that displays “Active edges” and “Potential edges” without changing execution logic.
+
+Keep diffs small and stop after it runs and shows the output.
+|
+Also: if you find you need to touch core engine/db/strategy logic, stop and ask me first. And add a simple on/off toggle (feature flag) so this new catalog-driven view can be disabled without removing code
+
+
+
+the last things we were working on was pause1.txt before i turned the computer off. did we push / save those changes? 

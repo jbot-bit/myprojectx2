@@ -1,0 +1,109 @@
+You are Claude Code running inside this repo.
+
+MODE:
+EDGE DISCOVERY — RESEARCH ONLY
+(Not execution, not “best trade now”)
+
+NON-NEGOTIABLE:
+- Do NOT refactor or reorganize the app.
+- Do NOT change execution logic, trade rules, or existing filter semantics.
+- Do NOT remove or weaken tests.
+- Make the smallest possible diff.
+- Prefer research scripts + saved outputs (CSV/MD) over UI work.
+
+GOAL:
+Find profitable ORB edges WITHOUT pigeon-holing.
+Use a dual-track discovery process so we find:
+(A) robust baseline edge families
+(B) edges that ONLY exist under specific conditions
+
+────────────────────────
+PHASE 0 — MAP (NO CODE)
+────────────────────────
+- Identify where ORB trades are generated
+- Where R / outcomes are computed
+- What pre-entry fields already exist
+- Where backtests or scans already live
+
+Print a short flow:
+Data → ORB trades → metrics → labels/filters → outputs
+
+STOP and wait for confirmation.
+
+────────────────────────
+PHASE 1A — TRACK A (FAMILY-FIRST)
+────────────────────────
+Definition of an edge family:
+- instrument
+- ORB time
+- direction
+- RR ≥ 2
+- stop mode (FULL / HALF)
+
+NO FILTERS.
+
+For every family compute:
+- total R
+- avg R
+- win rate
+- trades/year
+- max drawdown
+- stability across 3 equal time splits
+
+Rank and output TOP 20 families.
+Save results to research/.
+
+STOP and wait for confirmation.
+
+────────────────────────
+PHASE 1B — TRACK B (CONDITION-FIRST, CONTROLLED)
+────────────────────────
+Start with a FOUNDATION CONDITION SET (≤10 total):
+- Prefer conditions that already exist in DB/features.
+- You MAY add up to 2 new DERIVED PRE-ENTRY LABELS if needed.
+  Each new label must be:
+    - simple (bucket or flag)
+    - computable before entry
+    - justified explicitly
+
+Test ONE condition at a time:
+family + condition
+
+For each compute:
+- same metrics as Track A
+- deltas vs unfiltered family
+
+Keep candidates only if:
+- expectancy improves meaningfully
+- ≥40–50% of baseline trades remain
+- stability holds across time splits
+
+Output TOP 20 condition-dependent edges.
+Save to research/.
+
+STOP and wait for confirmation.
+
+────────────────────────
+PHASE 2 — MERGE
+────────────────────────
+Create a final candidate pool:
+- union of Track A winners
+- union of Track B winners
+
+Group results as:
+- family baseline
+- best single-condition upgrades
+
+DO NOT test multi-condition combos yet.
+
+────────────────────────
+PHASE 3 — DELIVER
+────────────────────────
+Provide:
+- CSV/MD outputs created
+- commands to rerun scans
+- a template showing how to add ONE new derived label safely
+- recommendation of 5 families to deep-mine next (including 2-condition combos later)
+
+IMPORTANT:
+If at any point assumptions are unclear, STOP and ASK.
