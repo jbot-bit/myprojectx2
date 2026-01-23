@@ -46,7 +46,18 @@
       "Bash(iconv:*)",
       "Bash(echo:*)",
       "Bash(CLOUD_MODE=0 python test_app_sync.py:*)",
-      "Bash(CLOUD_MODE=0 python:*)"
+      "Bash(CLOUD_MODE=0 python:*)",
+      "Bash(cmd.exe /c \"tasklist /FI \"\"PID eq 38884\"\"\")",
+      "Bash(cmd.exe /c \"taskkill /PID 38884 /F\")",
+      "Bash(Get-Process -Name streamlit -ErrorAction SilentlyContinue)",
+      "Bash(Stop-Process -Force)",
+      "Bash(Get-Process -Name python -ErrorAction SilentlyContinue)",
+      "Bash(Where-Object {$_Id -eq 38884})",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(Write-Host \"Processes cleared\")",
+      "Bash(powershell.exe -Command \"Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_Id -eq 38884} | Stop-Process -Force; Write-Host ''Process 38884 stopped''\")",
+      "Bash(powershell.exe -Command \"Get-Process streamlit -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host ''Streamlit stopped''\")",
+      "Bash(pip show:*)"
     ]
   }
 }

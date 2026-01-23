@@ -229,6 +229,24 @@ class SetupDetector:
             if con is None:
                 return [], []
 
+            # Check if Phase 1B columns exist (graceful fallback)
+            try:
+                col_check = con.execute("""
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_name = 'validated_setups' AND column_name = 'condition_type'
+                """).fetchone()
+                has_phase1b = col_check is not None
+            except:
+                has_phase1b = False
+
+            if not has_phase1b:
+                # Phase 1B columns don't exist - return all as baseline
+                logger.info("Phase 1B columns not found, returning all setups as baseline")
+                baseline_setups = self.get_all_validated_setups(instrument)
+                if orb_time:
+                    baseline_setups = [s for s in baseline_setups if s.get('orb_time') == orb_time]
+                return [], baseline_setups
+
             # Build WHERE clause for conditional setups
             where_conditions = ["instrument = ?"]
             params = [instrument]

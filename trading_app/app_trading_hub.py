@@ -644,8 +644,8 @@ if evaluation:
 
     style = action_styles.get(evaluation.action, action_styles[ActionType.STAND_DOWN])
 
-# Large prominent status banner
-st.markdown(f"""
+    # Large prominent status banner
+    st.markdown(f"""
 <div style="
     background: linear-gradient(135deg, {style['bg']} 0%, {style['bg']}dd 100%);
     border-left: 8px solid {style['color']};
@@ -667,19 +667,19 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Reasons and action in clean cards
-col1, col2 = st.columns([1, 1])
+    # Reasons and action in clean cards
+    col1, col2 = st.columns([1, 1])
 
-with col1:
-    st.markdown("### 💡 WHY")
-    reasons_html = ""
-    for reason in evaluation.reasons[:3]:
-        reasons_html += f'<div style="padding: 8px 0; border-left: 3px solid {style["color"]}; padding-left: 12px; margin: 4px 0;">• {reason}</div>'
-    st.markdown(f'<div style="font-size: 16px;">{reasons_html}</div>', unsafe_allow_html=True)
+    with col1:
+        st.markdown("### 💡 WHY")
+        reasons_html = ""
+        for reason in evaluation.reasons[:3]:
+            reasons_html += f'<div style="padding: 8px 0; border-left: 3px solid {style["color"]}; padding-left: 12px; margin: 4px 0;">• {reason}</div>'
+        st.markdown(f'<div style="font-size: 16px;">{reasons_html}</div>', unsafe_allow_html=True)
 
-with col2:
-    st.markdown("### 🎯 NEXT ACTION")
-    st.markdown(f"""
+    with col2:
+        st.markdown("### 🎯 NEXT ACTION")
+        st.markdown(f"""
     <div style="
         background: {style['color']}22;
         border: 2px solid {style['color']};
@@ -694,7 +694,9 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)  # Close decision panel container
+    st.markdown('</div>', unsafe_allow_html=True)  # Close decision panel container
+else:
+    st.warning("⚠️ Strategy evaluation unavailable. Check error above.")
 
 st.divider()
 

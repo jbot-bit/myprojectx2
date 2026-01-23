@@ -31,13 +31,22 @@ class TradingAIAssistant:
     """AI assistant for trading with live strategy context and persistent memory"""
 
     def __init__(self, memory_manager=None):
-        self.api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+        # Check for API key based on provider (defaults to OpenAI)
+        provider = os.getenv("AI_PROVIDER", "openai").lower()
+
+        if provider == "openai":
+            self.api_key = os.getenv("OPENAI_API_KEY")
+            provider_name = "OpenAI"
+        else:
+            self.api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+            provider_name = "Anthropic"
+
         if not self.api_key:
-            logger.warning("No ANTHROPIC_API_KEY found in environment. AI chat disabled.")
+            logger.warning(f"No {provider_name} API key found in environment. AI chat disabled.")
             self.is_configured = False
         else:
             self.is_configured = True
-            logger.info("AI assistant initialized (AI Source Lock enabled)")
+            logger.info(f"AI assistant initialized with {provider_name} (AI Source Lock enabled)")
 
             # Verify AI lock is properly configured
             try:

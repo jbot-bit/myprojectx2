@@ -15,12 +15,7 @@ import pandas as pd
 from datetime import date
 from typing import Dict, List, Optional
 
-# Relative imports for trading_app module
-try:
-    from .setup_detector import SetupDetector
-except ImportError:
-    # Fallback for direct execution
-    from setup_detector import SetupDetector
+from setup_detector import SetupDetector
 
 
 def render_market_state_panel(market_state: Dict) -> None:

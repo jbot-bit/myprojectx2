@@ -21,7 +21,15 @@ import os
 def get_database_path() -> Path:
     """Get database path from environment or default location."""
     db_path_str = os.getenv("DUCKDB_PATH", "data/db/gold.db")
-    return Path(db_path_str)
+    db_path = Path(db_path_str)
+
+    # If relative path and doesn't exist, try from repo root
+    if not db_path.is_absolute() and not db_path.exists():
+        # Get repo root (parent of trading_app)
+        repo_root = Path(__file__).parent.parent
+        db_path = repo_root / db_path_str
+
+    return db_path
 
 
 def get_asia_range(db_path: Optional[Path] = None, target_date: Optional[date] = None) -> Optional[Dict[str, float]]:

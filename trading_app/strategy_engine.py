@@ -70,7 +70,7 @@ def select_primary_setup(setups: list) -> dict:
 
     # Sort by score tuple (descending) and pick first
     scored_setups = [(score_setup(s), s) for s in setups]
-    scored_setups.sort(reverse=True)
+    scored_setups.sort(key=lambda x: x[0], reverse=True)
 
     selected = scored_setups[0][1]
 
