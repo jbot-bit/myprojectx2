@@ -1,0 +1,39 @@
+I want to clean this up and lock in truth:
+
+1) Delete v1 completely
+
+Remove pipeline/build_daily_features.py (v1) and any related v1 helpers/usages.
+
+Ensure nothing references daily_features anywhere.
+
+2) Lock the system to v2
+
+Make daily_features_v2 the only accepted features table.
+
+Add a hard guard: if any code tries to query/create/use daily_features (v1), it should fail loudly with a clear error.
+
+Update any scripts/tools that still point at v1 to use v2.
+
+3) Update docs (truth-first)
+
+Update README (and any “system guide” docs) to state plainly:
+
+daily_features_v2 is canonical
+
+timezone handling expectations (UTC storage, Brisbane-local session logic)
+
+ORB definition: 5-min window + 1-min close confirmation
+
+how to run audits/tests
+
+4) Verify integrity
+
+Run: pytest -q and python test_app_sync.py and paste the one-line summaries.
+
+5) Then research mode (more strategies)
+
+Run a new scan/backtest pass to discover additional profitable ORB families and single-condition improvements (don’t pigeon-hole to just Asia).
+
+Output a ranked CSV + a short MD report with: trades/year, avg R, total R, max DD, stability splits.
+
+Keep diffs minimal, no refactors unless needed for v1 removal + v2 lock.

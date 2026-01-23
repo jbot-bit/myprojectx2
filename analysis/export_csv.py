@@ -119,7 +119,7 @@ class CSVExporter:
                     orb_0030_mae,
                     orb_0030_mfe,
                     rsi_at_orb
-                FROM daily_features
+                FROM daily_features_v2
                 {where_clause}
                 ORDER BY date_local
             """
@@ -156,22 +156,22 @@ class CSVExporter:
                     -- Unpack all 6 ORBs into rows
                     SELECT 'ORB_0900' AS orb_time, orb_0900_break_dir AS direction, orb_0900_outcome AS outcome,
                            orb_0900_r_multiple AS r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_0900_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_0900_outcome IS NOT NULL
                     UNION ALL
                     SELECT 'ORB_1000', orb_1000_break_dir, orb_1000_outcome, orb_1000_r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_1000_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_1000_outcome IS NOT NULL
                     UNION ALL
                     SELECT 'ORB_1100', orb_1100_break_dir, orb_1100_outcome, orb_1100_r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_1100_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_1100_outcome IS NOT NULL
                     UNION ALL
                     SELECT 'ORB_1800', orb_1800_break_dir, orb_1800_outcome, orb_1800_r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_1800_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_1800_outcome IS NOT NULL
                     UNION ALL
                     SELECT 'ORB_2300', orb_2300_break_dir, orb_2300_outcome, orb_2300_r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_2300_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_2300_outcome IS NOT NULL
                     UNION ALL
                     SELECT 'ORB_0030', orb_0030_break_dir, orb_0030_outcome, orb_0030_r_multiple, asia_type, london_type, ny_type
-                    FROM daily_features WHERE orb_0030_outcome IS NOT NULL
+                    FROM daily_features_v2 WHERE orb_0030_outcome IS NOT NULL
                 )
                 SELECT
                     orb_time,
@@ -239,7 +239,7 @@ class CSVExporter:
                                    WHEN orb_2300_outcome = 'LOSS' THEN 0.0 END), 3) AS orb_2300_wr,
                     ROUND(AVG(CASE WHEN orb_0030_outcome = 'WIN' THEN 1.0
                                    WHEN orb_0030_outcome = 'LOSS' THEN 0.0 END), 3) AS orb_0030_wr
-                FROM daily_features
+                FROM daily_features_v2
                 GROUP BY asia_type, london_type, ny_type
                 HAVING COUNT(*) >= 3
                 ORDER BY occurrences DESC
@@ -315,7 +315,7 @@ def main():
 
     parser.add_argument(
         "export_type",
-        choices=["daily_features", "orb_performance", "session_stats", "bars_1m", "bars_5m"],
+        choices=["daily_features_v2", "orb_performance", "session_stats", "bars_1m", "bars_5m"],
         help="Type of data to export",
     )
 
@@ -358,7 +358,7 @@ def main():
     print(f"\nExporting {args.export_type}...")
 
     try:
-        if args.export_type == "daily_features":
+        if args.export_type == "daily_features_v2":
             output_path, row_count = exporter.export_daily_features(
                 days=args.days,
                 output_file=args.output,

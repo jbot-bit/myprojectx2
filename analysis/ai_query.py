@@ -173,7 +173,7 @@ class AIQueryEngine:
             """)
             return con, "daily_features_compat"
 
-        return con, "daily_features"
+        return con, "daily_features_v2"
 
     def _parse_orb_time(self, text: str) -> Optional[str]:
         """Extract ORB time from text"""

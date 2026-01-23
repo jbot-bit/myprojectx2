@@ -484,7 +484,7 @@ class LiveDataLoader:
 
     def get_today_atr(self) -> Optional[float]:
         """
-        Get ATR(20) for today from daily_features table.
+        Get ATR(20) for today from daily_features_v2 table.
 
         Returns:
             ATR value or None if not available

@@ -155,10 +155,9 @@ def render_intelligence_panel(
         current_atr=current_atr
     )
 
-    # Get validated setups for this instrument
-    from setup_detector import SetupDetector
-    detector = SetupDetector(db_path)
-    setups = detector.get_all_validated_setups(instrument)
+    # Get validated setups for this instrument (cached)
+    from cache_layer import get_cached_validated_setups
+    setups = get_cached_validated_setups(instrument)
 
     if not setups:
         st.warning(f"No validated setups found for {instrument}")

@@ -83,9 +83,15 @@ echo    ✓ PROJECT VALIDATED AND READY!
 echo ====================================================================
 echo.
 echo Your project is synchronized and safe to use.
-echo You can now work with Claude Code on this project.
+echo Launching Claude Code with project context...
 echo.
-echo To start Claude Code, run: claude
-echo (Or if already in Claude, you're all set!)
+echo CLAUDE.md will be automatically loaded as project authority.
 echo.
-pause
+echo Press any key to launch Claude Code...
+pause > nul
+echo.
+echo Starting Claude Code...
+echo.
+
+REM Launch Claude Code (it will auto-detect CLAUDE.md in the project root)
+claude

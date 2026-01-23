@@ -1,0 +1,42 @@
+I don’t trust that v1 or v2 is “correct” by default.
+I want the system to prove which one is accurate, and only then standardise.
+
+Please audit both daily_features v1 and v2 end-to-end:
+
+what inputs they use
+
+how ORBs are calculated
+
+what assumptions differ (timezones, session windows, pre-entry data, etc.)
+
+whether either version has lookahead, leakage, or silent inconsistencies
+
+I want a side-by-side comparison on the same sample of days:
+
+recompute ORBs directly from bars_1m
+
+compare against v1 outputs
+
+compare against v2 outputs
+
+highlight mismatches with concrete examples (timestamps, prices)
+
+If v2 is demonstrably better:
+
+mark v1 as deprecated
+
+ensure nothing in the app or research can silently use v1
+
+recompute any affected backtests or stats so everything is consistent
+
+If v1 is better or v2 has flaws:
+
+explain exactly why
+
+fix v2 or recommend a clean v3
+
+The priority is honesty and accuracy, not speed or convenience.
+Don’t refactor the app unless a mismatch is proven.
+Deliver a clear report showing evidence, not conclusions.
+
+Treat this like validating a financial system — if the data is wrong, everything else is useless.

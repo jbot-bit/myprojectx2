@@ -9,6 +9,25 @@ Gold (MGC) Data Pipeline for building a clean, replayable local dataset of Micro
 **Primary Focus**: 09:00, 10:00, 11:00 ORBs
 **Secondary**: 18:00, 23:00, 00:30 ORBs
 
+## ⚠️ CANONICAL FEATURES TABLE
+
+**`daily_features_v2` is the ONLY canonical features table.**
+
+- Table: `daily_features_v2`
+- Builder: `build_daily_features_v2.py`
+- Status: 100% accurate (verified by audit 2026-01-22)
+- Evidence: `DAILY_FEATURES_AUDIT_REPORT.md`
+
+**`daily_features` (v1) has been DELETED:**
+- Never existed in production
+- Zero rows (table never created)
+- Code file removed
+
+**Hard Guard Enforcement:**
+- Any code attempting to query `daily_features` will FAIL immediately
+- No warnings, no fallbacks - correctness > convenience
+- Error provides clear migration instructions
+
 ---
 
 ## ⚠️ CRITICAL REMINDER - ALWAYS DO THIS AFTER CHANGES
@@ -47,7 +66,7 @@ python backfill_databento_continuous.py YYYY-MM-DD YYYY-MM-DD
 - Stitches contracts into continuous series
 - Safe to interrupt and re-run (idempotent)
 - Can run forward or backward
-- Automatically calls `build_daily_features.py` after backfill
+- Automatically calls `build_daily_features_v2.py` after backfill
 
 **ProjectX (alternative source, not used for deep history):**
 ```bash
@@ -55,14 +74,14 @@ python backfill_range.py YYYY-MM-DD YYYY-MM-DD
 ```
 - Example: `python backfill_range.py 2025-12-01 2026-01-09`
 - Handles contract rollovers automatically
-- Also calls `build_daily_features.py` after backfill
+- Also calls `build_daily_features_v2.py` after backfill
 
 ### Feature Building
 
 ```bash
-python build_daily_features.py YYYY-MM-DD
+python build_daily_features_v2.py YYYY-MM-DD
 ```
-- Example: `python build_daily_features.py 2025-01-10`
+- Example: `python build_daily_features_v2.py 2025-01-10`
 - Automatically called by backfill scripts
 - Computes session stats (Asia/London/NY), ORBs, RSI
 - Safe to re-run (upserts)
@@ -74,7 +93,7 @@ python build_daily_features.py YYYY-MM-DD
 python init_db.py
 ```
 
-**Wipe all MGC data (bars_1m, bars_5m, daily_features):**
+**Wipe all MGC data (bars_1m, bars_5m, daily_features_v2):**
 ```bash
 python wipe_mgc.py
 ```
@@ -132,21 +151,23 @@ Source → Normalize → Store → Aggregate → Feature Build
 - Bucket = floor(epoch(ts)/300)*300
 - Fully rebuildable at any time
 
-**daily_features**:
+**daily_features_v2** (CANONICAL):
 - One row per local trading day
 - Primary key: `(date_local, instrument)` - ready for multi-instrument support
-  - Currently: instrument always = 'MGC'
+  - Currently: instrument = 'MGC', 'NQ', or 'MPL'
 - Session high/low (Asia 09:00-17:00, London 18:00-23:00, NY 23:00-02:00)
 - Pre-move travel (pre_ny_travel, pre_orb_travel)
-- **All 6 ORBs stored**: Each ORB has 4 columns (high, low, size, break_dir)
+- **All 6 ORBs stored**: Each ORB has 4+ columns (high, low, size, break_dir, outcome, r_multiple, mae, mfe)
   - `orb_0900_*`: 09:00-09:05 ORB
   - `orb_1000_*`: 10:00-10:05 ORB
   - `orb_1100_*`: 11:00-11:05 ORB
   - `orb_1800_*`: 18:00-18:05 ORB
   - `orb_2300_*`: 23:00-23:05 ORB
   - `orb_0030_*`: 00:30-00:35 ORB
-- RSI at ORB (RSI_LEN=14, computed for 00:30 ORB)
+- RSI at ORB (RSI_LEN=14)
+- ATR_20 for volatility context
 - Missing ORBs stored as NULL (no crashes on weekends/holidays)
+- **Zero lookahead**: Entry at first 1m CLOSE outside ORB (verified by audit)
 
 ### Time & Calendar Model (CRITICAL)
 

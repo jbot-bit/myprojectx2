@@ -93,7 +93,7 @@ class TradingJournal:
         try:
             result = con.execute("""
                 SELECT asia_type, london_type, ny_type
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE date_local = ?
             """, [trade_date]).fetchone()
 
@@ -467,7 +467,7 @@ class TradingJournal:
                     COUNT(*) as total,
                     SUM(CASE WHEN orb_{orb_time}_outcome = 'WIN' THEN 1 ELSE 0 END) as wins,
                     AVG(orb_{orb_time}_r_multiple) as avg_r
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE orb_{orb_time}_break_dir = ?
                   AND orb_{orb_time}_outcome IN ('WIN', 'LOSS')
             """, [direction]).fetchone()

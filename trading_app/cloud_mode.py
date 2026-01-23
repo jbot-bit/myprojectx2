@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import duckdb
 import logging
+from trading_app.db_guard import get_guarded_connection
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +124,9 @@ def get_database_connection(read_only: bool = True):
         _db_mode_logged = True
 
     if is_cloud:
-        # Cloud mode - use MotherDuck
-        return get_motherduck_connection(read_only=read_only)
+        # Cloud mode - use MotherDuck with guard
+        conn = get_motherduck_connection(read_only=read_only)
+        return get_guarded_connection(conn)
     else:
         # D) Local mode - use gold.db (always read/write to avoid mixed configs)
         app_dir = Path(__file__).parent
@@ -144,7 +146,9 @@ def get_database_connection(read_only: bool = True):
             logger.info(f"Created local DB file: {db_path}")
 
         # Always open in read/write to avoid mixed-config conflicts
-        return duckdb.connect(str(db_path), read_only=False)
+        # Wrap with guard to enforce daily_features_v2 canonical table
+        conn = duckdb.connect(str(db_path), read_only=False)
+        return get_guarded_connection(conn)
 
 
 def get_database_path() -> str:

@@ -129,7 +129,7 @@ class DailyUpdater:
         try:
             bars_1m = con.execute("SELECT COUNT(*) FROM bars_1m").fetchone()[0]
             bars_5m = con.execute("SELECT COUNT(*) FROM bars_5m").fetchone()[0]
-            daily_features = con.execute("SELECT COUNT(*) FROM daily_features").fetchone()[0]
+            daily_features = con.execute("SELECT COUNT(*) FROM daily_features_v2").fetchone()[0]
             daily_features_v2 = con.execute("SELECT COUNT(*) FROM daily_features_v2").fetchone()[0]
 
             last_1m = con.execute("""
@@ -139,7 +139,7 @@ class DailyUpdater:
 
             last_feature = con.execute("""
                 SELECT MAX(date_local)
-                FROM daily_features
+                FROM daily_features_v2
             """).fetchone()[0]
 
             last_feature_v2 = con.execute("""
@@ -150,7 +150,7 @@ class DailyUpdater:
             return {
                 "bars_1m": bars_1m,
                 "bars_5m": bars_5m,
-                "daily_features": daily_features,
+                "daily_features_v2": daily_features,
                 "daily_features_v2": daily_features_v2,
                 "last_1m_date": last_1m,
                 "last_feature_date": last_feature,
@@ -170,7 +170,7 @@ class DailyUpdater:
         counts = self.get_row_counts()
         print(f"  bars_1m: {counts['bars_1m']:,} rows (last: {counts['last_1m_date']})")
         print(f"  bars_5m: {counts['bars_5m']:,} rows")
-        print(f"  daily_features: {counts['daily_features']:,} rows (last: {counts['last_feature_date']})")
+        print(f"  daily_features: {counts['daily_features_v2']:,} rows (last: {counts['last_feature_date']})")
         print(f"  daily_features_v2: {counts['daily_features_v2']:,} rows (last: {counts['last_feature_v2_date']})")
 
         # Determine update range
@@ -203,7 +203,7 @@ class DailyUpdater:
             counts_after = self.get_row_counts()
             print(f"  bars_1m: {counts_after['bars_1m']:,} rows (last: {counts_after['last_1m_date']})")
             print(f"  bars_5m: {counts_after['bars_5m']:,} rows")
-            print(f"  daily_features: {counts_after['daily_features']:,} rows (last: {counts_after['last_feature_date']})")
+            print(f"  daily_features: {counts_after['daily_features_v2']:,} rows (last: {counts_after['last_feature_date']})")
             print(f"  daily_features_v2: {counts_after['daily_features_v2']:,} rows (last: {counts_after['last_feature_v2_date']})")
 
             rows_added = counts_after['bars_1m'] - counts['bars_1m']

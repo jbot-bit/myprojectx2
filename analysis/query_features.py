@@ -2,7 +2,7 @@ import duckdb
 
 con = duckdb.connect("gold.db")
 
-print("daily_features count:", con.execute("SELECT COUNT(*) FROM daily_features").fetchone())
+print("daily_features_v2 count:", con.execute("SELECT COUNT(*) FROM daily_features_v2").fetchone())
 
 # Query with new schema (v5) showing all 6 ORBs and session types
 q = """
@@ -21,7 +21,7 @@ SELECT date_local,
        orb_0030_break_dir,
        orb_0030_outcome,
        orb_0030_r_multiple
-FROM daily_features
+FROM daily_features_v2
 ORDER BY date_local DESC
 LIMIT 20;
 """

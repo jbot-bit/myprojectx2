@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from setup_detector import SetupDetector
 from config import MGC_ORB_CONFIGS, NQ_ORB_CONFIGS, MPL_ORB_CONFIGS
 from config import MGC_ORB_SIZE_FILTERS, NQ_ORB_SIZE_FILTERS, MPL_ORB_SIZE_FILTERS
+from cache_layer import get_cached_validated_setups
 
 
 class SetupStatus:
@@ -188,8 +189,8 @@ class SetupScanner:
         results = []
 
         for instrument in self.get_all_instruments():
-            # Get all setups for this instrument
-            setups = self.detector.get_all_validated_setups(instrument)
+            # Get all setups for this instrument (cached to reduce DB queries)
+            setups = get_cached_validated_setups(instrument)
 
             current_price = current_prices.get(instrument)
             atr = current_atrs.get(instrument)

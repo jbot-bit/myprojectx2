@@ -104,7 +104,7 @@ class DataAudit:
             tables = con.execute("SHOW TABLES").fetchall()
             table_names = [t[0] for t in tables]
 
-            required_tables = ['bars_1m', 'bars_5m', 'daily_features', 'validated_setups']
+            required_tables = ['bars_1m', 'bars_5m', 'daily_features_v2', 'validated_setups']
             for table in required_tables:
                 if table in table_names:
                     print_pass(f"Table '{table}' exists")
@@ -215,7 +215,7 @@ class DataAudit:
                     orb_0900_high, orb_0900_low, orb_0900_size,
                     orb_1000_high, orb_1000_low, orb_1000_size,
                     orb_1100_high, orb_1100_low, orb_1100_size
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE instrument = 'MGC'
                 AND date_local >= CURRENT_DATE - INTERVAL '7 days'
                 ORDER BY date_local DESC
@@ -290,7 +290,7 @@ class DataAudit:
                     asia_high, asia_low,
                     london_high, london_low,
                     ny_high, ny_low
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE instrument = 'MGC'
                 AND date_local >= CURRENT_DATE - INTERVAL '7 days'
                 ORDER BY date_local DESC
@@ -566,7 +566,7 @@ class DataAudit:
                     MIN(date_local) as first_date,
                     MAX(date_local) as last_date,
                     COUNT(*) as total_days
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE instrument = 'MGC'
             """).fetchdf()
 

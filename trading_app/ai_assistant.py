@@ -311,13 +311,13 @@ class TradingAIAssistant:
             evidence_pack = EvidencePack(
                 instrument=instrument,
                 timeframe="1m",  # Default timeframe
-                candle_tables_used=["bars_1m", "bars_5m", "daily_features", "validated_setups"],
+                candle_tables_used=["bars_1m", "bars_5m", "daily_features_v2", "validated_setups"],
                 ts_utc_start=datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0),  # Today
                 ts_utc_end=datetime.utcnow(),
                 setup_rows_used=setup_rows,
                 engine_eval=engine_eval,
                 facts=facts,
-                queries=["SELECT FROM validated_setups WHERE instrument=?", "SELECT FROM daily_features", "SELECT FROM bars_1m"],
+                queries=["SELECT FROM validated_setups WHERE instrument=?", "SELECT FROM daily_features_v2", "SELECT FROM bars_1m"],
                 db_mode=db_mode,
                 no_lookahead_check=no_lookahead_check,
                 strategy_ids=strategy_ids,

@@ -916,6 +916,49 @@ class StrategyEngine:
                 next_instruction=f"Stand down - wait for next ORB or smaller ORB setup"
             )
 
+        # Apply session range filters (london_filter, asia_filter)
+        london_filter = config.get("london_filter")
+        asia_filter = config.get("asia_filter")
+
+        if london_filter is not None or asia_filter is not None:
+            # Get session ranges
+            asia_hl = self._get_today_asia_levels()
+            london_hl = self._get_today_london_levels()
+
+            # Check London filter
+            if london_filter and london_hl:
+                london_range = london_hl["high"] - london_hl["low"]
+                if london_range > london_filter:
+                    return StrategyEvaluation(
+                        strategy_name=f"{orb_name}_ORB",
+                        priority=2 if config["tier"] == "NIGHT" else 4,
+                        state=StrategyState.INVALID,
+                        action=ActionType.STAND_DOWN,
+                        reasons=[
+                            f"LONDON RANGE FILTER REJECTED",
+                            f"London range ${london_range:.1f} > ${london_filter:.1f} limit",
+                            "Choppy London = whippy ORB breakout"
+                        ],
+                        next_instruction=f"Stand down - London too volatile for clean {orb_name} break"
+                    )
+
+            # Check Asia filter
+            if asia_filter and asia_hl:
+                asia_range = asia_hl["high"] - asia_hl["low"]
+                if asia_range > asia_filter:
+                    return StrategyEvaluation(
+                        strategy_name=f"{orb_name}_ORB",
+                        priority=2 if config["tier"] == "NIGHT" else 4,
+                        state=StrategyState.INVALID,
+                        action=ActionType.STAND_DOWN,
+                        reasons=[
+                            f"ASIA RANGE FILTER REJECTED",
+                            f"Asia range ${asia_range:.1f} > ${asia_filter:.1f} limit",
+                            "Choppy Asia = whippy ORB breakout"
+                        ],
+                        next_instruction=f"Stand down - Asia too volatile for clean {orb_name} break"
+                    )
+
         latest_bar = self.loader.get_latest_bar()
         if not latest_bar:
             return None

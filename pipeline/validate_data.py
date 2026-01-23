@@ -66,7 +66,7 @@ class DataValidator:
             # Get date range
             result = con.execute("""
                 SELECT MIN(date_local), MAX(date_local)
-                FROM daily_features
+                FROM daily_features_v2
             """).fetchone()
 
             if not result or not result[0]:
@@ -81,7 +81,7 @@ class DataValidator:
             existing_dates = set(
                 row[0] for row in con.execute("""
                     SELECT DISTINCT date_local
-                    FROM daily_features
+                    FROM daily_features_v2
                     ORDER BY date_local
                 """).fetchall()
             )
@@ -144,7 +144,7 @@ class DataValidator:
             # Check daily_features duplicates
             dupes_df = con.execute("""
                 SELECT date_local, instrument, COUNT(*) as cnt
-                FROM daily_features
+                FROM daily_features_v2
                 GROUP BY date_local, instrument
                 HAVING COUNT(*) > 1
                 LIMIT 10
@@ -342,7 +342,7 @@ class DataValidator:
             # Sample check: verify ORB size = high - low for recent data
             invalid_orbs = con.execute("""
                 SELECT COUNT(*)
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE (
                     (orb_0900_size IS NOT NULL AND
                      ABS(orb_0900_size - (orb_0900_high - orb_0900_low)) > 0.01)
@@ -367,7 +367,7 @@ class DataValidator:
             # Check for ORBs with outcome but no direction
             orphan_outcomes = con.execute("""
                 SELECT COUNT(*)
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE (
                     (orb_0900_outcome IS NOT NULL AND orb_0900_break_dir IS NULL)
                     OR
@@ -399,7 +399,7 @@ class DataValidator:
             # Sample: verify we have data during expected Asia hours
             result = con.execute("""
                 SELECT date_local
-                FROM daily_features
+                FROM daily_features_v2
                 WHERE asia_high IS NOT NULL
                   AND NOT EXISTS (
                     SELECT 1

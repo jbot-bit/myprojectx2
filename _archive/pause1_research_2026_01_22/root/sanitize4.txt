@@ -1,0 +1,19 @@
+Pause. Don’t add features or integrate anything yet.
+
+I’ve found a correctness problem in the Unicorn research scan.
+
+Different setups with different RR and SL modes are producing identical results (same trades, win rate, avg R, total R). That can’t be correct, so RR / SL aren’t actually being applied per setup, or a shared outcome is being reused.
+
+Please:
+
+Look at unicorn_backtest_runner.py
+
+Figure out why different parameters aren’t changing results
+
+Fix it in the smallest possible way so each setup truly uses its own RR and SL
+
+Keep this research-only. Don’t touch app execution logic.
+
+After fixing it, add a simple proof (log or assertion) showing that changing RR actually changes avg R.
+
+Don’t optimize or expand scans yet. Stop once correctness is confirmed.

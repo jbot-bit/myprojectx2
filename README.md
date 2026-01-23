@@ -56,9 +56,10 @@
 ### Critical Files & Their Purpose
 
 **Data Pipeline:**
-- `gold.db` - Main DuckDB database (bars_1m, bars_5m, daily_features, validated_setups)
+- `gold.db` - Main DuckDB database (bars_1m, bars_5m, **daily_features_v2**, validated_setups)
 - `backfill_databento_continuous.py` - Primary data source (Databento GLBX.MDP3)
-- `build_daily_features_v2.py` - Zero-lookahead feature builder (PRODUCTION)
+- `build_daily_features_v2.py` - Zero-lookahead feature builder (CANONICAL)
+- **⚠️ `daily_features` (v1) DELETED** - Never existed in production, use `daily_features_v2` only
 
 **Trading Apps:**
 - `trading_app/app_mobile.py` - Mobile Streamlit app (Streamlit Cloud deployment)
@@ -82,6 +83,8 @@
 ✅ **Mobile App:** Deployed to Streamlit Cloud, clear action statuses working
 
 ### Known Issues & Warnings
+
+⚠️ **HARD GUARD: `daily_features` (v1) DELETED** - Any code attempting to query or write to `daily_features` table will FAIL immediately with clear error message. Use `daily_features_v2` only. This is enforced at the database connection level (no warnings, no fallbacks). See `DAILY_FEATURES_AUDIT_REPORT.md` for evidence.
 
 ⚠️ **Gap Analysis Caveat:** 94.6% fill rate measures "eventual fill within 24 hours", NOT "immediate fill before stop-out". For trading, only <1.0 tick gaps have 74% immediate fill rate.
 

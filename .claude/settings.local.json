@@ -42,7 +42,11 @@
       "Bash(taskkill:*)",
       "Bash(test:*)",
       "Bash(where:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(iconv:*)",
+      "Bash(echo:*)",
+      "Bash(CLOUD_MODE=0 python test_app_sync.py:*)",
+      "Bash(CLOUD_MODE=0 python:*)"
     ]
   }
 }

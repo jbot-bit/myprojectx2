@@ -1,6 +1,8 @@
 import duckdb
+from pathlib import Path
 
-con = duckdb.connect("gold.db")
+DB_PATH = Path(__file__).parent.parent / "data" / "db" / "gold.db"
+con = duckdb.connect(str(DB_PATH))
 
 print("=== bars_1m schema ===")
 print(con.execute("PRAGMA table_info('bars_1m')").fetchall())
@@ -26,17 +28,17 @@ print(con.execute("PRAGMA table_info('bars_5m')").fetchall())
 print("\n=== bars_5m row count ===")
 print(con.execute("SELECT COUNT(*) FROM bars_5m").fetchone())
 
-print("\n=== daily_features schema ===")
-print(con.execute("PRAGMA table_info('daily_features')").fetchall())
+print("\n=== daily_features_v2 schema ===")
+print(con.execute("PRAGMA table_info('daily_features_v2')").fetchall())
 
-print("\n=== daily_features row count ===")
-print(con.execute("SELECT COUNT(*) FROM daily_features").fetchone())
+print("\n=== daily_features_v2 row count ===")
+print(con.execute("SELECT COUNT(*) FROM daily_features_v2").fetchone())
 
-print("\n=== daily_features duplicate check (date_local, instrument) ===")
+print("\n=== daily_features_v2 duplicate check (date_local, instrument) ===")
 dupes_df = con.execute(
     """
     SELECT date_local, instrument, COUNT(*) AS c
-    FROM daily_features
+    FROM daily_features_v2
     GROUP BY date_local, instrument
     HAVING c > 1
     LIMIT 20
@@ -47,7 +49,7 @@ print(dupes_df if dupes_df else "No duplicates found [OK]")
 print("\n=== date range in bars_1m ===")
 print(con.execute("SELECT MIN(ts_utc), MAX(ts_utc) FROM bars_1m").fetchone())
 
-print("\n=== date range in daily_features ===")
-print(con.execute("SELECT MIN(date_local), MAX(date_local) FROM daily_features").fetchone())
+print("\n=== date range in daily_features_v2 ===")
+print(con.execute("SELECT MIN(date_local), MAX(date_local) FROM daily_features_v2").fetchone())
 
 con.close()

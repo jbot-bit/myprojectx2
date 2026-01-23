@@ -396,6 +396,10 @@ with st.sidebar:
 
     st.divider()
 
+    # Cache controls for performance
+    from cache_layer import render_cache_controls
+    render_cache_controls()
+
     # Auto-refresh toggle
     auto_refresh = st.checkbox("Auto-refresh", value=True)
     if auto_refresh:

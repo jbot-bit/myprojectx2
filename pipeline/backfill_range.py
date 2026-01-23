@@ -362,17 +362,18 @@ def main():
     con.close()
     print(f"OK: bars_1m upsert total = {total}")
 
-    # Build daily_features (calls your existing script)
+    # Build daily_features_v2 (canonical)
+    # V1 deleted - never existed in production (see DAILY_FEATURES_AUDIT_REPORT.md)
     for d in daterange_inclusive(start_day, end_day):
-        cmd = [sys.executable, "build_daily_features.py", d.isoformat()]
+        cmd = [sys.executable, "build_daily_features_v2.py", d.isoformat()]
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode != 0:
-            print(f"FAIL daily_features {d}:")
+            print(f"FAIL daily_features_v2 {d}:")
             print(r.stdout)
             print(r.stderr)
             sys.exit(r.returncode)
         else:
-            print(f"OK: daily_features built for {d}")
+            print(f"OK: daily_features_v2 built for {d}")
 
     print("DONE")
 

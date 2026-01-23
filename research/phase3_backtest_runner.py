@@ -212,7 +212,7 @@ def backtest_candidate(
     years = days_in_period / 365.25
     annual_trades = total_trades / years if years > 0 else 0
 
-    # Time-in-trade stats (not available from daily_features, use placeholder)
+    # Time-in-trade stats (not available from daily_features_v2, use placeholder)
     avg_time_in_trade_hours = None  # Would need bars_1m analysis
 
     return {
