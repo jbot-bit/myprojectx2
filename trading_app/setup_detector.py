@@ -7,13 +7,18 @@ including rare high-probability ones like:
 - 2300 ORB with filters (72% WR)
 - 1000 RR=3.0 with 2 confirmations (29% WR but +0.158R)
 
+PHASE 1B INTEGRATION:
+Now supports conditional edges based on market state (asia_bias, etc.)
+Returns both active setups (conditions met NOW) and potential setups
+(conditions not yet met, but possible if market moves).
+
 The trading app calls this to check if current market conditions
 match ANY validated setup criteria.
 """
 
 import duckdb
-from typing import List, Dict, Optional
-from datetime import datetime
+from typing import List, Dict, Optional, Tuple
+from datetime import datetime, date
 import logging
 import pandas as pd
 from pathlib import Path
@@ -179,7 +184,10 @@ class SetupDetector:
                     avg_r,
                     annual_trades,
                     tier,
-                    notes
+                    notes,
+                    quality_multiplier,
+                    condition_type,
+                    condition_value
                 FROM validated_setups
                 WHERE instrument = ?
                   AND tier IN ('S+', 'S')
@@ -187,6 +195,215 @@ class SetupDetector:
             """, [instrument]).df()
 
             return result.to_dict('records')
+        except Exception as e:
+            logger.error(f"Error getting elite setups: {e}")
+            return []
+
+    def get_conditional_setups(
+        self,
+        instrument: str,
+        market_state: Dict[str, str],
+        orb_time: Optional[str] = None
+    ) -> Tuple[List[Dict], List[Dict]]:
+        """
+        Get setups matching current market conditions.
+
+        Args:
+            instrument: Instrument symbol (e.g., 'MGC')
+            market_state: Current market state from market_state.py
+                         e.g., {'asia_bias': 'ABOVE', 'asia_high': 2650.0, ...}
+            orb_time: Optional ORB time filter (e.g., '1000')
+
+        Returns:
+            Tuple of (active_setups, baseline_setups)
+            - active_setups: Conditional setups matching current state
+            - baseline_setups: Baseline setups (always available as fallback)
+
+        Example:
+            >>> state = {'asia_bias': 'ABOVE'}
+            >>> active, baseline = detector.get_conditional_setups('MGC', state, '1000')
+            >>> print(f"Active: {len(active)}, Baseline: {len(baseline)}")
+        """
+        try:
+            con = self._get_connection()
+            if con is None:
+                return [], []
+
+            # Build WHERE clause for conditional setups
+            where_conditions = ["instrument = ?"]
+            params = [instrument]
+
+            if orb_time:
+                where_conditions.append("orb_time = ?")
+                params.append(orb_time)
+
+            # Match conditions
+            condition_clauses = []
+            for cond_type, cond_value in market_state.items():
+                if cond_value and cond_value != 'UNKNOWN':
+                    condition_clauses.append(
+                        f"(condition_type = '{cond_type}' AND condition_value = '{cond_value}')"
+                    )
+
+            if condition_clauses:
+                where_conditions.append(f"({' OR '.join(condition_clauses)})")
+
+            # Query conditional setups
+            conditional_query = f"""
+                SELECT
+                    setup_id,
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    close_confirmations,
+                    win_rate,
+                    avg_r,
+                    tier,
+                    notes,
+                    quality_multiplier,
+                    condition_type,
+                    condition_value,
+                    trades,
+                    annual_trades
+                FROM validated_setups
+                WHERE {' AND '.join(where_conditions)}
+                  AND condition_type IS NOT NULL
+                ORDER BY
+                    CASE tier
+                        WHEN 'S+' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'A' THEN 3
+                        WHEN 'B' THEN 4
+                        WHEN 'C' THEN 5
+                        ELSE 6
+                    END,
+                    avg_r DESC
+            """
+
+            active_setups = con.execute(conditional_query, params).df().to_dict('records')
+
+            # Query baseline setups (fallback)
+            baseline_where = ["instrument = ?", "condition_type IS NULL"]
+            baseline_params = [instrument]
+
+            if orb_time:
+                baseline_where.append("orb_time = ?")
+                baseline_params.append(orb_time)
+
+            baseline_query = f"""
+                SELECT
+                    setup_id,
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    close_confirmations,
+                    win_rate,
+                    avg_r,
+                    tier,
+                    notes,
+                    quality_multiplier,
+                    trades,
+                    annual_trades
+                FROM validated_setups
+                WHERE {' AND '.join(baseline_where)}
+                ORDER BY
+                    CASE tier
+                        WHEN 'S+' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'A' THEN 3
+                        WHEN 'B' THEN 4
+                        WHEN 'C' THEN 5
+                        ELSE 6
+                    END,
+                    avg_r DESC
+            """
+
+            baseline_setups = con.execute(baseline_query, baseline_params).df().to_dict('records')
+
+            if active_setups:
+                logger.info(f"Found {len(active_setups)} conditional setups matching market state")
+            else:
+                logger.info(f"No conditional setups match current state, using {len(baseline_setups)} baseline setups")
+
+            return active_setups, baseline_setups
+
+        except Exception as e:
+            logger.error(f"Error getting conditional setups: {e}")
+            return [], []
+
+    def get_active_and_potential_setups(
+        self,
+        instrument: str,
+        current_price: float,
+        target_date: Optional[date] = None,
+        orb_time: Optional[str] = None
+    ) -> Dict[str, List[Dict]]:
+        """
+        Get active setups (conditions met NOW) and potential setups (if market moves).
+
+        Args:
+            instrument: Instrument symbol
+            current_price: Current market price
+            target_date: Date to evaluate (default: today)
+            orb_time: Optional ORB time filter
+
+        Returns:
+            Dict with keys:
+            - 'active': Setups matching current conditions
+            - 'baseline': Baseline setups (always available)
+            - 'potential': Setups that would activate if conditions change
+            - 'market_state': Current market state dict
+
+        Example:
+            >>> result = detector.get_active_and_potential_setups('MGC', 2650.5)
+            >>> print(f"Active: {len(result['active'])}")
+            >>> print(f"Market state: {result['market_state']['asia_bias']}")
+        """
+        try:
+            # Import market_state (lazy import to avoid circular dependencies)
+            from market_state import get_market_state, get_potential_states
+
+            # Get current market state
+            market_state = get_market_state(current_price, target_date=target_date)
+
+            # Get active and baseline setups
+            active_setups, baseline_setups = self.get_conditional_setups(
+                instrument, market_state, orb_time
+            )
+
+            # Get potential setups (what becomes active if conditions change)
+            potential_setups = []
+            if market_state['asia_high'] is not None:
+                potential_states = get_potential_states(
+                    current_price,
+                    market_state['asia_high'],
+                    market_state['asia_low']
+                )
+
+                for potential_condition, potential_value in potential_states.items():
+                    potential_market_state = {**market_state, 'asia_bias': potential_value}
+                    potential, _ = self.get_conditional_setups(
+                        instrument, potential_market_state, orb_time
+                    )
+                    for setup in potential:
+                        setup['becomes_active_if'] = potential_condition
+                        potential_setups.append(setup)
+
+            return {
+                'active': active_setups,
+                'baseline': baseline_setups,
+                'potential': potential_setups,
+                'market_state': market_state
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting active/potential setups: {e}")
+            return {
+                'active': [],
+                'baseline': [],
+                'potential': [],
+                'market_state': {'asia_bias': 'UNKNOWN'}
+            }
         except Exception as e:
             logger.error(f"Error getting elite setups: {e}")
             return []

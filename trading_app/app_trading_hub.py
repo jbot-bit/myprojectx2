@@ -1170,6 +1170,27 @@ if evaluation and evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
 # Active positions panel removed per user request
 
 # ============================================================================
+# CONDITIONAL EDGES - MARKET STATE & ACTIVE SETUPS
+# ============================================================================
+st.divider()
+
+with st.expander("🎯 Conditional Edges (Phase 1B)", expanded=True):
+    try:
+        from render_conditional_edges import render_conditional_edges_full
+
+        # Get current price from latest bar
+        if current_price > 0:
+            render_conditional_edges_full(
+                instrument=symbol,
+                current_price=current_price
+            )
+        else:
+            st.warning("⚠️ No price data available. Load data to see conditional edges.")
+    except Exception as e:
+        st.error(f"Error loading Conditional Edges: {e}")
+        logger.error(f"Conditional edges error: {e}", exc_info=True)
+
+# ============================================================================
 # STRATEGY DISCOVERY & EDGE CANDIDATES
 # ============================================================================
 st.divider()
