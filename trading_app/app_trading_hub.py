@@ -482,6 +482,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ========================================================================
+# SIMPLE MODE TOGGLE
+# ========================================================================
+col1, col2, col3 = st.columns([2, 1, 2])
+with col2:
+    if 'simple_mode' not in st.session_state:
+        st.session_state['simple_mode'] = True  # Default to simple
+
+    simple_mode = st.toggle("🎯 Simple Mode", value=st.session_state['simple_mode'],
+                           help="Clean, focused view showing only active ORB and what to do")
+    st.session_state['simple_mode'] = simple_mode
+
+st.divider()
+
 if not st.session_state.data_loader or not st.session_state.strategy_engine:
     # AUTO-INITIALIZE DATA (so user doesn't need to click button)
     st.info("🔄 Loading data... Please wait.")
@@ -624,6 +638,28 @@ except Exception as e:
     logger.error(f"Evaluation error: {e}", exc_info=True)
     # Don't stop - allow rest of app (including AI chat) to render
     evaluation = None
+
+# ========================================================================
+# SIMPLE MODE ROUTING
+# ========================================================================
+if st.session_state.get('simple_mode', True):
+    # SIMPLE MODE: Clean, focused UI
+    from simple_ui import render_simple_trading_view
+
+    render_simple_trading_view(
+        evaluation=evaluation,
+        current_price=current_price,
+        orb_data=None,  # Can enhance later with ORB details
+        ai_assistant=st.session_state.ai_assistant,
+        session_state=st.session_state
+    )
+
+    # Stop here - don't render complex UI below
+    st.stop()
+
+# ========================================================================
+# FULL MODE (below - only renders if simple_mode is False)
+# ========================================================================
 
 # ========================================================================
 # 🚦 DECISION PANEL - WHAT TO DO NOW (MOST IMPORTANT - ALWAYS VISIBLE)
@@ -1307,6 +1343,60 @@ Last 5 rows:
                                 st.text(csv_summary)
                                 st.info("💡 CSV ingestion into database coming soon. For now, use image uploads for AI analysis.")
 
+                                # Save CSV analysis to conversation memory
+                                if st.session_state.memory_manager:
+                                    try:
+                                        # Extract date range for context
+                                        date_range = None
+                                        if 'time' in df.columns:
+                                            try:
+                                                date_range = f"{df.iloc[0]['time']} to {df.iloc[-1]['time']}"
+                                            except:
+                                                pass
+
+                                        csv_context = {
+                                            "file_name": uploaded_file.name,
+                                            "file_type": "csv",
+                                            "row_count": len(df),
+                                            "columns": df.columns.tolist(),
+                                            "date_range": date_range,
+                                            "current_price": current_price if 'current_price' in locals() and current_price > 0 else None
+                                        }
+
+                                        st.session_state.memory_manager.save_message(
+                                            session_id=st.session_state.session_id,
+                                            role="user",
+                                            content=f"[Uploaded CSV file: {uploaded_file.name} ({len(df)} rows)]",
+                                            context_data=csv_context,
+                                            instrument=symbol,
+                                            tags=["upload", "csv", "data"]
+                                        )
+
+                                        st.session_state.memory_manager.save_message(
+                                            session_id=st.session_state.session_id,
+                                            role="assistant",
+                                            content=csv_summary,
+                                            context_data=csv_context,
+                                            instrument=symbol,
+                                            tags=["analysis", "csv", "data"]
+                                        )
+
+                                        # Update in-memory chat history
+                                        st.session_state.chat_history.append({
+                                            "role": "user",
+                                            "content": f"[CSV uploaded: {uploaded_file.name} ({len(df)} rows)]"
+                                        })
+                                        st.session_state.chat_history.append({
+                                            "role": "assistant",
+                                            "content": csv_summary
+                                        })
+
+                                        st.success("💾 CSV analysis saved to conversation")
+                                        logger.info(f"Saved CSV upload to memory: {uploaded_file.name}")
+                                    except Exception as mem_error:
+                                        logger.warning(f"Could not save CSV to memory: {mem_error}")
+                                        # Don't fail the analysis if memory save fails
+
                             except Exception as e:
                                 st.error(f"❌ Error analyzing CSV: {e}")
                                 logger.error(f"CSV analysis error: {e}", exc_info=True)
@@ -1357,6 +1447,65 @@ Last 5 rows:
                             if "raw_response" in analysis:
                                 with st.expander("📝 Full Analysis"):
                                     st.markdown(analysis['raw_response'])
+
+                            # Save to conversation memory
+                            if st.session_state.memory_manager and analysis:
+                                try:
+                                    # Build analysis summary
+                                    analysis_text = analysis.get('raw_response', '')
+                                    if not analysis_text:
+                                        # Build from components if no raw_response
+                                        parts = []
+                                        if 'pattern' in analysis:
+                                            parts.append(f"Pattern: {analysis['pattern']}")
+                                        if 'levels' in analysis:
+                                            parts.append(f"Levels: {', '.join(analysis['levels'])}")
+                                        if 'strategy' in analysis:
+                                            parts.append(f"Strategy: {analysis['strategy']}")
+                                        analysis_text = '\n'.join(parts)
+
+                                    # Save upload event
+                                    upload_context = {
+                                        "file_name": uploaded_file.name,
+                                        "file_type": "image",
+                                        "image_type": image_type,
+                                        "analysis_length": len(analysis_text),
+                                        "current_price": current_price if 'current_price' in locals() and current_price > 0 else None
+                                    }
+
+                                    st.session_state.memory_manager.save_message(
+                                        session_id=st.session_state.session_id,
+                                        role="user",
+                                        content=f"[Uploaded chart image: {uploaded_file.name}]",
+                                        context_data=upload_context,
+                                        instrument=symbol,
+                                        tags=["upload", "chart", "image"]
+                                    )
+
+                                    st.session_state.memory_manager.save_message(
+                                        session_id=st.session_state.session_id,
+                                        role="assistant",
+                                        content=analysis_text,
+                                        context_data=upload_context,
+                                        instrument=symbol,
+                                        tags=["analysis", "chart", "image"]
+                                    )
+
+                                    # Update in-memory chat history
+                                    st.session_state.chat_history.append({
+                                        "role": "user",
+                                        "content": f"[Chart uploaded: {uploaded_file.name}]"
+                                    })
+                                    st.session_state.chat_history.append({
+                                        "role": "assistant",
+                                        "content": analysis_text
+                                    })
+
+                                    st.success("💾 Chart analysis saved to conversation")
+                                    logger.info(f"Saved chart upload to memory: {uploaded_file.name}")
+                                except Exception as mem_error:
+                                    logger.warning(f"Could not save to memory: {mem_error}")
+                                    # Don't fail the analysis if memory save fails
 
                         else:
                             st.error("❌ Analysis failed. Check logs for details.")
@@ -1421,10 +1570,20 @@ else:
             st.info("Start a conversation! Ask me about strategies, risk calculations, or trade setups.")
         else:
             for msg in st.session_state.chat_history:
+                content = msg['content']
+
+                # Enhance upload messages with indicators
+                if "[Chart uploaded:" in content or "[Uploaded chart" in content:
+                    # Image upload indicator
+                    content = "📸 " + content
+                elif "[CSV uploaded:" in content or "[Uploaded CSV" in content:
+                    # CSV upload indicator
+                    content = "📊 " + content
+
                 if msg["role"] == "user":
-                    st.markdown(f"**You:** {msg['content']}")
+                    st.markdown(f"**You:** {content}")
                 else:
-                    st.markdown(f"**AI:** {msg['content']}")
+                    st.markdown(f"**AI:** {content}")
                     st.divider()
 
     # Chat input

@@ -264,6 +264,64 @@ class StrategyEngine:
         return fallback
 
     # ========================================================================
+    # HELPER: Active ORB Window Detection
+    # ========================================================================
+
+    def _get_active_orb_windows(self, current_time: datetime) -> List[str]:
+        """
+        Get list of ORB windows that should be evaluated right now.
+
+        An ORB window is "active" if:
+        - Current time >= ORB start time
+        - Current time < ORB expiration (start + 3 hours)
+
+        This fixes the bug where ORBs disappeared after their exact start hour.
+        Example: 2300 ORB is active from 23:00 to 02:00 (3 hour window)
+
+        Args:
+            current_time: Current local time
+
+        Returns:
+            List of ORB names (e.g., ["2300", "0030"]) currently in their active window
+        """
+        active_orbs = []
+        EXPIRATION_HOURS = 3  # ORB strategies valid for 3 hours after formation
+
+        for orb_time in ORB_TIMES:
+            orb_name = orb_time["name"]
+            orb_hour = orb_time["hour"]
+            orb_min = orb_time["min"]
+
+            # Calculate ORB start time (today)
+            orb_start = current_time.replace(
+                hour=orb_hour,
+                minute=orb_min,
+                second=0,
+                microsecond=0
+            )
+
+            # Handle overnight ORBs (00:30 is early morning but should be "today" if it's past midnight)
+            # Only adjust for ORBs that cross midnight boundary (23:00, 00:30)
+            if orb_hour <= 3 and current_time.hour >= 12:
+                # Early morning ORB (00:30-03:00), but current time is afternoon/evening
+                # The ORB hasn't happened yet today - it's "tomorrow"
+                orb_start = orb_start + timedelta(days=1)
+            elif orb_hour >= 18 and current_time.hour < 6:
+                # Evening ORB (18:00-23:00), but current time is early morning
+                # The ORB happened "yesterday"
+                orb_start = orb_start - timedelta(days=1)
+
+            # Calculate expiration time
+            orb_expiration = orb_start + timedelta(hours=EXPIRATION_HOURS)
+
+            # Check if we're in active window
+            if orb_start <= current_time < orb_expiration:
+                active_orbs.append(orb_name)
+                logger.debug(f"ORB {orb_name} active: started {orb_start.strftime('%H:%M')}, expires {orb_expiration.strftime('%H:%M')}")
+
+        return active_orbs
+
+    # ========================================================================
     # STRATEGY EVALUATORS (STUBS - FILL WITH REAL LOGIC)
     # ========================================================================
 
@@ -555,29 +613,29 @@ class StrategyEngine:
         Entry: First 1-minute close outside ORB (NOT ORB edge)
         Stop: HALF (ORB midpoint)
         Target: Entry + 1.0R
+
+        FIXED: Now uses active window detection (3-hour window per ORB)
+        instead of exact hour matching. Strategies persist and remain visible.
         """
         now_local = datetime.now(TZ_LOCAL)
-        current_hour = now_local.hour
-        current_min = now_local.minute
 
-        # Check 00:30 ORB (BEST ORB)
-        if current_hour == 0 and current_min >= 30:
-            orb_result = self._check_orb("0030")
-            if orb_result:
-                return orb_result
+        # Get active ORB windows (uses 3-hour expiration)
+        active_orbs = self._get_active_orb_windows(now_local)
 
-        # Check 23:00 ORB
-        if current_hour == 23:
-            orb_result = self._check_orb("2300")
-            if orb_result:
-                return orb_result
+        # Check night ORBs in priority order (0030 is higher priority)
+        night_orbs = ["0030", "2300"]
+        for orb_name in night_orbs:
+            if orb_name in active_orbs:
+                orb_result = self._check_orb(orb_name)
+                if orb_result:
+                    return orb_result
 
         return StrategyEvaluation(
             strategy_name="NIGHT_ORB",
             priority=2,
             state=StrategyState.INVALID,
             action=ActionType.STAND_DOWN,
-            reasons=["Outside night ORB windows (23:00, 00:30)"],
+            reasons=["Outside night ORB windows (23:00-02:00, 00:30-03:30)"],
             next_instruction="Wait for 23:00 or 00:30"
         )
 
@@ -734,14 +792,19 @@ class StrategyEngine:
         Evaluate Day ORB strategies (09:00, 10:00, 11:00).
 
         Validated edge: +0.27-0.34R avg, 64-66% freq (tertiary)
+
+        FIXED: Now uses active window detection (3-hour window per ORB)
+        instead of exact hour matching. Strategies persist and remain visible.
         """
         now_local = datetime.now(TZ_LOCAL)
-        current_hour = now_local.hour
 
-        # Check each day ORB
-        for orb_name in ["0900", "1000", "1100"]:
-            orb_hour = int(orb_name[:2])
-            if current_hour == orb_hour:
+        # Get active ORB windows (uses 3-hour expiration)
+        active_orbs = self._get_active_orb_windows(now_local)
+
+        # Check day ORBs in chronological order
+        day_orbs = ["0900", "1000", "1100"]
+        for orb_name in day_orbs:
+            if orb_name in active_orbs:
                 orb_result = self._check_orb(orb_name)
                 if orb_result:
                     return orb_result
@@ -751,7 +814,7 @@ class StrategyEngine:
             priority=4,
             state=StrategyState.INVALID,
             action=ActionType.STAND_DOWN,
-            reasons=["Outside day ORB windows"],
+            reasons=["Outside day ORB windows (09:00-12:00, 10:00-13:00, 11:00-14:00)"],
             next_instruction="Wait for 09:00, 10:00, or 11:00"
         )
 
@@ -869,8 +932,17 @@ class StrategyEngine:
         if not orb_time:
             return None
 
-        # Calculate ORB window
+        # Calculate ORB window (with overnight adjustment)
         orb_start = now.replace(hour=orb_time["hour"], minute=orb_time["min"], second=0, microsecond=0)
+
+        # Handle overnight ORBs (same logic as _get_active_orb_windows)
+        if orb_time["hour"] <= 3 and now.hour >= 12:
+            # Early morning ORB, but current time is afternoon/evening - ORB is tomorrow
+            orb_start = orb_start + timedelta(days=1)
+        elif orb_time["hour"] >= 18 and now.hour < 6:
+            # Evening ORB, but current time is early morning - ORB was yesterday
+            orb_start = orb_start - timedelta(days=1)
+
         orb_end = orb_start + timedelta(minutes=ORB_DURATION_MIN)
 
         # Are we in ORB formation window?
