@@ -51,6 +51,7 @@ from professional_ui import (
     render_countdown_timer,
     render_price_display
 )
+from chatbot_ui import render_chatbot_mode
 
 # Configure logging
 logging.basicConfig(
@@ -483,16 +484,21 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ========================================================================
-# SIMPLE MODE TOGGLE
+# VIEW MODE SELECTOR
 # ========================================================================
 col1, col2, col3 = st.columns([2, 1, 2])
 with col2:
-    if 'simple_mode' not in st.session_state:
-        st.session_state['simple_mode'] = True  # Default to simple
+    if 'view_mode' not in st.session_state:
+        st.session_state['view_mode'] = 'Chatbot'  # Default to chatbot mode
 
-    simple_mode = st.toggle("🎯 Simple Mode", value=st.session_state['simple_mode'],
-                           help="Clean, focused view showing only active ORB and what to do")
-    st.session_state['simple_mode'] = simple_mode
+    view_mode = st.selectbox(
+        "View Mode",
+        options=['Chatbot', 'Simple', 'Full'],
+        index=['Chatbot', 'Simple', 'Full'].index(st.session_state['view_mode']),
+        help="Chatbot: Minimal chat interface | Simple: Focused ORB view | Full: All features",
+        key="view_mode_select"
+    )
+    st.session_state['view_mode'] = view_mode
 
 st.divider()
 
@@ -640,25 +646,36 @@ except Exception as e:
     evaluation = None
 
 # ========================================================================
-# SIMPLE MODE ROUTING
+# VIEW MODE ROUTING
 # ========================================================================
-if st.session_state.get('simple_mode', True):
-    # SIMPLE MODE: Clean, focused UI
+view_mode = st.session_state.get('view_mode', 'Chatbot')
+
+if view_mode == 'Chatbot':
+    # CHATBOT MODE: Minimal chat interface with price/status
+    render_chatbot_mode(
+        evaluation=evaluation,
+        current_price=current_price,
+        data_loader=st.session_state.data_loader,
+        ai_assistant=st.session_state.ai_assistant,
+        session_state=st.session_state
+    )
+    st.stop()
+
+elif view_mode == 'Simple':
+    # SIMPLE MODE: Clean, focused ORB view
     from simple_ui import render_simple_trading_view
 
     render_simple_trading_view(
         evaluation=evaluation,
         current_price=current_price,
-        orb_data=None,  # Can enhance later with ORB details
+        orb_data=None,
         ai_assistant=st.session_state.ai_assistant,
         session_state=st.session_state
     )
-
-    # Stop here - don't render complex UI below
     st.stop()
 
 # ========================================================================
-# FULL MODE (below - only renders if simple_mode is False)
+# FULL MODE (below - only renders if view_mode is 'Full')
 # ========================================================================
 
 # ========================================================================
