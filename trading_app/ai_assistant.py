@@ -137,6 +137,99 @@ class TradingAIAssistant:
             logger.error(f"Error loading validated setups: {e}")
             return []
 
+    def _build_smart_context(
+        self,
+        instrument: str,
+        current_price: float,
+        strategy_state: Dict,
+        session_levels: Dict,
+        orb_data: Dict,
+        conversation_history: List[Dict],
+        user_question: str
+    ) -> List[str]:
+        """
+        Build smart context - only include NEW or RELEVANT information.
+
+        Rules:
+        1. Don't repeat facts from last 3 messages
+        2. Don't repeat facts visible in UI (price, status)
+        3. Only include facts relevant to user's question
+        4. Reference past conversation when helpful
+
+        This reduces token usage and makes AI responses less spammy.
+        """
+        facts = []
+
+        # Extract recent facts from last 3 messages
+        recent_facts = set()
+        for msg in conversation_history[-3:] if conversation_history else []:
+            if msg.get("role") == "assistant":
+                # Extract key facts from recent responses (basic heuristic)
+                content = msg.get("content", "")
+                if "Current price" in content or "$" in content:
+                    recent_facts.add("price")
+                if "Strategy status" in content or "ENTER" in content or "WAIT" in content:
+                    recent_facts.add("status")
+                if "Asia session" in content:
+                    recent_facts.add("asia")
+                if "London session" in content:
+                    recent_facts.add("london")
+                if "NY session" in content:
+                    recent_facts.add("ny")
+
+        # Only add instrument if NEW session (no recent messages)
+        if len(conversation_history) < 3:
+            facts.append(f"Instrument: {instrument}")
+
+        # Price: Only if significantly changed OR user asks about it
+        price_relevant = any(word in user_question.lower() for word in ['price', 'level', 'where', 'at', 'now'])
+        if (price_relevant or "price" not in recent_facts) and current_price > 0:
+            facts.append(f"Current price: ${current_price:.2f}")
+
+        # Strategy: Only if changed OR user asks about it
+        strategy_relevant = any(word in user_question.lower() for word in ['strategy', 'setup', 'trade', 'enter', 'exit', 'take'])
+        if strategy_relevant or "status" not in recent_facts:
+            status = strategy_state.get('action', 'STAND_DOWN')
+            facts.append(f"Strategy status: {status}")
+            facts.append(f"Strategy: {strategy_state.get('strategy', 'None')}")
+
+        # Session levels: Only if user asks about them OR not mentioned recently
+        session_relevant = any(word in user_question.lower() for word in ['asia', 'london', 'ny', 'session', 'range', 'high', 'low'])
+        if session_relevant and session_levels:
+            if 'asia_high' in session_levels and 'asia_low' in session_levels and "asia" not in recent_facts:
+                facts.append(f"Asia session: ${session_levels['asia_low']:.2f} - ${session_levels['asia_high']:.2f}")
+            if 'london_high' in session_levels and 'london_low' in session_levels and "london" not in recent_facts:
+                facts.append(f"London session: ${session_levels['london_low']:.2f} - ${session_levels['london_high']:.2f}")
+            if 'ny_high' in session_levels and 'ny_low' in session_levels and "ny" not in recent_facts:
+                facts.append(f"NY session: ${session_levels['ny_low']:.2f} - ${session_levels['ny_high']:.2f}")
+
+        # ORB data: Only if user asks about it OR breakout happening
+        orb_relevant = any(word in user_question.lower() for word in ['orb', '0900', '1000', '1100', '1800', '2300', '0030', 'breakout', 'break'])
+        if orb_relevant and orb_data:
+            for orb_name, orb_info in orb_data.items():
+                if isinstance(orb_info, dict) and 'low' in orb_info and 'high' in orb_info:
+                    facts.append(f"{orb_name}: ${orb_info['low']:.2f} - ${orb_info['high']:.2f} (size: {orb_info.get('size', 0):.2f})")
+
+        # Upload references: If user mentions "chart" or "upload"
+        if any(word in user_question.lower() for word in ['chart', 'upload', 'image', 'csv', 'file', 'that chart', 'the chart']):
+            # Find recent uploads in conversation history
+            for msg in reversed(conversation_history[-10:]) if conversation_history else []:
+                if msg.get("role") == "user" and "[Uploaded" in msg.get("content", ""):
+                    facts.append(f"Recent upload: {msg['content']}")
+                    break
+
+        # Conversation continuity: If user says "it" or "that" or "the trade", reference context
+        if any(word in user_question.lower() for word in ['it', 'that', 'this', 'the trade', 'the setup']):
+            # Get last assistant message
+            for msg in reversed(conversation_history) if conversation_history else []:
+                if msg.get("role") == "assistant":
+                    # Extract key point from last response (first line)
+                    last_point = msg.get("content", "").split("\n")[0][:100]
+                    facts.append(f"Continuing from: {last_point}...")
+                    break
+
+        return facts
+
     def _build_evidence_pack(
         self,
         instrument: str,
@@ -144,7 +237,8 @@ class TradingAIAssistant:
         current_price: float,
         session_levels: Dict,
         orb_data: Dict,
-        user_question: str = ""
+        user_question: str = "",
+        conversation_history: List[Dict] = None
     ) -> Optional[EvidencePack]:
         """
         Build EvidencePack from current context.
@@ -154,6 +248,7 @@ class TradingAIAssistant:
 
         Args:
             user_question: User's question text (used to detect chart analysis intent)
+            conversation_history: Recent chat messages (for smart context building)
         """
         try:
             # Load validated setups
@@ -183,26 +278,40 @@ class TradingAIAssistant:
                 reasons=strategy_state.get('reasons', [])
             )
 
-            # Build facts from current state
-            facts = []
-            facts.append(f"Instrument: {instrument}")
-            if current_price > 0:
-                facts.append(f"Current price: ${current_price:.2f}")
-            facts.append(f"Strategy status: {status}")
-            facts.append(f"Strategy: {engine_eval.strategy_name}")
+            # Build facts from current state using SMART CONTEXT
+            # This reduces token usage by not repeating visible/recent information
+            if conversation_history:
+                # Use smart context builder (Phase 2: AI Unification)
+                facts = self._build_smart_context(
+                    instrument=instrument,
+                    current_price=current_price,
+                    strategy_state=strategy_state,
+                    session_levels=session_levels,
+                    orb_data=orb_data,
+                    conversation_history=conversation_history,
+                    user_question=user_question
+                )
+            else:
+                # Fallback to full context if no conversation history (first message)
+                facts = []
+                facts.append(f"Instrument: {instrument}")
+                if current_price > 0:
+                    facts.append(f"Current price: ${current_price:.2f}")
+                facts.append(f"Strategy status: {status}")
+                facts.append(f"Strategy: {engine_eval.strategy_name}")
 
-            if session_levels:
-                if 'asia_high' in session_levels and 'asia_low' in session_levels:
-                    facts.append(f"Asia session: ${session_levels['asia_low']:.2f} - ${session_levels['asia_high']:.2f}")
-                if 'london_high' in session_levels and 'london_low' in session_levels:
-                    facts.append(f"London session: ${session_levels['london_low']:.2f} - ${session_levels['london_high']:.2f}")
-                if 'ny_high' in session_levels and 'ny_low' in session_levels:
-                    facts.append(f"NY session: ${session_levels['ny_low']:.2f} - ${session_levels['ny_high']:.2f}")
+                if session_levels:
+                    if 'asia_high' in session_levels and 'asia_low' in session_levels:
+                        facts.append(f"Asia session: ${session_levels['asia_low']:.2f} - ${session_levels['asia_high']:.2f}")
+                    if 'london_high' in session_levels and 'london_low' in session_levels:
+                        facts.append(f"London session: ${session_levels['london_low']:.2f} - ${session_levels['london_high']:.2f}")
+                    if 'ny_high' in session_levels and 'ny_low' in session_levels:
+                        facts.append(f"NY session: ${session_levels['ny_low']:.2f} - ${session_levels['ny_high']:.2f}")
 
-            if orb_data:
-                for orb_name, orb_info in orb_data.items():
-                    if isinstance(orb_info, dict) and 'low' in orb_info and 'high' in orb_info:
-                        facts.append(f"{orb_name}: ${orb_info['low']:.2f} - ${orb_info['high']:.2f} (size: {orb_info.get('size', 0):.2f})")
+                if orb_data:
+                    for orb_name, orb_info in orb_data.items():
+                        if isinstance(orb_info, dict) and 'low' in orb_info and 'high' in orb_info:
+                            facts.append(f"{orb_name}: ${orb_info['low']:.2f} - ${orb_info['high']:.2f} (size: {orb_info.get('size', 0):.2f})")
 
             # Detect db_mode (cloud-aware)
             from cloud_mode import is_cloud_deployment, get_database_connection
@@ -369,14 +478,15 @@ class TradingAIAssistant:
             return "AI assistant not available. Set ANTHROPIC_API_KEY in .env file."
 
         try:
-            # Build evidence pack from context
+            # Build evidence pack from context (with smart context for Phase 2)
             evidence_pack = self._build_evidence_pack(
                 instrument=instrument,
                 strategy_state=strategy_state or {},
                 current_price=current_price,
                 session_levels=session_levels or {},
                 orb_data=orb_data or {},
-                user_question=user_message  # Pass user question for chart detection
+                user_question=user_message,  # Pass user question for chart detection
+                conversation_history=conversation_history or []  # Phase 2: Smart context building
             )
 
             # Log evidence pack creation for audit
