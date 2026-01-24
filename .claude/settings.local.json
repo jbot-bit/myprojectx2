@@ -58,7 +58,8 @@
       "Bash(powershell.exe -Command \"Get-Process python -ErrorAction SilentlyContinue | Where-Object {$_Id -eq 38884} | Stop-Process -Force; Write-Host ''Process 38884 stopped''\")",
       "Bash(powershell.exe -Command \"Get-Process streamlit -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host ''Streamlit stopped''\")",
       "Bash(pip show:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(git grep:*)"
     ]
   }
 }
