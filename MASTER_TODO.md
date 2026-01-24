@@ -117,6 +117,79 @@ python test_app_sync.py
 
 ---
 
+## RESEARCH & EDGE IMPLEMENTATION 🔬 NEW
+
+### 4A. Implement Verified Edges (9 edges discovered)
+**Status**: Research COMPLETE (2026-01-24), awaiting implementation approval
+**Research File**: `research/RESEARCH_SESSION_COMPLETE_2026-01-24.md`
+**Impact**: 77%+ win rate possible with ELITE setups
+**Effort**: 2-3 days (phased implementation)
+**Risk**: LOW (research-backed, statistical validation)
+
+**Discovered Edges:**
+1. Direction Alignment (63% vs 33% WR) - TIER 1
+2. Low Vol Boost (75% WR) - TIER 1
+3. Liquidity Freshness (edge fades with time) - TIER 1
+4. Double Sweep Cascade (60% WR) - TIER 1
+5. Weekday Effect (58-73% WR) - TIER 2
+6. **ELITE Setup (77.1% WR)** - TIER S
+7. Low Vol + Cascade (63.8% WR) - TIER 2
+8. Wide Liquidity Levels (63-64% WR) - TIER 2
+9. **ORB Size Large (77.3% WR)** - TIER S
+
+**Phase 1: Core Implementation** (Day 1-2):
+- [ ] Review implementation proposal with user
+- [ ] Choose implementation approach (Option A, B, or C)
+- [ ] Add Edge #1 (Direction Alignment) to validated_setups
+- [ ] Update config.py to match
+- [ ] Run test_app_sync.py to verify synchronization
+- [ ] Test in app (display only, no real trades yet)
+
+**Phase 2: Volatility & Elite Setups** (Day 2-3):
+- [ ] Add volatility_tercile column to daily_features_v2
+- [ ] Implement Edge #2 (Low Vol Boost) filters
+- [ ] Add Edge #6 (ELITE Setup) entries to validated_setups
+- [ ] Test ELITE setup detection in app
+- [ ] Verify 77%+ win rate on historical data
+
+**Phase 3: Additional Edges** (Day 3-4):
+- [ ] Implement Edge #4 (Double Sweep Cascade) for 2300 ORB
+- [ ] Add Edge #9 (ORB Size Large) filters
+- [ ] Implement weekday preference (Edge #5)
+- [ ] Test all edges together
+
+**Phase 4: Database Enhancements** (Future):
+- [ ] Add proposed columns from DAILY_FEATURES_V2_COLUMNS_AND_PROPOSALS.md
+- [ ] Backfill historical data with new columns
+- [ ] Optimize queries for faster setup detection
+
+**Reference Files:**
+- `research/RESEARCH_SESSION_COMPLETE_2026-01-24.md` - Full research report
+- `research/LEGITIMATE_EDGES_CATALOG.md` - All 9 verified edges documented
+- `research/IMPLEMENTATION_PROPOSAL_DIRECTION_ALIGNMENT.md` - Implementation guide
+- `research/VERIFIED_EDGES_SESSION_2026-01-24.md` - Original 5 edges
+- `research/CONTINUE_ADVANCED_EDGE_TESTING.py` - Advanced testing script
+
+**Expected Performance:**
+- Conservative (Direction Alignment only): 60-65% WR, +0.25-0.30R
+- Moderate (+ Low Vol or Weekday): 70-75% WR, +0.40-0.50R
+- Aggressive (ELITE or Large ORB): 75-80% WR, +0.50-0.70R
+- Monthly return: +8.75R to +13.5R per contract (25-30 trades)
+
+**Validation:**
+```bash
+# After implementing Edge #1
+python test_app_sync.py  # Must pass
+python research/TEST_LIQUIDITY_PATTERNS_FROM_SCRATCH.py  # Verify 63% vs 33%
+
+# Check app displays correctly
+streamlit run trading_app/app_trading_hub.py
+# Navigate to date with L1_SWEEP_HIGH
+# Verify: ONLY shows UP setups (not DOWN)
+```
+
+---
+
 ## NICE TO HAVE (Backlog)
 
 ### 5. Documentation Updates 📝
