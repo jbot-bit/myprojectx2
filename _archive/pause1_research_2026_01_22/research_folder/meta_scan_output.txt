@@ -1,0 +1,24 @@
+================================================================================
+META-PARAMETER SCAN
+Finding optimal ORB window size and entry timing
+================================================================================
+
+Testing 144 combinations...
+  - ORB times: ['0900', '1000', '2300']
+  - ORB windows: [5, 10, 15, 30] minutes
+  - Entry confirmations: [1, 5] minute bars
+  - RR targets: [1.0, 3.0, 6.0]
+  - SL modes: ['HALF', 'FULL']
+
+[1/144] 0900_W5m_E1m_RR1.0_HALF... 523 trades | 52.8% WR | +0.055R
+[2/144] 0900_W5m_E1m_RR1.0_FULL... 523 trades | 48.8% WR | -0.024R
+[3/144] 0900_W5m_E1m_RR3.0_HALF... 523 trades | 22.4% WR | -0.105R
+[4/144] 0900_W5m_E1m_RR3.0_FULL... 523 trades | 24.3% WR | -0.050R
+[5/144] 0900_W5m_E1m_RR6.0_HALF... 523 trades | 14.9% WR | +0.039R
+[6/144] 0900_W5m_E1m_RR6.0_FULL... 523 trades | 15.1% WR | -0.012R
+[7/144] 0900_W5m_E5m_RR1.0_HALF... 523 trades | 42.4% WR | -0.151R
+[8/144] 0900_W5m_E5m_RR1.0_FULL... 523 trades | 44.6% WR | -0.108R
+[9/144] 0900_W5m_E5m_RR3.0_HALF... 523 trades | 17.8% WR | -0.289R
+[10/144] 0900_W5m_E5m_RR3.0_FULL... 523 trades | 23.3% WR | -0.094R
+[11/144] 0900_W5m_E5m_RR6.0_HALF... 523 trades | 9.2% WR | -0.363R
+[12/144] 0900_W5m_E5m_RR6.0_FULL... 

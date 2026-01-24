@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "databases": {
+    "main": "data/db/gold.db",
+    "cache": "live_data.db",
+    "allowed_locations": [
+      "data/db/gold.db",
+      "live_data.db",
+      "trades.db",
+      "trading_app.db"
+    ],
+    "forbidden_locations": [
+      "trading_app/*.db",
+      "trading_app/*.db.wal",
+      "scripts/*.db",
+      "scripts/*.db.wal"
+    ]
+  },
+  "database_tables": {
+    "persistent": [
+      "bars_1m",
+      "bars_5m",
+      "daily_features_v2",
+      "validated_setups",
+      "edge_candidates"
+    ],
+    "cache": [
+      "session_cache",
+      "feature_cache"
+    ]
+  },
+  "documentation": {
+    "schema": "docs/SCHEMA.md",
+    "trading_rules": "docs/TRADING_RULES.md",
+    "zero_lookahead": "docs/ZERO_LOOKAHEAD.md"
+  },
+  "entry_points": {
+    "mobile": "trading_app/app_mobile.py",
+    "desktop": "trading_app/app_trading_hub.py"
+  },
+  "connection_module": {
+    "canonical": "trading_app/cloud_mode.py"
+  },
+  "required_files": [
+    "trading_app/canonical.py",
+    "trading_app/cloud_mode.py",
+    "CANONICAL.json"
+  ]
+}

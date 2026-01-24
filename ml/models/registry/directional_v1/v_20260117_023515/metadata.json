@@ -1,0 +1,47 @@
+{
+  "model_name": "directional",
+  "model_type": "lightgbm",
+  "version": "v_20260117_023515",
+  "created_at": "2026-01-17T02:35:15.110897",
+  "target_info": {
+    "target_column": "orb_break_dir",
+    "target_type": "classification",
+    "classes": [
+      "UP",
+      "DOWN",
+      "NONE"
+    ],
+    "class_mapping": {
+      "UP": 0,
+      "DOWN": 1,
+      "NONE": 2
+    }
+  },
+  "feature_count": 58,
+  "metrics": {
+    "accuracy": 0.5,
+    "classification_report": "              precision    recall  f1-score   support\n\n          UP       0.55      0.62      0.58       343\n        DOWN       0.45      0.35      0.39       285\n        NONE       0.00      0.00      0.00         0\n\n    accuracy                           0.50       628\n   macro avg       0.33      0.32      0.33       628\nweighted avg       0.50      0.50      0.50       628\n",
+    "confusion_matrix": [
+      [
+        214,
+        123,
+        6
+      ],
+      [
+        177,
+        100,
+        8
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "class_labels": [
+      "UP",
+      "DOWN",
+      "NONE"
+    ]
+  }
+}

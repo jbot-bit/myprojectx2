@@ -1,0 +1,68 @@
+You are Claude Code running inside a local git repo.
+
+NON-NEGOTIABLE OPERATING RULES:
+- Do not assume repo root or paths. Discover them by running commands.
+- Do not connect to internet/DB at import time. Tests must run offline by default.
+- Do not “fix” by adding sys.path hacks anywhere in trading_app/, tests/, scripts/.
+- Make the smallest possible diff that fixes the issue.
+- After each change, run the exact verification commands and paste the final one-line summaries.
+
+STEP 0 — DISCOVER CONTEXT (must run these and paste outputs)
+1) pwd
+2) git rev-parse --show-toplevel
+3) git branch --show-current
+4) git log -1 --oneline
+5) ls (or dir on Windows)
+6) find the authority docs and list them:
+   - ls README* (or dir README*)
+   - ls docs (or dir docs)
+   - ls docs/archive (or dir docs/archive)
+7) Print which file is authority order, then obey it:
+   Authority order:
+   (1) README_MIGRATION.md if present at repo root
+   (2) README.md at repo root
+   (3) docs/archive/* are NOT authority (archive only)
+
+STEP 1 — REPRODUCE THE FAILURE (must run)
+- pytest -q
+Capture the stack trace and identify the FIRST import that triggers a DB/network call.
+
+EXPECTED CURRENT ROOT CAUSE:
+- trading_app/config.py imports tools/config_generator.load_instrument_configs at import time
+- config_generator.get_database_connection connects to MotherDuck during pytest collection
+This must be eliminated.
+
+STEP 2 — FIX DESIGN (must follow)
+Goal: ZERO DB/network at import time.
+Implement ONE of these patterns (choose best minimal diff):
+A) Lazy config loader:
+   - trading_app/config.py defines functions like get_instrument_configs(instrument)
+   - and only loads from DB when called at runtime, not at import.
+B) Offline/test fallback:
+   - if PYTEST_CURRENT_TEST is set OR OFFLINE_MODE=1 OR MOTHERDUCK_TOKEN missing:
+     return static configs from a local JSON/YAML in repo or embedded minimal defaults.
+   - tests must never attempt MotherDuck.
+C) Move DB config generation out of trading_app/config import path:
+   - tools/config_generator can still exist, but trading_app/config must not call it on import.
+
+HARD REQUIREMENT:
+- After fix, simply importing trading_app.config must not open DB connections.
+- “pytest -q” must complete without hanging even if CLOUD_MODE=1.
+
+STEP 3 — IMPLEMENT (do minimal diff)
+- Change trading_app/config.py and any direct callers (strategy_engine, tests) as required.
+- Ensure strategy_engine gets dict configs (no lists reaching UI). If configs are lists, resolve them at boundary.
+- If some tests truly require cloud DB, mark them and skip unless RUN_CLOUD_TESTS=1.
+
+STEP 4 — VERIFY (must run all and paste final summary lines)
+1) python -c "import trading_app.config; print('import ok')"
+2) pytest -q
+3) python test_app_sync.py
+4) python -c "from trading_app.backtest import engine; print(engine.__file__)"
+5) streamlit run app/streamlit_app.py --server.headless true (start only; then stop)
+
+STEP 5 — OUTPUT (must include)
+- Files changed (list)
+- Why each change was required (1-2 lines each)
+- Commands run + results (one-liners)
+- NO extra refactors.

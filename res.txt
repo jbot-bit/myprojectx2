@@ -1,0 +1,49 @@
+You are working inside an existing quantitative trading research codebase.
+
+Your task is research only, not production. Do not modify any live trading logic, validated strategies, configuration files, or apps.
+
+Goal: help me discover new statistically valid edges by adding derived research logic around session liquidity and ORB interactions.
+
+What I want you to do conceptually:
+
+Identify liquidity events (single-side sweep, dual-side sweep / cascade) relative to session highs/lows
+
+Determine when the liquidity was taken (before, during, or after an ORB window)
+
+Associate those liquidity events with subsequent ORB outcomes and direction
+
+Constraints (very important):
+
+Do NOT change database schemas or production tables
+
+Do NOT touch validated strategies or configs
+
+Treat this as an isolated research layer that can be thrown away
+
+Prefer derived labels in memory or temporary research outputs
+
+Keep logic deterministic, testable, and free of lookahead
+
+What I want as output:
+
+A clear conceptual breakdown of liquidity types and timing (plain English first)
+
+A suggested research workflow for testing these edges safely
+
+Optional: example pseudocode or high-level Python logic (not tightly coupled to any specific file structure)
+
+Guidance on how to rank and decide which edges are strong enough to promote later
+
+What I do NOT want:
+
+No assumptions about my file paths
+
+No large refactors
+
+No “let’s just add this to production” shortcuts
+
+No hard-coded constants unless justified
+
+Think like a senior quant researcher helping another researcher explore liquidity-driven conditional edges, not like someone shipping features.
+
+Ask clarifying questions only if absolutely necessary; otherwise proceed carefully and incrementally.

@@ -1,0 +1,320 @@
+{
+  "catalog_name": "Comprehensive ORB Strategy Catalog",
+  "version": "1.0",
+  "created_date": "2026-01-22",
+  "data_source": "daily_features_v2",
+  "base_config": {
+    "instrument": "MGC",
+    "orb_window_minutes": 5,
+    "entry_rule": "1m_close_confirm",
+    "scan_end_rule": "next_asia_open_0900",
+    "entry_mode": "1m"
+  },
+  "setups": [
+    {
+      "id": "MGC_0900_RR1.0_HALF_standard",
+      "name": "9am Conservative (9am Report Winner)",
+      "source": "9am_best_strategies_report.md",
+      "instrument": "MGC",
+      "orb_time": "0900",
+      "rr": 1.0,
+      "sl_mode": "HALF",
+      "scan_window": "standard",
+      "scan_start": "09:05",
+      "scan_end": "17:00",
+      "filters": {},
+      "notes": "Best 9am setup from comprehensive 5-year backtest. 52.9% WR, +31.7R total, 16min avg hold.",
+      "expected_performance": {
+        "trades_per_year": 103,
+        "win_rate": 52.9,
+        "avg_r": 0.061,
+        "total_r_5yr": 31.7,
+        "max_dd_r": 16.0
+      }
+    },
+    {
+      "id": "MGC_0900_RR8.0_HALF_extended",
+      "name": "9am Asymmetric",
+      "source": "9am_best_strategies_report.md",
+      "instrument": "MGC",
+      "orb_time": "0900",
+      "rr": 8.0,
+      "sl_mode": "HALF",
+      "scan_window": "extended",
+      "scan_start": "09:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "Asymmetric 9am setup. 11.7% WR, +30.3R total, rare big wins.",
+      "expected_performance": {
+        "trades_per_year": 103,
+        "win_rate": 11.7,
+        "avg_r": 0.058,
+        "total_r_5yr": 30.3,
+        "max_dd_r": 76.0
+      }
+    },
+    {
+      "id": "MGC_0900_RR6.0_FULL_extended",
+      "name": "9am Unicorn (CONFLICTS with 9am report)",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "0900",
+      "rr": 6.0,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "09:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "UNICORN doc says +51R/year, but 9am report says this tests NEGATIVE. NEEDS VERIFICATION.",
+      "expected_performance": {
+        "trades_per_year": 257,
+        "win_rate": 17.1,
+        "avg_r": 0.198,
+        "total_r_2yr": 102,
+        "conflict": "9am report shows this as negative"
+      }
+    },
+    {
+      "id": "MGC_1000_RR6.0_FULL_extended",
+      "name": "10am Winner (10am Report Best)",
+      "source": "10am_best_strategies_report.md",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "rr": 6.0,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "10:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "BEST 10am setup. 16.4% WR, +101.5R over 5 years. 3x better than 9am.",
+      "expected_performance": {
+        "trades_per_year": 103,
+        "win_rate": 16.4,
+        "avg_r": 0.194,
+        "total_r_5yr": 101.5,
+        "max_dd_r": 60.8
+      }
+    },
+    {
+      "id": "MGC_1000_RR6.0_FULL_standard",
+      "name": "10am Winner (Lower DD)",
+      "source": "10am_best_strategies_report.md",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "rr": 6.0,
+      "sl_mode": "FULL",
+      "scan_window": "standard",
+      "scan_start": "10:05",
+      "scan_end": "17:00",
+      "filters": {},
+      "notes": "Alternative 10am with 25% lower DD. 12.2% WR, +96.6R over 5 years.",
+      "expected_performance": {
+        "trades_per_year": 103,
+        "win_rate": 12.2,
+        "avg_r": 0.185,
+        "total_r_5yr": 96.6,
+        "max_dd_r": 48.2
+      }
+    },
+    {
+      "id": "MGC_1000_RR8.0_FULL_extended",
+      "name": "10am Asymmetric Unicorn",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "rr": 8.0,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "10:05",
+      "scan_end": "09:00_next",
+      "filters": {
+        "orb_size_max_ticks": 100
+      },
+      "notes": "UNICORN Crown Jewel. 15.3% WR, claimed +98R/year. Needs verification against 10am report.",
+      "expected_performance": {
+        "trades_per_year": 258,
+        "win_rate": 15.3,
+        "avg_r": 0.378,
+        "total_r_2yr": 195
+      }
+    },
+    {
+      "id": "MGC_1000_RR4.0_FULL_standard",
+      "name": "10am Conservative",
+      "source": "10am_best_strategies_report.md",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "rr": 4.0,
+      "sl_mode": "FULL",
+      "scan_window": "standard",
+      "scan_start": "10:05",
+      "scan_end": "17:00",
+      "filters": {},
+      "notes": "Higher WR 10am setup. 20.8% WR, +74.6R over 5 years.",
+      "expected_performance": {
+        "trades_per_year": 103,
+        "win_rate": 20.8,
+        "avg_r": 0.143,
+        "total_r_5yr": 74.6,
+        "max_dd_r": 41.6
+      }
+    },
+    {
+      "id": "MGC_1000_RR3.0_FULL_extended",
+      "name": "10am Balanced",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "1000",
+      "rr": 3.0,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "10:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "UNICORN alternative. 32.1% WR, +75R/year claimed.",
+      "expected_performance": {
+        "trades_per_year": 262,
+        "win_rate": 32.1,
+        "avg_r": 0.285,
+        "total_r_2yr": 149
+      }
+    },
+    {
+      "id": "MGC_1100_RR3.0_FULL_extended",
+      "name": "11am UNICORN",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "1100",
+      "rr": 3.0,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "11:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "Late Asia ORB. 30.4% WR, +56R/year claimed.",
+      "expected_performance": {
+        "trades_per_year": 260,
+        "win_rate": 30.4,
+        "avg_r": 0.215,
+        "total_r_2yr": 112
+      }
+    },
+    {
+      "id": "MGC_1800_RR1.5_FULL_extended",
+      "name": "London Open UNICORN",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "1800",
+      "rr": 1.5,
+      "sl_mode": "FULL",
+      "scan_window": "extended",
+      "scan_start": "18:05",
+      "scan_end": "09:00_next",
+      "filters": {},
+      "notes": "London session. 51.0% WR, +72R/year claimed. Captures NY moves.",
+      "expected_performance": {
+        "trades_per_year": 261,
+        "win_rate": 51.0,
+        "avg_r": 0.274,
+        "total_r_2yr": 143
+      }
+    },
+    {
+      "id": "MGC_2300_RR1.5_HALF_extended",
+      "name": "Night Session Champion",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "2300",
+      "rr": 1.5,
+      "sl_mode": "HALF",
+      "scan_window": "extended",
+      "scan_start": "23:05",
+      "scan_end": "09:00_next",
+      "filters": {
+        "orb_size_filter": 0.155,
+        "orb_size_filter_type": "atr_ratio_max"
+      },
+      "notes": "UNICORN Best Overall. 56.1% WR, +105R/year. High frequency bread & butter.",
+      "expected_performance": {
+        "trades_per_year": 261,
+        "win_rate": 56.1,
+        "avg_r": 0.403,
+        "total_r_2yr": 210
+      }
+    },
+    {
+      "id": "MGC_0030_RR3.0_HALF_extended",
+      "name": "NY Session Power",
+      "source": "UNICORN_SETUPS_CORRECTED.md",
+      "instrument": "MGC",
+      "orb_time": "0030",
+      "rr": 3.0,
+      "sl_mode": "HALF",
+      "scan_window": "extended",
+      "scan_start": "00:35",
+      "scan_end": "09:00_next",
+      "filters": {
+        "orb_size_filter": 0.112,
+        "orb_size_filter_type": "atr_ratio_max"
+      },
+      "notes": "NY cash session. 31.3% WR, +66R/year.",
+      "expected_performance": {
+        "trades_per_year": 260,
+        "win_rate": 31.3,
+        "avg_r": 0.254,
+        "total_r_2yr": 132
+      }
+    }
+  ],
+  "condition_filters": [
+    {
+      "name": "asia_bias_above",
+      "description": "Entry price is above Asia session midpoint",
+      "applies_to": ["0900", "1000", "1100"],
+      "impact": "Significantly improves winrate for UP direction trades"
+    },
+    {
+      "name": "asia_bias_below",
+      "description": "Entry price is below Asia session midpoint",
+      "applies_to": ["0900", "1000", "1100"],
+      "impact": "Significantly improves winrate for DOWN direction trades"
+    },
+    {
+      "name": "pre_orb_trend_bullish",
+      "description": "Price trending up before ORB formation",
+      "applies_to": ["all"],
+      "impact": "Modest improvement for LONG entries"
+    },
+    {
+      "name": "pre_orb_trend_bearish",
+      "description": "Price trending down before ORB formation",
+      "applies_to": ["all"],
+      "impact": "Modest improvement for SHORT entries"
+    },
+    {
+      "name": "orb_size_small",
+      "description": "ORB size is below median",
+      "applies_to": ["all"],
+      "impact": "Prevents exhaustion setups"
+    }
+  ],
+  "conflicts_to_resolve": [
+    {
+      "setup": "MGC 0900",
+      "conflict": "UNICORN says RR=6.0 FULL is +51R/year, but 9am report says it tests NEGATIVE",
+      "resolution_needed": "Run comprehensive backtest to determine which is correct"
+    },
+    {
+      "setup": "MGC 1000",
+      "conflict": "UNICORN says RR=8.0 FULL is best (+98R/year), 10am report says RR=6.0 FULL is best (+20R/year on 5yr data)",
+      "resolution_needed": "Both may be correct but on different timeframes. Verify both."
+    }
+  ],
+  "next_steps": [
+    "Run comprehensive backtest on all setups using daily_features_v2",
+    "Use canonical execution engine with zero-lookahead",
+    "Output ranked results by avg_r and total_r",
+    "Resolve conflicts between UNICORN doc and detailed reports",
+    "Test condition filters separately to measure impact"
+  ]
+}

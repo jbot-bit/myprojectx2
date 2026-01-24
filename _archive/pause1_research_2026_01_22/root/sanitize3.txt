@@ -1,0 +1,11 @@
+Step 1
+Take docs/UNICORN_SETUPS_CORRECTED.md and convert every setup into a structured config file (JSON preferred) that my research/backtest runner can consume.
+Each setup must include: instrument, orb_time, orb_window_minutes=5, entry_rule=1m_close_confirm, rr, sl_mode (FULL/HALF), scan_end_rule (next_asia_open_0900), and any filters (ATR caps, ORB size caps).
+Do not change strategy logic yet—just produce the catalog file and a short mapping table from markdown section → config id.
+
+Step 2
+Using the new unicorn catalog JSON, add a single research runner script that backtests every config and produces:
+research/unicorn_scan_results.csv and a short research/unicorn_scan_results.md ranking top setups.
+Use the canonical backtest engine and daily_features_v2.
+Keep it research-only (no app integration).
+Then run pytest -q and python test_app_sync.py and paste summaries.

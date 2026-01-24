@@ -1,0 +1,210 @@
+STEP 1.5 — GAP, PRE-OPEN, AND TRANSITION BEHAVIOR
+
+Goal:
+Turn “dead time” and session gaps into explicit, testable structures instead of ignoring them.
+
+1️⃣ First: Stop Treating Gaps as Empty
+
+Right now:
+
+You have hard session blocks
+
+Everything outside is implicitly ignored
+
+That’s a mistake.
+
+Action
+Create explicit transition windows instead of gaps.
+
+2️⃣ Define NEW Canonical Time Buckets (No Gaps)
+
+Do not change existing sessions yet.
+Add adjacent pre-open / transition buckets.
+
+Proposed Additions (UTC+10)
+
+PRE_ASIA
+
+07:00–09:00
+
+ASIA
+
+09:00–17:00
+
+ASIA→LONDON TRANSITION
+
+17:00–18:00
+
+LONDON
+
+18:00–23:00
+
+LONDON→NY TRANSITION
+
+22:00–23:00 (overlaps allowed)
+
+NY
+
+23:00–02:00
+
+NY→ASIA GAP
+
+02:00–07:00 (optional, likely thin)
+
+Key point
+
+These are analysis buckets, not trading sessions.
+
+ORBs stay exactly where they are.
+
+Confirm this structure before we go further.
+
+3️⃣ Gap Metrics to Compute (Very Concrete)
+
+For every transition window, compute:
+
+A. Range Metrics
+
+High
+
+Low
+
+Range (ticks)
+
+Range / ATR
+
+B. Directional Bias
+
+Net move (close − open)
+
+% up vs down closes
+
+Impulse direction
+
+C. Structural Events
+
+Sweep of prior session high?
+
+Sweep of prior session low?
+
+Inside prior session range? (yes/no)
+
+4️⃣ Specific Hypotheses to Test (Your Intuition, Formalized)
+H1 — Pre-London Compression → London Expansion
+
+Test:
+
+Small 17:00–18:00 range
+
+Then large 18:00 ORB follow-through
+
+Metric:
+
+London ORB Avg R conditioned on transition range size
+
+H2 — Pre-Asia Gap Predicts Asia ORB Direction
+
+This addresses your 09:00 concern directly.
+
+Define:
+
+Asia Gap = 09:00 open − last NY close
+
+Test:
+
+Gap up vs gap down
+
+Gap size buckets (small / medium / large)
+
+Impact on:
+
+09:00 ORB direction
+
+09:00 ORB win rate
+
+10:00 continuation
+
+H3 — Last Candle → First Candle Discontinuity
+
+Compute:
+
+Δ = first candle open − prior candle close
+
+Test:
+
+Does |Δ| > X ticks predict:
+
+False breaks?
+
+Trend days?
+
+Reversal days?
+
+This is not standard ORB logic — this is edge territory.
+
+5️⃣ Minimal Tests to Add NOW (Low Effort, High Signal)
+Test 1 — Gap Exists or Not
+SELECT
+  date,
+  asia_open - ny_close AS asia_gap
+FROM daily_features_v2_half;
+
+
+Bucket:
+
+Small: < 0.1 ATR
+
+Medium: 0.1–0.3 ATR
+
+Large: > 0.3 ATR
+
+Test 2 — Gap Direction vs ORB Direction
+SELECT
+  CASE
+    WHEN asia_gap > 0 THEN 'GAP_UP'
+    ELSE 'GAP_DOWN'
+  END AS gap_dir,
+  orb_0900_direction,
+  AVG(r_multiple)
+FROM v_orb_trades
+WHERE orb_time = '0900'
+GROUP BY 1,2;
+
+Test 3 — Transition Range vs ORB Quality
+SELECT
+  transition_range / atr_20 AS norm_range,
+  AVG(orb_1800_r_multiple)
+FROM daily_features_v2_half
+GROUP BY 1;
+
+6️⃣ IMPORTANT RULE (Do Not Skip)
+
+Transitions must obey zero-lookahead
+
+Allowed:
+
+Prior session close
+
+Transition window range
+
+Gap size
+
+Not allowed:
+
+Session labels from the session you’re about to trade
+
+Anything that completes after the ORB opens
+
+7️⃣ What This Unlocks If Valid
+
+If any of these test positive:
+
+New pre-ORB filters
+
+New size modifiers
+
+Possibly directional bias rules
+
+A reason to trade / skip ORBs before they form
+
+This is how systems evolve beyond “ORB boilerplate”.

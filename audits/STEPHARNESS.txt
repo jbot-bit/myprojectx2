@@ -1,0 +1,180 @@
+ATTACK TEST HARNESS (CORE)
+attack_runner.py
+from dataclasses import dataclass
+from typing import Callable, Dict
+import pandas as pd
+import numpy as np
+
+@dataclass
+class AttackResult:
+    name: str
+    avg_r: float
+    winrate: float
+    trades: int
+
+def run_attack(
+    name: str,
+    backtest_fn: Callable,
+    mutate_fn: Callable,
+    data: pd.DataFrame,
+    **kwargs
+) -> AttackResult:
+
+    attacked_data = mutate_fn(data.copy(), **kwargs)
+    trades = backtest_fn(attacked_data)
+
+    return AttackResult(
+        name=name,
+        avg_r=trades["r_multiple"].mean(),
+        winrate=(trades["outcome"] == "WIN").mean(),
+        trades=len(trades)
+    )
+
+ATTACK 1 — SLIPPAGE SHOCK
+attacks/slippage.py
+def slippage_attack(df, ticks=2, tick_size=0.1):
+    slip = ticks * tick_size
+
+    df["entry_price"] += np.random.choice(
+        [-slip, slip],
+        size=len(df)
+    )
+    df["stop_price"] += slip
+    df["target_price"] -= slip
+
+    return df
+
+
+Run
+
+run_attack(
+  "slippage_3_ticks",
+  backtest_fn,
+  slippage_attack,
+  data,
+  ticks=3
+)
+
+
+PASS
+
+Avg R > 0
+
+No sign flip
+
+ATTACK 2 — STOP-FIRST AMBIGUITY
+attacks/stop_first.py
+def stop_first_attack(df):
+    mask = df["hit_stop_and_target"] == True
+    df.loc[mask, "outcome"] = "LOSS"
+    df.loc[mask, "r_multiple"] = -1.0
+    return df
+
+
+PASS
+
+Edge degrades but stays positive
+
+ATTACK 3 — LATENCY / DELAYED ENTRY
+attacks/latency.py
+def latency_attack(df, delay_candles=1):
+    df["entry_index"] += delay_candles
+    df["entry_price"] = df["price_at_entry_index"]
+    return df
+
+
+Test with:
+
+delay_candles = 1
+
+delay_candles = 2
+
+ATTACK 4 — TRADE SKIP (OUTAGES / HUMAN ERROR)
+attacks/trade_skip.py
+def skip_attack(df, skip_pct=0.2):
+    mask = np.random.rand(len(df)) > skip_pct
+    return df[mask]
+
+
+Test:
+
+10%
+
+20%
+
+30%
+
+PASS
+
+Equity shape intact
+
+No single-trade dependency
+
+ATTACK 5 — SPREAD WIDENING / REJECTED FILLS
+attacks/spread.py
+def spread_attack(df, max_spread_ticks=4, tick_size=0.1):
+    spread = max_spread_ticks * tick_size
+
+    reject = np.random.rand(len(df)) < 0.15
+    df = df[~reject]
+
+    df["entry_price"] += spread
+    return df
+
+ATTACK 6 — PARTIAL DATA LOSS
+attacks/missing_bar.py
+def missing_bar_attack(df):
+    drop_idx = np.random.choice(df.index, size=int(0.05*len(df)), replace=False)
+    df = df.drop(drop_idx)
+
+    # force skip trades with incomplete ORB
+    df = df[df["orb_complete"] == True]
+    return df
+
+
+PASS
+
+Trades skipped safely
+
+No silent invalid ORBs
+
+RUN ALL ATTACKS
+run_all_attacks.py
+attacks = [
+  ("slip_1", slippage_attack, dict(ticks=1)),
+  ("slip_5", slippage_attack, dict(ticks=5)),
+  ("stop_first", stop_first_attack, {}),
+  ("latency_1", latency_attack, dict(delay_candles=1)),
+  ("skip_20", skip_attack, dict(skip_pct=0.2)),
+  ("spread", spread_attack, {}),
+]
+
+results = []
+for name, fn, kwargs in attacks:
+    res = run_attack(name, backtest_fn, fn, data, **kwargs)
+    results.append(res)
+
+print(pd.DataFrame([r.__dict__ for r in results]))
+
+REQUIRED OUTPUT TABLE
+
+You should end with:
+
+Attack	Avg R	Win%	Trades	Verdict
+Baseline	+0.48	58%	240	OK
+Slip 3	+0.31	55%	240	OK
+Stop-first	+0.19	53%	240	OK
+Latency +1	+0.22	54%	OK	
+Skip 20%	+0.41	57%	OK	
+Spread	+0.14	51%	BORDERLINE	
+STOP CONDITIONS (HARD FAIL)
+
+If any attack:
+
+flips expectancy negative
+
+explodes loss per trade
+
+depends on optimistic fills
+
+→ Strategy is not deployable

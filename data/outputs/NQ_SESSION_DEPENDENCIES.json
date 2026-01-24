@@ -1,0 +1,129 @@
+{
+  "session_correlations": {
+    "asia_london_correlation": {
+      "correlation": 0.5888466535967656,
+      "p_value": 3.331481153362346e-22,
+      "n": 223,
+      "significant": "True"
+    },
+    "asia_ny_correlation": {
+      "correlation": 0.4364285568512839,
+      "p_value": 8.733092541743048e-12,
+      "n": 223,
+      "significant": "True"
+    },
+    "london_ny_correlation": {
+      "correlation": 0.4768810290352343,
+      "p_value": 4.597164997335247e-14,
+      "n": 223,
+      "significant": "True"
+    }
+  },
+  "volatility_regime": {
+    "asia_low_regime": {
+      "n": 74,
+      "london_expansion_rate": 0.21621621621621623,
+      "london_avg_range": 97.22297297297297
+    },
+    "asia_high_regime": {
+      "n": 74,
+      "london_expansion_rate": 0.8108108108108109,
+      "london_avg_range": 223.0439189189189
+    },
+    "asia_mid_regime": {
+      "n": 75,
+      "london_expansion_rate": 0.48,
+      "london_avg_range": 134.3
+    },
+    "baseline": {
+      "n": 223,
+      "london_expansion_rate": 0.5022421524663677,
+      "london_avg_range": 151.445067264574
+    }
+  },
+  "orb_sequences": {
+    "0900_win_predicts_1800": {
+      "n": 118,
+      "baseline_1800_wr": 0.6143497757847534,
+      "conditional_1800_wr": 0.6271186440677966,
+      "improvement_pct": 2.078436224174192
+    },
+    "1000_win_predicts_1800": {
+      "n": 127,
+      "baseline_1800_wr": 0.6143497757847534,
+      "conditional_1800_wr": 0.6220472440944882,
+      "improvement_pct": 1.2529455715845752
+    },
+    "all_asia_win_predicts_1800": {
+      "n": 37,
+      "baseline_1800_wr": 0.6143497757847534,
+      "conditional_1800_wr": 0.7027027027027027,
+      "improvement_pct": 14.381534819491032
+    },
+    "1800_win_predicts_0030": {
+      "n": 137,
+      "baseline_0030_wr": 0.5964125560538116,
+      "conditional_0030_wr": 0.5547445255474452,
+      "improvement_pct": -6.986444212721578
+    }
+  },
+  "direction_continuation": {
+    "asia_up_to_1800": {
+      "n": 117,
+      "continuation_rate": 0.5726495726495726,
+      "baseline_rate": 0.5336322869955157,
+      "improvement_pct": 7.311642605760249
+    },
+    "asia_down_to_1800": {
+      "n": 105,
+      "continuation_rate": 0.5142857142857142,
+      "baseline_rate": 0.4663677130044843,
+      "improvement_pct": 10.27472527472526
+    }
+  },
+  "tradeable_edges": {
+    "edge1_0900_to_1800": {
+      "status": "WEAK",
+      "n": 118.0,
+      "wins": 74.0,
+      "losses": 44.0,
+      "win_rate": 0.6271186440677966,
+      "avg_r": 0.2542372881355932,
+      "baseline_wr": 0.6199095022624435,
+      "baseline_avg_r": 0.2398190045248869,
+      "improvement_wr": 1.1629345540022231,
+      "improvement_r": 6.012152222577543,
+      "is_n": 82,
+      "is_wr": 0.6097560975609756,
+      "is_avg_r": 0.21951219512195122,
+      "oos_n": 36,
+      "oos_wr": 0.6666666666666666,
+      "oos_avg_r": 0.3333333333333333,
+      "pass_tests": [
+        "BOTH_METRICS_BETTER",
+        "MIN_SAMPLE"
+      ]
+    },
+    "edge2_asia_up_to_1800": {
+      "status": "FAIL",
+      "n": 66.0,
+      "wins": 38.0,
+      "losses": 28.0,
+      "win_rate": 0.5757575757575758,
+      "avg_r": 0.15151515151515152,
+      "baseline_wr": 0.6199095022624435,
+      "baseline_avg_r": 0.2398190045248869,
+      "improvement_wr": -7.122318071223176,
+      "improvement_r": -36.8210405946255,
+      "is_n": 46,
+      "is_wr": 0.5217391304347826,
+      "is_avg_r": 0.043478260869565216,
+      "oos_n": 20,
+      "oos_wr": 0.7,
+      "oos_avg_r": 0.4,
+      "pass_tests": [
+        "MIN_SAMPLE"
+      ]
+    }
+  }
+}

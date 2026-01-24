@@ -1,0 +1,117 @@
+STEP 2.4 — Add Safe Feature-Time Assertions (Hard-Fail)
+1) Create a single “availability map” (source of truth)
+
+In your feature builder (e.g., build_daily_features_v2.py), define:
+
+ORB close times (when ORB size/high/low is known)
+
+Transition bucket end times
+
+Each feature’s “available_at” time
+
+from datetime import time
+
+ORB_CLOSE_TIME = {
+    "0900": time(9, 5),
+    "1000": time(10, 5),
+    "1100": time(11, 5),
+    "1800": time(18, 5),
+    "2300": time(23, 5),
+    "0030": time(0, 35),
+}
+
+FEATURE_AVAILABLE_AT = {
+    # Pre-open / transitions (available at window end)
+    "pre_asia_range": time(9, 0),
+    "asia_gap": time(9, 0),              # 09:00 open minus last close before
+    "transition_1700_1800_range": time(18, 0),
+
+    # ATR (available at day start if computed from prior days only)
+    "atr_20": time(0, 0),
+
+    # ORB-derived (available at ORB close)
+    "orb_0900_size": ORB_CLOSE_TIME["0900"],
+    "orb_1000_size": ORB_CLOSE_TIME["1000"],
+    "orb_1100_size": ORB_CLOSE_TIME["1100"],
+    "orb_1800_size": ORB_CLOSE_TIME["1800"],
+    "orb_2300_size": ORB_CLOSE_TIME["2300"],
+    "orb_0030_size": ORB_CLOSE_TIME["0030"],
+}
+
+
+Check: confirm you want the transition bucket names exactly like that (or you have a naming standard).
+
+2) Add a single assertion function (used everywhere)
+
+This enforces: feature must be computed from candles strictly before its availability time.
+
+import pandas as pd
+
+def assert_window_ends_before(feature_name: str, window_end: pd.Timestamp):
+    """Hard-fail if any feature uses candles after its declared availability."""
+    declared = FEATURE_AVAILABLE_AT.get(feature_name)
+    if declared is None:
+        raise AssertionError(f"Feature '{feature_name}' missing from FEATURE_AVAILABLE_AT")
+
+    declared_ts = window_end.replace(
+        hour=declared.hour, minute=declared.minute, second=0, microsecond=0
+    )
+
+    if window_end > declared_ts:
+        raise AssertionError(
+            f"[LOOKAHEAD] {feature_name}: window_end={window_end} exceeds declared_available_at={declared_ts}"
+        )
+
+
+How to use it:
+
+whenever you compute a feature from a candle slice, you know the slice end time → assert it
+
+3) Wrap every feature computation with the assertion
+
+Example for transition range (17:00–18:00):
+
+# candles: df_1m for that date (already tz-local)
+win = df_1m[(df_1m["t"].dt.time >= time(17,0)) & (df_1m["t"].dt.time < time(18,0))]
+
+window_end = win["t"].max()  # last candle timestamp used
+assert_window_ends_before("transition_1700_1800_range", window_end)
+
+transition_range = win["high"].max() - win["low"].min()
+
+
+Example for ORB size (09:00 ORB = 09:00–09:05):
+
+orb = df_1m[(df_1m["t"].dt.time >= time(9,0)) & (df_1m["t"].dt.time < time(9,5))]
+window_end = orb["t"].max()
+assert_window_ends_before("orb_0900_size", window_end)
+
+orb_size = orb["high"].max() - orb["low"].min()
+
+4) Add “strategy usage assertions” (prevents misuse later)
+
+Separate from build-time, enforce at strategy-time:
+
+STRATEGY_CAN_USE = {
+  "0900": {"pre_asia_range","asia_gap","atr_20","orb_0900_size"},
+  "1000": {"pre_asia_range","asia_gap","atr_20","orb_1000_size","orb_0900_size"},
+  "1800": {"atr_20","transition_1700_1800_range","orb_1800_size"},
+  # etc...
+}
+
+def assert_strategy_feature_allowed(orb_name: str, feature: str):
+    if feature not in STRATEGY_CAN_USE.get(orb_name, set()):
+        raise AssertionError(f"[FORBIDDEN FEATURE] {feature} used for ORB {orb_name}")
+
+
+This stops “accidental leakage” even if a feature exists.
+
+5) Make it “safe”
+
+To avoid false failures:
+
+Use strict window boundaries (< end_time, not <=)
+
+Use candle timestamps consistently (close-time vs open-time) one standard
+
+For 00:30 ORB, be careful with date rollover (same “trading day” logic)

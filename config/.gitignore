@@ -1,0 +1,86 @@
+# DuckDB databases (local only - never commit!)
+*.db
+*.db.wal
+*.duckdb
+*.sqlite
+*.sqlite3
+gold.db
+trading_app.db
+live_data.db
+live_data.db.wal
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables (contains API keys - CRITICAL!)
+.env
+.env.local
+.env.*.local
+.claude/settings.local.json
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Logs (can be large)
+*.log
+logs/
+trading_app.log
+
+# Data files (can be very large)
+*.csv
+*.zst
+dbn/
+exports/*.csv
+
+# Backup files
+*.backup
+*.bak
+backups/
+
+*.pyc
+*.pyo
+
+
+# Shadow DB files (prevent duplicates outside canonical root locations)
+# Canonical DBs are: gold.db, live_data.db, trades.db, trading_app.db (root only)
+trading_app/*.db
+trading_app/*.db.wal
+trading_app/*.db-shm
+scripts/*.db
+scripts/*.db.wal
+scripts/*.db-shm
+
+# Temporary Claude files
+tmpclaude-*
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Streamlit secrets (use Streamlit Cloud secrets instead)
+.streamlit/secrets.toml
+STREAMLIT_SECRETS.txt
+DEPLOY_NOW_CHECKLIST.txt

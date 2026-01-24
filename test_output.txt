@@ -1,0 +1,27 @@
+........................................................................ [ 45%]
+.................................s..............ssssssss...s.ss......... [ 91%]
+.............                                                            [100%]
+============================== warnings summary ===============================
+tests\test_research_runner_checkpoint_resume.py:49
+  C:\Users\sydne\OneDrive\myprojectx2_cleanpush\tests\test_research_runner_checkpoint_resume.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+tests\test_research_runner_checkpoint_resume.py:82
+  C:\Users\sydne\OneDrive\myprojectx2_cleanpush\tests\test_research_runner_checkpoint_resume.py:82: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+tests\test_research_runner_checkpoint_resume.py:105
+  C:\Users\sydne\OneDrive\myprojectx2_cleanpush\tests\test_research_runner_checkpoint_resume.py:105: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+tests\test_research_runner_checkpoint_resume.py:129
+  C:\Users\sydne\OneDrive\myprojectx2_cleanpush\tests\test_research_runner_checkpoint_resume.py:129: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+tests/test_orb_temporal_consistency.py::test_orb_consistency
+  C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_orb_temporal_consistency.py::test_orb_consistency returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

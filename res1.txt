@@ -1,0 +1,31 @@
+You’re auditing a newly discovered trading edge.
+
+Goal: determine if it’s real and zero-lookahead, not to improve it.
+
+Rules:
+
+Do NOT touch production logic, configs, validated_setups, apps, or DB schemas
+
+Research-only, smallest possible diff
+
+Be adversarial: assume the edge might be invalid
+
+What to do:
+
+Identify exactly how the ELITE setup eligibility is computed.
+
+Recompute eligibility at each historical trade time using only data available at that moment (time-travel check).
+
+Flag any use of future/session-complete/EOD information.
+
+Run 2–3 light robustness checks (walk-forward split, label shuffle, small threshold perturbation).
+
+Output (keep it brief):
+
+PASS / FAIL on lookahead safety
+
+Evidence for the verdict (numbers, not prose)
+
+If FAIL: exact leakage source and smallest fix (research-only)
+
+Avoid large tables. Summaries only.

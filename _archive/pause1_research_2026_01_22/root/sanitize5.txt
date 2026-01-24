@@ -1,0 +1,40 @@
+Let’s do focused, honest strategy discovery.
+
+I want to run a small, trustworthy baseline study using the fixed Unicorn runner.
+
+Scope:
+
+Session: 18:00 ORB only
+
+ORB window: 5 minutes
+
+Entry: 1-minute close breakout
+
+Data source: bars_1m + daily_features_v2 only
+
+Parameters to test:
+
+RR values: 1.5, 2.0, 3.0, 4.0, 6.0
+
+SL modes: FULL and HALF
+
+Rules:
+
+Use unicorn_backtest_runner_fixed.py
+
+Do not reuse any old results or meta scans
+
+Keep this research-only
+
+No combinatorial scans, no indicators, no filters yet
+
+Output:
+
+One clear table summarising results
+
+Enough detail to decide which RR/SL combinations are viable at 18:00
+
+Stop once baseline results are produced. Don’t optimize or expand yet.
+
+That’s it.
+Nothing else.

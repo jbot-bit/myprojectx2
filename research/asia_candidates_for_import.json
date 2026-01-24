@@ -1,0 +1,237 @@
+[
+  {
+    "research_id": "MGC_0900_RR2.0_HALF_ISOLATION",
+    "name": "Asia 0900 ORB - RR2.0 HALF",
+    "instrument": "MGC",
+    "hypothesis_text": "0900 ORB breakout with HALF SL mode. Entry: First 1m close outside ORB after 09:05. Stop: ORB midpoint (HALF mode). Target: RR=2.0. Scan window: 09:05 \u2192 11:00 (ISOLATION mode: force exit at 11:00). Expected: 0.099R avg (254 trades), 2/3 positive split stability.",
+    "filter_spec": {
+      "type": "Asia ORB - Isolation Mode",
+      "description": "ISOLATION mode: force exit at 11:00",
+      "scan_window_start": "09:05",
+      "scan_window_end": "11:00",
+      "filters_applied": []
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 09:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "target_rule": "RR=2.0",
+      "rr": 2.0,
+      "scan_window": "09:05 \u2192 11:00"
+    },
+    "metrics": {
+      "365d": {
+        "trades": 254,
+        "win_rate": 0.465,
+        "avg_r": 0.099,
+        "total_r": 25.1
+      },
+      "splits": {
+        "stability": "2/3 positive",
+        "split1_avg_r": -0.218,
+        "split2_avg_r": 0.121,
+        "split3_avg_r": 0.383
+      }
+    },
+    "slippage_assumptions": {
+      "entry": 0,
+      "exit": 0,
+      "notes": "Zero slippage assumed in research. Stress tests pending."
+    },
+    "code_version": "asia_backtest_core.py (2026-01-21)",
+    "data_version": "bars_1m (2025-01-11 to 2026-01-10)",
+    "survival_score": "MEDIUM",
+    "confidence_level": "MEDIUM",
+    "source_notes": "Source: asia_orb_research | Date range: 2025-01-11 to 2026-01-10 | Total days: 365 | Determinism hash: acd0323cde0db7457897fb7a266d2f27 | Zero-lookahead: True | Recommendation: VIABLE - Moderate stability (2/3), good 365d performance | Notes: 0900 performs best with HALF SL. Split 1 was negative, but splits 2-3 strongly positive."
+  },
+  {
+    "research_id": "MGC_0900_RR3.0_HALF_ISOLATION",
+    "name": "Asia 0900 ORB - RR3.0 HALF",
+    "instrument": "MGC",
+    "hypothesis_text": "0900 ORB breakout with HALF SL mode. Entry: First 1m close outside ORB after 09:05. Stop: ORB midpoint (HALF mode). Target: RR=3.0. Scan window: 09:05 \u2192 11:00 (ISOLATION mode: force exit at 11:00). Expected: 0.097R avg (254 trades), 2/3 positive split stability.",
+    "filter_spec": {
+      "type": "Asia ORB - Isolation Mode",
+      "description": "ISOLATION mode: force exit at 11:00",
+      "scan_window_start": "09:05",
+      "scan_window_end": "11:00",
+      "filters_applied": []
+    },
+    "test_config": {
+      "orb_time": "0900",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 09:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "target_rule": "RR=3.0",
+      "rr": 3.0,
+      "scan_window": "09:05 \u2192 11:00"
+    },
+    "metrics": {
+      "365d": {
+        "trades": 254,
+        "win_rate": 0.382,
+        "avg_r": 0.097,
+        "total_r": 24.6
+      },
+      "splits": {
+        "stability": "2/3 positive",
+        "split1_avg_r": -0.307,
+        "split2_avg_r": 0.202,
+        "split3_avg_r": 0.379
+      }
+    },
+    "slippage_assumptions": {
+      "entry": 0,
+      "exit": 0,
+      "notes": "Zero slippage assumed in research. Stress tests pending."
+    },
+    "code_version": "asia_backtest_core.py (2026-01-21)",
+    "data_version": "bars_1m (2025-01-11 to 2026-01-10)",
+    "survival_score": "MEDIUM",
+    "confidence_level": "MEDIUM",
+    "source_notes": "Source: asia_orb_research | Date range: 2025-01-11 to 2026-01-10 | Total days: 365 | Determinism hash: acd0323cde0db7457897fb7a266d2f27 | Zero-lookahead: True | Recommendation: VIABLE - Similar to RR=2.0, slightly higher RR with lower WR | Notes: Alternative to RR=2.0. Split 1 more negative. Consider RR=2.0 as primary."
+  },
+  {
+    "research_id": "MGC_1000_RR1.0_FULL_ISOLATION",
+    "name": "Asia 1000 ORB - RR1.0 FULL",
+    "instrument": "MGC",
+    "hypothesis_text": "1000 ORB breakout with FULL SL mode. Entry: First 1m close outside ORB after 10:05. Stop: Opposite ORB edge (FULL mode). Target: RR=1.0. Scan window: 10:05 \u2192 12:00 (ISOLATION mode: force exit at 12:00). Expected: 0.055R avg (257 trades), 3/3 positive split stability.",
+    "filter_spec": {
+      "type": "Asia ORB - Isolation Mode",
+      "description": "ISOLATION mode: force exit at 12:00",
+      "scan_window_start": "10:05",
+      "scan_window_end": "12:00",
+      "filters_applied": []
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "sl_mode": "FULL",
+      "target_rule": "RR=1.0",
+      "rr": 1.0,
+      "scan_window": "10:05 \u2192 12:00"
+    },
+    "metrics": {
+      "365d": {
+        "trades": 257,
+        "win_rate": 0.528,
+        "avg_r": 0.055,
+        "total_r": 14.1
+      },
+      "splits": {
+        "stability": "3/3 positive",
+        "split1_avg_r": 0.042,
+        "split2_avg_r": 0.061,
+        "split3_avg_r": 0.062
+      }
+    },
+    "slippage_assumptions": {
+      "entry": 0,
+      "exit": 0,
+      "notes": "Zero slippage assumed in research. Stress tests pending."
+    },
+    "code_version": "asia_backtest_core.py (2026-01-21)",
+    "data_version": "bars_1m (2025-01-11 to 2026-01-10)",
+    "survival_score": "HIGH",
+    "confidence_level": "HIGH",
+    "source_notes": "Source: asia_orb_research | Date range: 2025-01-11 to 2026-01-10 | Total days: 365 | Determinism hash: acd0323cde0db7457897fb7a266d2f27 | Zero-lookahead: True | Recommendation: VIABLE - MOST STABLE (3/3 splits positive) | Notes: 1000 performs best with FULL SL (opposite of 0900!). Low avg_r but very stable."
+  },
+  {
+    "research_id": "MGC_1000_RR2.0_HALF_ISOLATION",
+    "name": "Asia 1000 ORB - RR2.0 HALF",
+    "instrument": "MGC",
+    "hypothesis_text": "1000 ORB breakout with HALF SL mode. Entry: First 1m close outside ORB after 10:05. Stop: ORB midpoint (HALF mode). Target: RR=2.0. Scan window: 10:05 \u2192 12:00 (ISOLATION mode: force exit at 12:00). Expected: 0.054R avg (257 trades), 3/3 positive split stability.",
+    "filter_spec": {
+      "type": "Asia ORB - Isolation Mode",
+      "description": "ISOLATION mode: force exit at 12:00",
+      "scan_window_start": "10:05",
+      "scan_window_end": "12:00",
+      "filters_applied": []
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "ORB midpoint (HALF mode)",
+      "sl_mode": "HALF",
+      "target_rule": "RR=2.0",
+      "rr": 2.0,
+      "scan_window": "10:05 \u2192 12:00"
+    },
+    "metrics": {
+      "365d": {
+        "trades": 257,
+        "win_rate": 0.389,
+        "avg_r": 0.054,
+        "total_r": 13.9
+      },
+      "splits": {
+        "stability": "3/3 positive",
+        "split1_avg_r": 0.13,
+        "split2_avg_r": 0.005,
+        "split3_avg_r": 0.027
+      }
+    },
+    "slippage_assumptions": {
+      "entry": 0,
+      "exit": 0,
+      "notes": "Zero slippage assumed in research. Stress tests pending."
+    },
+    "code_version": "asia_backtest_core.py (2026-01-21)",
+    "data_version": "bars_1m (2025-01-11 to 2026-01-10)",
+    "survival_score": "HIGH",
+    "confidence_level": "HIGH",
+    "source_notes": "Source: asia_orb_research | Date range: 2025-01-11 to 2026-01-10 | Total days: 365 | Determinism hash: acd0323cde0db7457897fb7a266d2f27 | Zero-lookahead: True | Recommendation: VIABLE - MOST STABLE (3/3 splits positive) | Notes: Alternative to RR=1.0 FULL. Also 3/3 splits. HALF SL not typical for 1000 but works."
+  },
+  {
+    "research_id": "MGC_1000_RR1.5_FULL_ISOLATION",
+    "name": "Asia 1000 ORB - RR1.5 FULL",
+    "instrument": "MGC",
+    "hypothesis_text": "1000 ORB breakout with FULL SL mode. Entry: First 1m close outside ORB after 10:05. Stop: Opposite ORB edge (FULL mode). Target: RR=1.5. Scan window: 10:05 \u2192 12:00 (ISOLATION mode: force exit at 12:00). Expected: 0.084R avg (257 trades), 2/3 positive split stability.",
+    "filter_spec": {
+      "type": "Asia ORB - Isolation Mode",
+      "description": "ISOLATION mode: force exit at 12:00",
+      "scan_window_start": "10:05",
+      "scan_window_end": "12:00",
+      "filters_applied": []
+    },
+    "test_config": {
+      "orb_time": "1000",
+      "orb_duration_min": 5,
+      "entry_rule": "First 1m close outside ORB after 10:05",
+      "stop_rule": "Opposite ORB edge (FULL mode)",
+      "sl_mode": "FULL",
+      "target_rule": "RR=1.5",
+      "rr": 1.5,
+      "scan_window": "10:05 \u2192 12:00"
+    },
+    "metrics": {
+      "365d": {
+        "trades": 257,
+        "win_rate": 0.493,
+        "avg_r": 0.084,
+        "total_r": 21.6
+      },
+      "splits": {
+        "stability": "2/3 positive",
+        "split1_avg_r": -0.04,
+        "split2_avg_r": 0.116,
+        "split3_avg_r": 0.172
+      }
+    },
+    "slippage_assumptions": {
+      "entry": 0,
+      "exit": 0,
+      "notes": "Zero slippage assumed in research. Stress tests pending."
+    },
+    "code_version": "asia_backtest_core.py (2026-01-21)",
+    "data_version": "bars_1m (2025-01-11 to 2026-01-10)",
+    "survival_score": "MEDIUM",
+    "confidence_level": "MEDIUM",
+    "source_notes": "Source: asia_orb_research | Date range: 2025-01-11 to 2026-01-10 | Total days: 365 | Determinism hash: acd0323cde0db7457897fb7a266d2f27 | Zero-lookahead: True | Recommendation: VIABLE - Higher avg_r than RR=1.0, 2/3 stable | Notes: Best 365d performance for 1000. FULL SL mode. Split 1 slightly negative."
+  }
+]

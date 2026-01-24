@@ -1,0 +1,262 @@
+ORB Institutional Audit Protocol (Repo-Executable)
+0) Non-negotiables (gates)
+
+No trading live until all gates pass.
+
+Every claim must be backed by:
+
+a file/line reference, or
+
+a reproducible command output, or
+
+a unit/integration test.
+
+1) Discover system truth (must run + paste outputs)
+
+Run and paste:
+
+git rev-parse --show-toplevel
+
+git status --porcelain
+
+python -V
+
+python -c "import platform; print(platform.platform())"
+
+python -c "import zoneinfo; print('zoneinfo OK')"
+
+python -c "import duckdb; print('duckdb', duckdb.__version__)"
+
+2) Inventory the pipeline and “time authority”
+
+Goal: identify where timestamps are born and where timezone is assigned/converted.
+
+Run:
+
+rg -n "timezone|tz|ZoneInfo|pytz|localize|AEST|AEDT|Brisbane|UTC|convert_tz|to_datetime|timestamp" trading_app scripts tests
+
+rg -n "Databento|IBKR|Interactive Brokers|TWS|Topstep|MyFunded|CQG|Rithmic|Polygon" trading_app scripts
+
+Deliverable:
+
+A table (in markdown) of:
+
+Source of candles (file/module)
+
+Column names (e.g., ts, time, datetime)
+
+Stored timezone (naive? UTC? exchange local?)
+
+Conversion points (function names)
+
+“Single source of truth” timezone policy (what it should be)
+
+Gate:
+
+There must be exactly one internal standard for stored timestamps (recommendation: UTC in DB + explicit conversion at UI/execution boundaries).
+
+3) Temporal integrity tests (market open + ORB window)
+
+You need automated tests proving the 5-minute window aligns to the intended session time in Australia/Brisbane, across DST regimes.
+
+Create tests that:
+
+Select known dates:
+
+AEST period (no DST in Brisbane, but source/exchange may DST)
+
+US DST start/end weeks
+
+Any exchange DST if relevant
+
+For each date, assert:
+
+ORB window = intended open time → open+5m (in Brisbane time)
+
+First eligible breakout candle is after ORB window ends
+
+Candle boundaries are correct (no off-by-one minute)
+
+Commands to support:
+
+Build a small reproducible “timestamp probe” script:
+
+Reads 1 day of 1m bars
+
+Prints first 20 timestamps in:
+
+raw DB
+
+interpreted as UTC
+
+converted to Australia/Brisbane
+
+Prints computed ORB start/end timestamps
+
+Gate:
+
+ORB start/end must be correct on all test dates.
+
+No naive timestamps allowed to flow past ingestion without explicit tz assignment.
+
+4) Lookahead bias audit (hard rules)
+
+Search and review for these red flags:
+
+Any use of:
+
+shift(-1) / negative shift
+
+future window aggregates
+
+merging outcome columns back into features without time separation
+
+using daily high/low for intraday decisions
+
+computing ORB high/low using data after ORB end
+
+Any vectorized signal that uses full-day context before the signal timestamp.
+
+Run:
+
+rg -n "shift\(-|lead\(|future|lookahead|mfe|mae|outcome|label|target|profit|pnl" trading_app scripts
+
+rg -n "rolling\(|expanding\(|resample\(" trading_app scripts
+
+Required proof:
+
+For every signal timestamp t, show in code that only candles <= t are accessible.
+
+Gate:
+
+“Feature build” and “label/outcome build” must be separated, with clear timestamp joins preventing leakage.
+
+5) Execution realism validation (can it trade like real life?)
+
+Check:
+
+Entry definition:
+
+“first 1m close outside ORB after ORB ends”
+
+Ensure you aren’t using high/low intrabar unless you model it.
+
+Fill model:
+
+If you enter on candle close, fill must be at close or next bar open (choose and enforce consistently).
+
+Stops/targets:
+
+If stop/target can hit in same bar, you need deterministic rule (stop-first vs target-first) OR higher-res data.
+
+Costs:
+
+Commission + slippage assumptions explicit, not implied.
+
+Gate:
+
+Backtest must declare fill rules + stop/target ordering rules explicitly and test them.
+
+6) Determinism / recreatability
+
+Run the same backtest twice, compare outputs.
+
+Required:
+
+backtest_run_1.json and backtest_run_2.json (or parquet/csv)
+
+They must match byte-for-byte OR match within stated tolerances (ideally identical).
+
+Check for nondeterminism causes:
+
+unordered dict iteration
+
+random seeds
+
+dependence on “now()”
+
+concurrency without stable ordering
+
+Gate:
+
+Deterministic results on the same input data.
+
+7) Silent failure points + targeted test cases
+
+Create explicit tests for:
+
+Missing minutes (data gaps)
+
+Duplicate timestamps
+
+Out-of-order bars
+
+Holiday / early close / half session
+
+DST boundary day
+
+Session where ORB window spans a missing bar
+
+Minimum test cases:
+
+A day with a known DST transition in the source timezone
+
+A day with at least one missing minute
+
+A day with duplicate timestamp
+
+A normal day baseline
+
+Gate:
+
+System must fail loudly (raise/alert), not silently “continue”.
+
+8) Profitability framework honesty checks
+
+Hard checks:
+
+No parameter optimization reported without:
+
+walk-forward or holdout split
+
+multiple period validation
+
+No “best config” chosen on the same sample without penalty.
+
+Required output:
+
+Report metrics split by:
+
+in-sample
+
+out-of-sample
+
+most recent quarter
+
+Include:
+
+trade count
+
+avg R
+
+win rate
+
+max drawdown (in R)
+
+worst streak
+
+Gate:
+
+Profitability claims must be out-of-sample supported.
+
+9) Deliverables (what Claude must output)
+
+Findings list with severity (Blocker / Major / Minor)
+
+Evidence for each finding (file/line + command/test output)
+
+Fix plan ordered by dependency (what must be fixed first)
+
+Test suite additions (names of tests + what they assert)
+
+“Safe to trade?” = NO unless all gates pass.

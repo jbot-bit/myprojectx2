@@ -1,0 +1,8 @@
+template,params,trades,win_rate,avg_r,total_r,stage1_pass
+ORB_Breakout_RR1,{'rr': 1.0},522,0.7126436781609196,0.42528735632183906,222.0,True
+ORB_Breakout_RR2,{'rr': 2.0},522,0.7126436781609196,0.42528735632183906,222.0,True
+ORB_Breakout_RR3,{'rr': 3.0},522,0.7126436781609196,0.42528735632183906,222.0,True
+ORB_SmallOnly_50pct_RR1,"{'max_orb_pct_atr': 0.5, 'rr': 1.0}",500,0.704,0.408,204.0,True
+ORB_SmallOnly_40pct_RR1,"{'max_orb_pct_atr': 0.4, 'rr': 1.0}",498,0.7028112449799196,0.40562248995983935,202.0,True
+ORB_SmallOnly_30pct_RR1,"{'max_orb_pct_atr': 0.3, 'rr': 1.0}",491,0.7046843177189409,0.4093686354378819,201.0,True
+Asia_Rejection_20stop,"{'min_asia_pct_atr': 0.3, 'max_asia_pct_atr': 1.5, 'stop_pct': 0.2}",449,0.7104677060133631,0.4209354120267261,189.0,True

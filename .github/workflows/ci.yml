@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: Canonical engine import check
+        run: |
+          python -c "from trading_app.backtest import engine; print('OK', engine.__file__)"
+
+      - name: Fail on sys.path hacks (enforced zones only)
+        run: |
+          python - <<'PY'
+          import pathlib, re, sys
+          root = pathlib.Path(".")
+
+          # ENFORCED ZONES: Only check these directories
+          enforced_dirs = ["trading_app", "tests", "scripts"]
+
+          # IGNORED ZONES: Legacy paths allowed (for now)
+          ignored_dirs = [".venv", "venv", "_archive", ".git", "research", "pipeline", "audits", "data", "backups", "site-packages", "__pycache__"]
+
+          bad = []
+          for enforced in enforced_dirs:
+            enforced_path = root / enforced
+            if not enforced_path.exists():
+              continue
+
+            for p in enforced_path.rglob("*.py"):
+              s = str(p).replace("\\","/")
+
+              # Skip ignored subdirectories
+              if any(ignored in s for ignored in ignored_dirs):
+                continue
+
+              txt = p.read_text(encoding="utf-8", errors="ignore")
+              if re.search(r"\bsys\.path\.(insert|append)\b", txt):
+                bad.append(s)
+
+          if bad:
+            print("❌ FAIL: sys.path hacks found in enforced zones:")
+            print(f"Enforced zones: {', '.join(enforced_dirs)}")
+            print(f"Ignored zones: {', '.join(ignored_dirs)}")
+            print("\nViolations:")
+            for f in bad:
+              print(f"  - {f}")
+            sys.exit(1)
+
+          print(f"✅ PASS: No sys.path hacks in enforced zones: {', '.join(enforced_dirs)}")
+          PY
+
+      - name: Fail on loose imports
+        run: |
+          python - <<'PY'
+          import pathlib, re, sys
+          root = pathlib.Path(".")
+          pat = re.compile(r"^(from|import)\s+(cloud_mode|config|data_loader|setup_detector|strategy_engine)\b", re.M)
+          bad = []
+          for p in root.rglob("*.py"):
+            s = str(p).replace("\\","/")
+            if any(x in s for x in ["/.venv/","/venv/","/site-packages/","/_archive/","/__pycache__/"]):
+              continue
+            txt = p.read_text(encoding="utf-8", errors="ignore")
+            if pat.search(txt):
+              bad.append(s)
+          if bad:
+            print("Loose imports found:")
+            print("\n".join(bad))
+            sys.exit(1)
+          print("OK: no loose imports")
+          PY
+
+      - name: App sync test
+        run: |
+          python test_app_sync.py
+
+      - name: Pytest
+        run: |
+          pytest -q
+
+      - name: Clean working tree check
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "❌ FAIL: Working tree became dirty during CI"
+            echo ""
+            git status --porcelain
+            exit 1
+          fi
+          echo "✅ PASS: Working tree is clean"

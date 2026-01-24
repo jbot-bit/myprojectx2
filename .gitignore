@@ -1,0 +1,47 @@
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Databases / backups
+*.db
+*.db.wal
+*.db-shm
+*.duckdb
+data/db/
+data/backups/
+
+# Python / venv
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs
+*.log
+logs/
+
+# Windows reserved filenames
+nul
+
+# Temporary task files
+delete.txt
+fix.txt
+maintenance.txt
+scope.txt
+candidate_claude.txt
+
+# Runtime logs
+trading_app.log
+log.txt
+
+# Audit outputs (generated)
+audit_reports/
+
+# Runtime checkpoints
+data/checkpoints/*.lock
+
+# Local scratch files
+fix*.txt
+

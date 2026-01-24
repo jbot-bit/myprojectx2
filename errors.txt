@@ -1,0 +1,486 @@
+ 11 files changed, 2026 insertions(+), 3 deletions(-)
+ create mode 100644 FINAL_INTEGRATION_SUMMARY.md
+ create mode 100644 HONEST_APP_STATUS.md
+ create mode 100644 PHASE1B_INTEGRATION_COMPLETE.md
+ create mode 100644 UI_INTEGRATION_COMPLETE.md
+ create mode 100644 test_fresh_connection.py
+ create mode 100644 test_phase1b_integration.py
+ create mode 100644 tools/import_phase1b_setups.py
+ create mode 100644 trading_app/market_state.py
+ create mode 100644 trading_app/render_conditional_edges.py
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> git add .
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> git commit -m "Phase 1B complete: friday" git push origin HEAD
+error: pathspec 'git' did not match any file(s) known to git
+error: pathspec 'push' did not match any file(s) known to git
+error: pathspec 'origin' did not match any file(s) known to git
+error: pathspec 'HEAD' did not match any file(s) known to git
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> git push origin HEAD
+Enumerating objects: 20, done.
+Counting objects: 100% (20/20), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (15/15), done.
+Writing objects: 100% (15/15), 22.84 KiB | 4.57 MiB/s, done.
+Total 15 (delta 5), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (5/5), completed with 5 local objects.
+To https://github.com/jbot-bit/myprojectx2.git
+   512366e..7b0fd43  HEAD -> recovery/working-app
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> streamlit run trading_app/app_trading_hub.py
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.128:8501
+
+2026-01-23 16:23:47,179 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:23:47,180 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:23:47,182 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:23:47,182 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:23:47,187 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:23:48,011 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:23:48,097 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:23:49,132 - ai_memory - INFO - AI memory schema initialized in canonical DB
+2026-01-23 16:23:49,132 - ai_assistant - INFO - AI assistant initialized (AI Source Lock enabled)
+2026-01-23 16:23:49,132 - ai_guard - INFO - [OK] AI Source Lock verified: Locked prompt loaded and validated
+2026-01-23 16:23:49,136 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:23:49,433 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=True - ignored for cloud)
+2026-01-23 16:23:49,433 - data_loader - INFO - Cloud mode: Connected to MotherDuck for MGC
+2026-01-23 16:23:50,890 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 16:23:50,891 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 16:23:51,858 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 16:23:51,859 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 16:23:51,860 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 16:23:52,928 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:23:54,159 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:23:54,160 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 16:23:54,160 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 16:23:54,162 - strategy_engine - INFO - Selected primary setup from 2 options: RR=2.0, SL=HALF, avg_r=None, WR=None
+2026-01-23 16:23:54,220 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:23:54,222 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:23:54,224 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:23:54,225 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:23:54,226 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:23:55,031 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:23:55.039 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:23:55.263 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:23:56,276 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:23:57,461 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:23:57,533 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:23:57,917 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:23:57,919 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:23:57,977 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:23:57,978 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:23:58,821 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:23:58,827 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=True - ignored for cloud)
+2026-01-23 16:23:58,828 - data_loader - INFO - Cloud mode: Connected to MotherDuck for MGC
+2026-01-23 16:23:59,904 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:23:59,905 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:23:59,907 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:23:59,908 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:23:59,908 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:00,064 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 16:24:00,064 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 16:24:00,756 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:24:00.764 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:00.768 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:00,990 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 16:24:00,991 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 16:24:00,991 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 16:24:01,769 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:02,017 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:03,743 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:04,204 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:06,709 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:06,780 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:07.104 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:07,176 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=True - ignored for cloud)
+2026-01-23 16:24:07,176 - setup_detector - INFO - Connected to database for setup detection
+2026-01-23 16:24:07,716 - setup_detector - ERROR - Error getting conditional setups: Binder Error: Referenced column "condition_type" not found in FROM clause!
+Candidate bindings: "orb_time", "instrument", "atr_filter", "close_confirmations", "win_rate"
+
+LINE 19:                   AND condition_type IS NOT NULL
+                               ^
+2026-01-23 16:24:07,764 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:13,167 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:24:13,168 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:24:13,171 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:24:13,171 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:24:13,172 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:13,958 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:24:13.964 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:13.965 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:14,910 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:15,233 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:24:15,233 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:24:15,236 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:24:15,236 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:24:15,237 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:16,163 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:24:16,380 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:16.382 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:16.449 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:17,390 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:18,774 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:21,364 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:21,436 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC (cloud mode)
+2026-01-23 16:24:21.486 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:21,539 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=True - ignored for cloud)
+2026-01-23 16:24:21,539 - setup_detector - INFO - Connected to database for setup detection
+2026-01-23 16:24:22,041 - setup_detector - ERROR - Error getting conditional setups: Binder Error: Referenced column "condition_type" not found in FROM clause!
+Candidate bindings: "orb_time", "instrument", "atr_filter", "close_confirmations", "win_rate"
+
+LINE 19:                   AND condition_type IS NOT NULL
+                               ^
+2026-01-23 16:24:22,067 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:25,233 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 16:24:29,679 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 16:24:29,682 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 16:24:29,682 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 16:24:29,684 - cloud_mode - INFO - Connected to MotherDuck: md:projectx_prod (read_only=False - ignored for cloud)
+2026-01-23 16:24:30,633 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 16:24:30.640 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-01-23 16:24:30.643 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+  Stopping...
+2026-01-23 16:24:31,676 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 16:24:33,079 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC (cloud mode)
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush>  streamlit run trading_app/app_trading_hub.py
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.128:8501
+
+2026-01-23 17:05:56,861 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:05:56,862 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:05:56,865 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:05:56,866 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:05:56,866 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:05:56,868 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:05:56,911 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:05:57,003 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:05:57,051 - ai_memory - INFO - AI memory schema initialized in canonical DB
+2026-01-23 17:05:57,053 - ai_assistant - INFO - AI assistant initialized (AI Source Lock enabled)
+2026-01-23 17:05:57,055 - ai_guard - INFO - [OK] AI Source Lock verified: Locked prompt loaded and validated
+2026-01-23 17:05:57,056 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:05:57,149 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:05:58,327 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:05:58,329 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:05:59,205 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:05:59,206 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:05:59,207 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:06:00,118 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:06:00,686 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:06:00,688 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:06:00,692 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:06:00,692 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:06:00,695 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:06:00,697 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:06:00,705 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:06:00,714 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:06:01,608 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:06:01,609 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:06:02,495 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:06:02,497 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:06:02,498 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:06:03,440 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:06:08,388 - data_loader - WARNING - ProjectX fetch failed: Constraint Error: Duplicate key "symbol: MGC, ts_utc: 2026-01-22 07:37:00+00" violates primary key constraint.. Falling back to database.
+2026-01-23 17:06:13,755 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:06:16,246 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:06:17,153 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:06:32,552 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:06:32,553 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:06:32,557 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:06:32,558 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:06:32,559 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:06:32,559 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:06:32,566 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:06:32,572 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:06:33,382 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:06:33,461 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:06:33,462 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:06:34,332 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:06:34,332 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:06:34,333 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:06:35,185 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:06:35,274 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:06:48,416 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:06:49,322 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:07:02,351 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:07:02,352 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 17:07:02,353 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 17:07:02,358 - __main__ - ERROR - Data load error: '<' not supported between instances of 'dict' and 'dict'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 314, in <module>
+    st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 174, in __init__
+    self._load_instrument_configs()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 202, in _load_instrument_configs
+    self.orb_configs = {
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 203, in <dictcomp>
+    orb_time: resolve_orb_config(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 112, in resolve_orb_config
+    return select_primary_setup(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 73, in select_primary_setup
+    scored_setups.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+2026-01-23 17:07:02,371 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:07:03,277 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:07:03,278 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:07:04,158 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:07:04,160 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:07:04,161 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:07:05,071 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:07:17,367 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:07:17,368 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:07:17,372 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:07:17,372 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:07:17,373 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:07:17,374 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:07:17,377 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:07:17,385 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:07:17,929 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:07:18,279 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:07:18,280 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:07:18,877 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:07:19,158 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:07:19,159 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:07:19,160 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:07:20,068 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:07:40,210 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:07:41,364 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:07:42,301 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:07:59,304 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:07:59,306 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 17:07:59,307 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 17:07:59,308 - __main__ - ERROR - Data load error: '<' not supported between instances of 'dict' and 'dict'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 314, in <module>
+    st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 174, in __init__
+    self._load_instrument_configs()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 202, in _load_instrument_configs
+    self.orb_configs = {
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 203, in <dictcomp>
+    orb_time: resolve_orb_config(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 112, in resolve_orb_config
+    return select_primary_setup(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 73, in select_primary_setup
+    scored_setups.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+2026-01-23 17:07:59,316 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:08:00,211 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:08:00,212 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:08:01,083 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:08:01,084 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:08:01,087 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:08:02,010 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:08:18,886 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:08:19,895 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:08:33,853 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:08:33,855 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 17:08:33,855 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 17:08:33,858 - __main__ - ERROR - Data load error: '<' not supported between instances of 'dict' and 'dict'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 541, in <module>
+    st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 174, in __init__
+    self._load_instrument_configs()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 202, in _load_instrument_configs
+    self.orb_configs = {
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 203, in <dictcomp>
+    orb_time: resolve_orb_config(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 112, in resolve_orb_config
+    return select_primary_setup(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 73, in select_primary_setup
+    scored_setups.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+2026-01-23 17:08:34,773 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 17:08:48,629 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 17:08:48,637 - __main__ - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 616, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-23 17:08:48.640 Uncaught app execution
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 672, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 650, in <module>
+    background: linear-gradient(135deg, {style['bg']} 0%, {style['bg']}dd 100%);
+NameError: name 'style' is not defined. Did you mean: 'type'?
+  Stopping...
+  Stopping...
+Exception ignored in: <module 'threading' from 'C:\\Users\\sydne\\AppData\\Local\\Programs\\Python\\Python310\\lib\\threading.py'>
+Traceback (most recent call last):
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python310\lib\threading.py", line 1547, in _shutdown
+    _main_thread._stop()
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python310\lib\threading.py", line 1053, in _stop
+    _maintain_shutdown_locks()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\web\bootstrap.py", line 43, in signal_handler
+    server.stop()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\web\server\server.py", line 535, in stop
+    self._runtime.stop()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\runtime\runtime.py", line 355, in stop
+    async_objs.eventloop.call_soon_threadsafe(stop_on_eventloop)
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python310\lib\asyncio\base_events.py", line 798, in call_soon_threadsafe
+    self._check_closed()
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python310\lib\asyncio\base_events.py", line 515, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> ^C
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush> ^C
+(venv) PS C:\Users\sydne\OneDrive\myprojectx2_cleanpush>  streamlit run trading_app/app_trading_hub.py
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.128:8501
+
+2026-01-23 17:59:57,073 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:59:57,076 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:59:57,079 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:59:57,079 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:59:57,080 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:59:57,082 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:59:57,133 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:59:57,227 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:59:57,288 - ai_memory - INFO - AI memory schema initialized in canonical DB
+2026-01-23 17:59:57,290 - ai_assistant - INFO - AI assistant initialized (AI Source Lock enabled)
+2026-01-23 17:59:57,292 - ai_guard - INFO - [OK] AI Source Lock verified: Locked prompt loaded and validated
+2026-01-23 17:59:57,294 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:59:57,407 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 17:59:58,594 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 17:59:58,596 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 17:59:59,495 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 17:59:59,497 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 17:59:59,498 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 17:59:59,772 - trading_app.canonical - INFO - Checking required files...
+2026-01-23 17:59:59,773 - trading_app.canonical - INFO - Checking for shadow databases...
+2026-01-23 17:59:59,777 - trading_app.canonical - INFO - Checking canonical database access...
+2026-01-23 17:59:59,778 - trading_app.canonical - INFO - Checking connection module...
+2026-01-23 17:59:59,780 - trading_app.canonical - INFO - OK: CANONICAL ENVIRONMENT VALIDATED
+2026-01-23 17:59:59,780 - cloud_mode - INFO - Using local DuckDB at: C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db
+2026-01-23 17:59:59,784 - db_bootstrap - INFO - Database bootstrap completed successfully.
+2026-01-23 17:59:59,792 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 18:00:00,427 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:00,709 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 18:00:00,710 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 18:00:01,605 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 18:00:01,606 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 18:00:01,608 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 18:00:02,521 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:13,464 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:14,433 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:14,621 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:15,598 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:26,394 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:27,547 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:27,549 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 18:00:27,551 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 18:00:27,556 - __main__ - ERROR - Data load error: '<' not supported between instances of 'dict' and 'dict'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 314, in <module>
+    st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 174, in __init__
+    self._load_instrument_configs()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 202, in _load_instrument_configs
+    self.orb_configs = {
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 203, in <dictcomp>
+    orb_time: resolve_orb_config(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 112, in resolve_orb_config
+    return select_primary_setup(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 73, in select_primary_setup
+    scored_setups.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+2026-01-23 18:00:27,577 - data_loader - INFO - Local mode: Connected to C:\Users\sydne\OneDrive\myprojectx2_cleanpush\data\db\gold.db for MGC
+2026-01-23 18:00:28,501 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-23 18:00:28,502 - data_loader - INFO - ProjectX authentication successful
+2026-01-23 18:00:29,386 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-23 18:00:29,387 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-23 18:00:29,388 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-23 18:00:30,317 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:41,130 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:42,072 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:00:53,241 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:00:53,243 - __main__ - INFO - ML disabled (ENABLE_ML not set)
+2026-01-23 18:00:53,244 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-23 18:00:53,247 - __main__ - ERROR - Data load error: '<' not supported between instances of 'dict' and 'dict'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 541, in <module>
+    st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 174, in __init__
+    self._load_instrument_configs()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 202, in _load_instrument_configs
+    self.orb_configs = {
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 203, in <dictcomp>
+    orb_time: resolve_orb_config(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 112, in resolve_orb_config
+    return select_primary_setup(config)
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\strategy_engine.py", line 73, in select_primary_setup
+    scored_setups.sort(reverse=True)
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+2026-01-23 18:00:54,183 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-23 18:01:04,201 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-23 18:01:04,210 - __main__ - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 616, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-23 18:01:04.213 Uncaught app execution
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\venv\lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 672, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "C:\Users\sydne\OneDrive\myprojectx2_cleanpush\trading_app\app_trading_hub.py", line 650, in <module>
+    background: linear-gradient(135deg, {style['bg']} 0%, {style['bg']}dd 100%);
+NameError: name 'style' is not defined. Did you mean: 'type'?
