@@ -153,11 +153,12 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
     # Chat history display
     chat_container = st.container()
     with chat_container:
-        if not session_state.get('chat_history', []):
+        chat_history = getattr(session_state, 'chat_history', [])
+        if not chat_history:
             st.info("👋 Ask me about strategies, setups, or current market conditions!")
         else:
             # Show recent messages (last 10)
-            recent_messages = session_state['chat_history'][-10:]
+            recent_messages = chat_history[-10:]
             for msg in recent_messages:
                 if msg['role'] == 'user':
                     st.markdown(f"""
@@ -195,15 +196,15 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
 
     with col1:
         if st.button("📊 Analyze Current Setup", use_container_width=True):
-            session_state['pending_question'] = "Analyze the current ORB setup. Should I take this trade?"
+            session_state.pending_question = "Analyze the current ORB setup. Should I take this trade?"
 
     with col2:
         if st.button("🎯 Best Strategy Now", use_container_width=True):
-            session_state['pending_question'] = "What's the best strategy to use right now based on current conditions?"
+            session_state.pending_question = "What's the best strategy to use right now based on current conditions?"
 
     with col3:
         if st.button("⚠️ Risk Assessment", use_container_width=True):
-            session_state['pending_question'] = "What are the main risks with the current setup?"
+            session_state.pending_question = "What are the main risks with the current setup?"
 
     # Chat input
     user_input = st.text_area(
@@ -220,7 +221,7 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
 
     with col2:
         if st.button("Clear", use_container_width=True):
-            session_state['chat_history'] = []
+            session_state.chat_history = []
             st.rerun()
 
     # Process input (from button or text)
@@ -228,9 +229,9 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
 
     if send_clicked and user_input.strip():
         message_to_send = user_input
-    elif session_state.get('pending_question'):
-        message_to_send = session_state['pending_question']
-        session_state['pending_question'] = None
+    elif hasattr(session_state, 'pending_question') and session_state.pending_question:
+        message_to_send = session_state.pending_question
+        session_state.pending_question = None
 
     if message_to_send:
         with st.spinner("Thinking..."):
@@ -251,10 +252,13 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
                     }
 
                 # Get AI response
+                chat_hist = getattr(session_state, 'chat_history', [])
+                sess_id = getattr(session_state, 'session_id', 'chatbot')
+
                 response = ai_assistant.chat(
                     user_message=message_to_send,
-                    conversation_history=session_state.get('chat_history', [])[-6:],  # Last 3 exchanges
-                    session_id=session_state.get('session_id', 'chatbot'),
+                    conversation_history=chat_hist[-6:],  # Last 3 exchanges
+                    session_id=sess_id,
                     instrument='MGC',
                     current_price=current_price,
                     strategy_state=strategy_state,
@@ -264,24 +268,24 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
                 )
 
                 # Update history
-                if 'chat_history' not in session_state:
-                    session_state['chat_history'] = []
+                if not hasattr(session_state, 'chat_history'):
+                    session_state.chat_history = []
 
-                session_state['chat_history'].append({'role': 'user', 'content': message_to_send})
-                session_state['chat_history'].append({'role': 'assistant', 'content': response})
+                session_state.chat_history.append({'role': 'user', 'content': message_to_send})
+                session_state.chat_history.append({'role': 'assistant', 'content': response})
 
                 # Save to memory
                 try:
-                    memory_manager = session_state.get('memory_manager')
+                    memory_manager = getattr(session_state, 'memory_manager', None)
                     if memory_manager:
                         memory_manager.save_message(
-                            session_id=session_state.get('session_id', 'chatbot'),
+                            session_id=sess_id,
                             role='user',
                             content=message_to_send,
                             instrument='MGC'
                         )
                         memory_manager.save_message(
-                            session_id=session_state.get('session_id', 'chatbot'),
+                            session_id=sess_id,
                             role='assistant',
                             content=response,
                             instrument='MGC'
@@ -304,19 +308,21 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
         col1, col2 = st.columns(2)
 
         with col1:
+            current_account_size = getattr(session_state, 'account_size', 10000.0)
             account_size = st.number_input(
                 "Account Size ($)",
-                value=session_state.get('account_size', 10000.0),
+                value=current_account_size,
                 step=1000.0
             )
-            session_state['account_size'] = account_size
+            session_state.account_size = account_size
 
         with col2:
+            current_auto_refresh = getattr(session_state, 'auto_refresh_enabled', True)
             auto_refresh = st.checkbox(
                 "Auto-refresh",
-                value=session_state.get('auto_refresh_enabled', True)
+                value=current_auto_refresh
             )
-            session_state['auto_refresh_enabled'] = auto_refresh
+            session_state.auto_refresh_enabled = auto_refresh
 
         if st.button("🔄 Refresh Data", use_container_width=True):
             if data_loader:
@@ -329,11 +335,11 @@ def render_chatbot_mode(evaluation, current_price, data_loader, ai_assistant, se
 def render_chatbot_mode_toggle():
     """Simple toggle for chatbot mode."""
 
-    if 'chatbot_mode' not in st.session_state:
-        st.session_state['chatbot_mode'] = True  # Default to chatbot mode
+    if not hasattr(st.session_state, 'chatbot_mode'):
+        st.session_state.chatbot_mode = True  # Default to chatbot mode
 
-    mode = st.toggle("💬 Chatbot Mode", value=st.session_state['chatbot_mode'],
+    mode = st.toggle("💬 Chatbot Mode", value=st.session_state.chatbot_mode,
                     help="Minimal chat interface with just price and AI assistant")
-    st.session_state['chatbot_mode'] = mode
+    st.session_state.chatbot_mode = mode
 
     return mode
