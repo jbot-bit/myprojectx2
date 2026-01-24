@@ -25,7 +25,7 @@ from typing import Tuple
 TZ_LOCAL = ZoneInfo("Australia/Brisbane")  # UTC+10, no DST
 TZ_UTC = ZoneInfo("UTC")
 
-DB_PATH = "gold.db"
+DB_PATH = "data/db/gold.db"
 SYMBOL = "MGC"
 
 

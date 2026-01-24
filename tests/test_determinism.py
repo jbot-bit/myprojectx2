@@ -21,7 +21,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Any
 
-DB_PATH = "gold.db"
+DB_PATH = "data/db/gold.db"
 SYMBOL = "MGC"
 
 
@@ -215,7 +215,7 @@ class TestDeterminism:
                 SELECT
                   asia_high, asia_low,
                   london_high, london_low,
-                  ny_cash_high, ny_cash_low
+                  ny_high, ny_low
                 FROM daily_features_v2
                 WHERE date_local = ?
                   AND instrument = ?

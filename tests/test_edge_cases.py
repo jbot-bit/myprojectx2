@@ -22,7 +22,6 @@ import tempfile
 import os
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
-from pathlib import Path
 
 TZ_LOCAL = ZoneInfo("Australia/Brisbane")
 TZ_UTC = ZoneInfo("UTC")
@@ -40,10 +39,11 @@ class TestEdgeCases:
 
     def setup_method(self):
         """Setup temporary database for testing."""
-        # Create temporary database
+        # Create temporary database - delete empty file first so DuckDB can create it
         self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
         self.db_path = self.temp_db.name
         self.temp_db.close()
+        os.unlink(self.db_path)  # Delete empty file
 
         self.con = duckdb.connect(self.db_path)
 

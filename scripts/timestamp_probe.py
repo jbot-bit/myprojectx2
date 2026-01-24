@@ -23,7 +23,7 @@ from typing import List, Tuple
 TZ_LOCAL = ZoneInfo("Australia/Brisbane")  # UTC+10, no DST
 TZ_UTC = ZoneInfo("UTC")
 
-DB_PATH = "gold.db"
+DB_PATH = "data/db/gold.db"
 SYMBOL = "MGC"
 
 
@@ -45,7 +45,7 @@ def fetch_day_bars(con: duckdb.DuckDBPyConnection, trade_date: date) -> List[Tup
     """
     Fetch all 1-minute bars for a trading day.
 
-    Trading day: 09:00 local → next 09:00 local (Brisbane)
+    Trading day: 09:00 local -> next 09:00 local (Brisbane)
     """
     start_local = _dt_local(trade_date, 9, 0)
     end_local = _dt_local(trade_date + timedelta(days=1), 9, 0)
@@ -129,7 +129,7 @@ def validate_orb_alignment(trade_date: date):
     Assertions:
     - 09:00 ORB should start at exactly 09:00 Brisbane
     - All ORBs should be 5 minutes duration
-    - Brisbane → UTC conversion should be consistent
+    - Brisbane -> UTC conversion should be consistent
     """
     print("\n\nVALIDATION CHECKS")
     print("=" * 80)
@@ -141,20 +141,20 @@ def validate_orb_alignment(trade_date: date):
     test_local = _dt_local(trade_date, 12, 0)
     offset_hours = test_local.utcoffset().total_seconds() / 3600
     if offset_hours == 10:
-        print("✅ PASS: Brisbane timezone is UTC+10 (no DST)")
+        print("[OK] PASS: Brisbane timezone is UTC+10 (no DST)")
         checks_passed += 1
     else:
-        print(f"❌ FAIL: Brisbane timezone offset is {offset_hours} hours (expected 10)")
+        print(f"[FAIL] FAIL: Brisbane timezone offset is {offset_hours} hours (expected 10)")
         checks_failed += 1
 
-    # Check 2: 09:00 Brisbane → 23:00 UTC (previous day)
+    # Check 2: 09:00 Brisbane -> 23:00 UTC (previous day)
     orb_0900_local = _dt_local(trade_date, 9, 0)
     orb_0900_utc = orb_0900_local.astimezone(TZ_UTC)
     if orb_0900_utc.hour == 23 and orb_0900_utc.day == trade_date.day - 1:
-        print("✅ PASS: 09:00 Brisbane = 23:00 UTC (previous day)")
+        print("[OK] PASS: 09:00 Brisbane = 23:00 UTC (previous day)")
         checks_passed += 1
     else:
-        print(f"❌ FAIL: 09:00 Brisbane = {orb_0900_utc.strftime('%H:%M %Y-%m-%d')} UTC (expected 23:00 prev day)")
+        print(f"[FAIL] FAIL: 09:00 Brisbane = {orb_0900_utc.strftime('%H:%M %Y-%m-%d')} UTC (expected 23:00 prev day)")
         checks_failed += 1
 
     # Check 3: All ORBs are exactly 5 minutes
@@ -173,23 +173,23 @@ def validate_orb_alignment(trade_date: date):
         orb_end_local = orb_start_local + timedelta(minutes=5)
         duration = (orb_end_local - orb_start_local).total_seconds() / 60
         if duration != 5:
-            print(f"❌ FAIL: ORB {name} duration = {duration} minutes (expected 5)")
+            print(f"[FAIL] FAIL: ORB {name} duration = {duration} minutes (expected 5)")
             all_5min = False
             checks_failed += 1
 
     if all_5min:
-        print("✅ PASS: All 6 ORBs are exactly 5 minutes duration")
+        print("[OK] PASS: All 6 ORBs are exactly 5 minutes duration")
         checks_passed += 1
 
-    # Check 4: Midnight crossing (23:00 → 00:30) spans 90 minutes
+    # Check 4: Midnight crossing (23:00 -> 00:30) spans 90 minutes
     ny_start = _dt_local(trade_date, 23, 0)
     ny_end = _dt_local(trade_date + timedelta(days=1), 0, 30)
     ny_duration = (ny_end - ny_start).total_seconds() / 60
     if ny_duration == 90:
-        print("✅ PASS: NY session (23:00→00:30) spans 90 minutes")
+        print("[OK] PASS: NY session (23:00->00:30) spans 90 minutes")
         checks_passed += 1
     else:
-        print(f"❌ FAIL: NY session duration = {ny_duration} minutes (expected 90)")
+        print(f"[FAIL] FAIL: NY session duration = {ny_duration} minutes (expected 90)")
         checks_failed += 1
 
     # Summary
@@ -197,9 +197,9 @@ def validate_orb_alignment(trade_date: date):
     print(f"TOTAL: {checks_passed} passed, {checks_failed} failed")
 
     if checks_failed == 0:
-        print("\n✅ ALL VALIDATION CHECKS PASSED")
+        print("\n[OK] ALL VALIDATION CHECKS PASSED")
     else:
-        print(f"\n❌ {checks_failed} VALIDATION CHECKS FAILED")
+        print(f"\n[FAIL] {checks_failed} VALIDATION CHECKS FAILED")
 
 
 def main():
@@ -229,13 +229,13 @@ def main():
     bars = fetch_day_bars(con, trade_date)
 
     if not bars:
-        print(f"\n⚠️  WARNING: No bars found for {trade_date}")
+        print(f"\n[WARN]  WARNING: No bars found for {trade_date}")
         print("\nPossible reasons:")
         print("  - Weekend or holiday (no trading)")
         print("  - Data not yet backfilled for this date")
         print("  - Database path incorrect")
     else:
-        print(f"\n✅ Found {len(bars)} bars for {trade_date}")
+        print(f"\n[OK] Found {len(bars)} bars for {trade_date}")
         print_timestamps(bars, f"FIRST 20 TIMESTAMPS FOR {trade_date}")
 
     # Compute ORB windows
