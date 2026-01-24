@@ -64,7 +64,7 @@ Windows:
 ### Basic Launch
 
 ```bash
-streamlit run app_trading_hub.py
+streamlit run trading_app/app_trading_hub.py
 ```
 
 **Default URL:** http://localhost:8501
@@ -72,13 +72,13 @@ streamlit run app_trading_hub.py
 ### Custom Port
 
 ```bash
-streamlit run app_trading_hub.py --server.port 8502
+streamlit run trading_app/app_trading_hub.py --server.port 8502
 ```
 
 ### Auto-Open Browser
 
 ```bash
-streamlit run app_trading_hub.py --server.headless false
+streamlit run trading_app/app_trading_hub.py --server.headless false
 ```
 
 ---
@@ -435,7 +435,7 @@ backgroundColor = "#ffffff"
 
 1. **Launch the dashboard**
    ```bash
-   streamlit run app_trading_hub.py
+   streamlit run trading_app/app_trading_hub.py
    ```
 
 2. **Run edge discovery** to see all 40 edges

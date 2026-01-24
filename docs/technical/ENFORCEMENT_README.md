@@ -21,7 +21,7 @@ This enforcement system ensures:
 **Purpose**: Single source of truth for all canonical paths
 
 Defines:
-- Canonical database locations (gold.db, live_data.db, etc.)
+- Canonical database locations (data/db/gold.db, live_data.db, etc.)
 - Forbidden database locations (trading_app/*.db, scripts/*.db)
 - Connection module (trading_app/cloud_mode.py)
 - Documentation paths

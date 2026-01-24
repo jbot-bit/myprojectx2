@@ -393,5 +393,5 @@ Before asking ChatGPT tonight:
 ---
 
 **Last Updated:** January 16, 2026
-**Data Source:** gold.db → validated_setups table (post scan-window bug fix)
+**Data Source:** data/db/gold.db → validated_setups table (post scan-window bug fix)
 **Performance:** Verified 2024-01-01 to 2026-01-10 (2 years)

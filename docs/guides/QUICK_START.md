@@ -20,7 +20,7 @@ ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 ## 2. Launch Dashboard
 
 ```bash
-streamlit run app_trading_hub.py
+streamlit run trading_app/app_trading_hub.py
 ```
 
 **Opens at:** http://localhost:8501
@@ -156,5 +156,5 @@ python backtest_orb_exec_1m.py --rr-grid "1.5,2.0,2.5,3.0" --confirm 1
 **Ready to trade smarter? Launch the dashboard now!**
 
 ```bash
-streamlit run app_trading_hub.py
+streamlit run trading_app/app_trading_hub.py
 ```
