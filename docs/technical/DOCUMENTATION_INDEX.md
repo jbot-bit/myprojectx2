@@ -96,7 +96,7 @@ Complete guide to all documentation in the MGC Trading System.
 **[CLAUDE.md](CLAUDE.md)** - Developer Instructions
 - Project overview and architecture
 - Key commands (backfill, features, testing)
-- Database schema (bars_1m, bars_5m, daily_features)
+- Database schema (bars_1m, bars_5m, daily_features_v2)
 - Time and calendar model (trading day definition)
 - Idempotency and resume behavior
 - **CRITICAL:** Database/config synchronization rules

@@ -60,7 +60,7 @@ These apps are OLD and INCOMPLETE:
 - ✅ **Enhanced Charting** - ORB overlays and trade markers
 
 ### Data Source:
-- ✅ **Uses validated_setups** table from gold.db
+- ✅ **Uses validated_setups** table from data/db/gold.db
 - ✅ **Synced with config.py** (verified by test_app_sync.py)
 - ✅ **17 profitable setups** with correct RR, SL modes, and filters
 - ✅ **Tier system** (S+, S, A, B, C) with automatic risk adjustment
@@ -73,9 +73,9 @@ These apps are OLD and INCOMPLETE:
 
 ---
 
-## Why Only One App?
+## Why Only Two Apps?
 
-**Problems with multiple apps:**
+**Problems with more than two apps:**
 1. ❌ Risk of using wrong version with bugs
 2. ❌ Confusion about which one has latest fixes
 3. ❌ Wasted time fixing same bug in multiple places
@@ -83,9 +83,9 @@ These apps are OLD and INCOMPLETE:
 5. ❌ Impossible to maintain quality
 
 **Solution:**
-- ✅ ONE app to rule them all
-- ✅ All features in one place
-- ✅ All fixes go to one place
+- ✅ Two apps only (desktop + mobile)
+- ✅ Clear device-based choice
+- ✅ One shared database and logic
 - ✅ No confusion, no mistakes
 
 ---
@@ -96,10 +96,10 @@ These apps are OLD and INCOMPLETE:
 myprojectx/
 ├── START_TRADING_APP.bat          ← USE THIS to launch app
 ├── APP_USAGE_GUIDE.md             ← THIS FILE (read it!)
-├── gold.db                         ← Database with validated_setups
+├── data/db/gold.db                 ← Database with validated_setups
 ├── test_app_sync.py               ← Verify database/config sync
 ├── trading_app/                    ← THE PRODUCTION CODE
-│   ├── app_trading_hub.py         ← THE ONE TRUE APP ⭐
+│   ├── app_trading_hub.py         ← DESKTOP APP (primary) ⭐
 │   ├── config.py                  ← Setup configs (synced with DB)
 │   ├── strategy_engine.py         ← Strategy evaluation logic
 │   ├── setup_detector.py          ← Reads validated_setups from DB
@@ -185,7 +185,7 @@ Ask the AI assistant in the app! (🤖 AI CHAT tab)
 ### What Is AI Source Lock?
 
 The AI assistant in the app is **CODE-ENFORCED** to answer ONLY using:
-1. Data from `gold.db` (bars_1m, bars_5m, daily_features, validated_setups)
+1. Data from `data/db/gold.db` (bars_1m, bars_5m, daily_features_v2, validated_setups)
 2. Outputs from `strategy_engine.py` and `execution_engine.py`
 3. Nothing else (no general trading advice, no external knowledge, no estimating)
 

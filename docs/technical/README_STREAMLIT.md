@@ -366,7 +366,7 @@ pip install streamlit
 **Fix:**
 ```bash
 # Verify database exists
-ls gold.db
+ls data/db/gold.db
 
 # Check working directory
 pwd
@@ -384,11 +384,11 @@ streamlit run app_edge_research.py
 1. Check filters (especially Outcomes - include WIN, LOSS, NO_TRADE)
 2. Verify V2 data exists:
    ```bash
-   python -c "import duckdb; con = duckdb.connect('gold.db'); print(con.execute('SELECT COUNT(*) FROM daily_features_v2').fetchone())"
+   python -c "import duckdb; con = duckdb.connect('data/db/gold.db'); print(con.execute('SELECT COUNT(*) FROM daily_features_v2').fetchone())"
    ```
 3. Check v_orb_trades view exists:
    ```bash
-   python -c "import duckdb; con = duckdb.connect('gold.db'); print(con.execute('SELECT COUNT(*) FROM v_orb_trades').fetchone())"
+   python -c "import duckdb; con = duckdb.connect('data/db/gold.db'); print(con.execute('SELECT COUNT(*) FROM v_orb_trades').fetchone())"
    ```
 
 ### Charts Not Rendering

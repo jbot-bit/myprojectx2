@@ -56,7 +56,7 @@
 ### Critical Files & Their Purpose
 
 **Data Pipeline:**
-- `gold.db` - Main DuckDB database (bars_1m, bars_5m, **daily_features_v2**, validated_setups)
+- `data/db/gold.db` - Main DuckDB database (bars_1m, bars_5m, **daily_features_v2**, validated_setups)
 - `backfill_databento_continuous.py` - Primary data source (Databento GLBX.MDP3)
 - `build_daily_features_v2.py` - Zero-lookahead feature builder (CANONICAL)
 - **⚠️ `daily_features` (v1) DELETED** - Never existed in production, use `daily_features_v2` only
@@ -71,7 +71,7 @@
 - `audit_master.py` - 38-test audit system (100% pass rate as of Jan 17)
 
 **Strategy Source of Truth:**
-- `validated_setups` table in gold.db (19 setups: 8 MGC, 5 NQ, 6 MPL)
+- `validated_setups` table in data/db/gold.db (19 setups: 8 MGC, 5 NQ, 6 MPL)
 - `trading_app/config.py` - Python representation (must match database)
 - `populate_validated_setups.py` - Rebuild validated_setups from scratch
 
@@ -148,11 +148,11 @@ python journal.py compare       # Compare vs historical
 # Install dashboard dependencies
 pip install -r requirements.txt
 
-# Launch Streamlit dashboard (reads gold.db and v_orb_trades)
+# Launch Streamlit dashboard (reads data/db/gold.db and v_orb_trades)
 streamlit run app_edge_research.py
 
 # Quick DB connectivity test (PowerShell/cmd safe)
-python -c "import duckdb; con=duckdb.connect('gold.db'); print(con.execute('SELECT COUNT(*) FROM v_orb_trades').fetchone())"
+python -c "import duckdb; con=duckdb.connect('data/db/gold.db'); print(con.execute('SELECT COUNT(*) FROM v_orb_trades').fetchone())"
 ```
 
 Use the left sidebar to filter by date, ORB time, break direction, outcomes (WIN/LOSS/NO_TRADE), session type codes, and optional ATR/Asia range bounds. Charts and tables update instantly; download the drilldown table for CSV analysis.
@@ -173,8 +173,7 @@ Use the left sidebar to filter by date, ORB time, break direction, outcomes (WIN
 
 ### Zero-Lookahead (Current Objective)
 - **V2 is the trusted dataset**: `build_daily_features_v2.py` builds zero-lookahead features; `analyze_orb_v2.py` and `realtime_signals.py` consume them.
-- **Automation**: `daily_update.py` → `backfill_databento_continuous.py` now builds **both** `daily_features` (legacy) and `daily_features_v2` (preferred). Always favor V2 outputs for decisions.
-- **Legacy data caution**: V1 (`daily_features`, session types) is retained for comparison only and contains lookahead bias. Do not base live rules on V1 session labels.
+- **Automation**: `daily_update.py` → `backfill_databento_continuous.py` builds `daily_features_v2` only (canonical).
 - **Execution backtest**: `backtest_orb_exec_1m.py` uses `daily_features_v2` levels and 1m closes for realistic entries/exits.
 - **Deterministic session codes**: `daily_features_v2` stores `asia_type_code`, `london_type_code`, and `pre_ny_type_code` (sweep/expansion/consolidation) computed strictly from each session’s own highs/lows and ATR — no subjective trend or lookahead.
 
@@ -202,7 +201,7 @@ python daily_update.py --days 7          # Catch up last 7 days
 python backfill_databento_continuous.py 2024-01-01 2026-01-10
 
 # Rebuild features for specific date
-python build_daily_features.py 2026-01-10
+python build_daily_features_v2.py 2026-01-10
 
 # Wipe all MGC data (fresh start)
 python wipe_mgc.py
@@ -286,8 +285,8 @@ python daily_alerts.py 2026-01-09       # Specific date
 
 ```bash
 # Export to CSV
-python export_csv.py daily_features              # All features
-python export_csv.py daily_features --days 30    # Last 30 days
+python export_csv.py daily_features_v2              # All features
+python export_csv.py daily_features_v2 --days 30    # Last 30 days
 python export_csv.py orb_performance             # Setup performance
 python export_csv.py session_stats               # Session analysis
 python export_csv.py bars_1m 2026-01-09         # 1-min bars for date
@@ -370,7 +369,7 @@ All reports saved to `audit_reports/` directory. See `MASTER_AUDIT_PLAN.md` for 
 
 ```
 myprojectx/
-├── gold.db                          # Main database (DuckDB)
+├── data/db/gold.db                  # Main database (DuckDB)
 ├── trades.db                        # Trading journal (SQLite)
 ├── CLAUDE.md                        # Project instructions
 ├── TRADING_PLAYBOOK.md              # Trading strategy guide
@@ -379,7 +378,7 @@ myprojectx/
 │
 ├── Data Pipeline
 │   ├── backfill_databento_continuous.py  # Main backfill script
-│   ├── build_daily_features.py           # Feature engineering
+│   ├── build_daily_features_v2.py        # Feature engineering (canonical)
 │   ├── build_5m.py                       # 5-min aggregation
 │   ├── daily_update.py                   # One-command daily update
 │   └── init_db.py                        # Initialize database
@@ -447,7 +446,7 @@ myprojectx/
    DATABENTO_DATASET=GLBX.MDP3
    DATABENTO_SCHEMA=ohlcv-1m
    DATABENTO_SYMBOLS=MGC.FUT
-   DUCKDB_PATH=gold.db
+   DUCKDB_PATH=data/db/gold.db
    SYMBOL=MGC
    TZ_LOCAL=Australia/Brisbane
    ```
@@ -584,7 +583,7 @@ python journal.py compare
 python analyze_orb_performance.py
 
 # Export for deeper analysis
-python export_csv.py daily_features --days 7
+python export_csv.py daily_features_v2 --days 7
 
 # Check journal stats
 python journal.py stats
@@ -616,7 +615,7 @@ A: Yes! Use `export_csv.py` for any table or analysis result.
 A: Use `ai_query.py` for natural language or `filter_orb_setups.py` for precise filtering.
 
 **Q: Is the database safe to backup?**
-A: Yes. Just copy `gold.db` and `trades.db`. They're portable SQLite/DuckDB files.
+A: Yes. Just copy `data/db/gold.db` and `trades.db`. They're portable SQLite/DuckDB files.
 
 **Q: Can I run this on a schedule?**
 A: Yes. Use Windows Task Scheduler or cron to run `daily_update.py` daily.

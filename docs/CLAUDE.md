@@ -16,10 +16,10 @@ Gold (MGC) Data Pipeline for building a clean, replayable local dataset of Micro
 **After ANY changes to strategies, database, or config files, ALWAYS run:**
 
 ```bash
-python strategies/test_app_sync.py
+python test_app_sync.py
 ```
 
-This validates that `trading_app/config.py` matches `data/db/data/db/gold.db` → `validated_setups` table.
+This validates that `trading_app/config.py` matches `data/db/gold.db` → `validated_setups` table.
 
 **DO NOT PROCEED if this test fails.** Fix the mismatch immediately.
 
@@ -40,29 +40,29 @@ See full details in section: "CRITICAL: Database and Config Synchronization"
 
 **Databento (primary source for historical data):**
 ```bash
-python pipeline/backfill_databento_continuous.py YYYY-MM-DD YYYY-MM-DD
+python backfill_databento_continuous.py YYYY-MM-DD YYYY-MM-DD
 ```
-- Example: `python pipeline/backfill_databento_continuous.py 2024-01-01 2026-01-10`
+- Example: `python backfill_databento_continuous.py 2024-01-01 2026-01-10`
 - Automatically selects front/most liquid contract per day
 - Stitches contracts into continuous series
 - Safe to interrupt and re-run (idempotent)
 - Can run forward or backward
-- Automatically calls `build_daily_features.py` after backfill
+- Automatically calls `build_daily_features_v2.py` after backfill
 
 **ProjectX (alternative source, not used for deep history):**
 ```bash
-python pipeline/backfill_range.py YYYY-MM-DD YYYY-MM-DD
+python backfill_range.py YYYY-MM-DD YYYY-MM-DD
 ```
-- Example: `python pipeline/backfill_range.py 2025-12-01 2026-01-09`
+- Example: `python backfill_range.py 2025-12-01 2026-01-09`
 - Handles contract rollovers automatically
-- Also calls `build_daily_features.py` after backfill
+- Also calls `build_daily_features_v2.py` after backfill
 
 ### Feature Building
 
 ```bash
-python pipeline/build_daily_features.py YYYY-MM-DD
+python build_daily_features_v2.py YYYY-MM-DD
 ```
-- Example: `python pipeline/build_daily_features.py 2025-01-10`
+- Example: `python build_daily_features_v2.py 2025-01-10`
 - Automatically called by backfill scripts
 - Computes session stats (Asia/London/NY), ORBs, RSI
 - Safe to re-run (upserts)
@@ -71,36 +71,36 @@ python pipeline/build_daily_features.py YYYY-MM-DD
 
 **Initialize database schema:**
 ```bash
-python pipeline/init_db.py
+python init_db.py
 ```
 
-**Wipe all MGC data (bars_1m, bars_5m, daily_features):**
+**Wipe all MGC data (bars_1m, bars_5m, daily_features_v2):**
 ```bash
-python pipeline/wipe_mgc.py
+python wipe_mgc.py
 ```
 
 **Check database contents:**
 ```bash
-python pipeline/check_db.py
+python check_db.py
 ```
 
 **Query features:**
 ```bash
-python analysis/query_features.py
+python query_features.py
 ```
 
 ### Testing & Inspection
 
 **Inspect DBN files:**
 ```bash
-python pipeline/inspect_dbn.py
+python inspect_dbn.py
 ```
 - Configured to read from `dbn/` folder
 - Shows schema, dataset, symbols, record counts
 
 **Validate data:**
 ```bash
-python pipeline/validate_data.py
+python validate_data.py
 ```
 - Validates data integrity and completeness
 
@@ -132,8 +132,8 @@ Source → Normalize → Store → Aggregate → Feature Build
 - Bucket = floor(epoch(ts)/300)*300
 - Fully rebuildable at any time
 
-**daily_features**:
-- One row per local trading day
+**daily_features_v2**:
+- One row per local trading day (canonical features)
 - Primary key: `(date_local, instrument)` - ready for multi-instrument support
   - Currently: instrument always = 'MGC'
 - Session high/low (Asia 09:00-17:00, London 18:00-23:00, NY 23:00-02:00)
@@ -145,7 +145,7 @@ Source → Normalize → Store → Aggregate → Feature Build
   - `orb_1800_*`: 18:00-18:05 ORB
   - `orb_2300_*`: 23:00-23:05 ORB
   - `orb_0030_*`: 00:30-00:35 ORB
-- RSI at ORB (RSI_LEN=14, computed for 00:30 ORB)
+- RSI at ORB (RSI_LEN=14)
 - Missing ORBs stored as NULL (no crashes on weekends/holidays)
 
 ### Time & Calendar Model (CRITICAL)
@@ -176,7 +176,7 @@ Source → Normalize → Store → Aggregate → Feature Build
 
 - Break detected when CLOSE is outside the ORB range (not touch)
 - Direction: UP, DOWN, or NONE
-- Uses 5-minute closes for detection (from bars_5m)
+- Uses 1-minute closes for detection (from bars_1m)
 
 ### Idempotency & Resume Behavior
 
@@ -241,7 +241,7 @@ Required environment variables:
 ### ⚠️ ALWAYS RUN THIS TEST AFTER ANY CHANGES:
 
 ```bash
-python strategies/test_app_sync.py
+python test_app_sync.py
 ```
 
 **Run this test EVERY TIME after:**
@@ -269,7 +269,7 @@ When updating MGC setups in validated_setups table:
 
 1. **FIRST**: Update `data/db/gold.db` → `validated_setups` table
 2. **IMMEDIATELY AFTER**: Update `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary
-3. **VERIFY**: Run `python strategies/test_app_sync.py` to confirm synchronization
+3. **VERIFY**: Run `python test_app_sync.py` to confirm synchronization
 4. **ONLY PROCEED**: If ALL TESTS PASS
 
 **NEVER skip step 2. NEVER skip step 3. NEVER proceed if tests fail.**
@@ -288,7 +288,7 @@ For each ORB time (0900, 1000, 1100, 1800, 2300, 0030):
 ### Verification Command
 
 ```bash
-python strategies/test_app_sync.py
+python test_app_sync.py
 ```
 
 Expected output:
@@ -326,7 +326,7 @@ All must work with synchronized data.
 Same rules apply:
 - Update database first
 - Update corresponding config section immediately (MGC_ORB_SIZE_FILTERS, NQ_ORB_SIZE_FILTERS, or MPL_ORB_SIZE_FILTERS)
-- **Run `python strategies/test_app_sync.py`**
+- **Run `python test_app_sync.py`**
 - Verify all tests pass
 - **Do NOT skip this step**
 
@@ -340,4 +340,4 @@ On 2026-01-16, a critical error was discovered:
 - Emergency fix required updating config.py and creating test_app_sync.py
 - **System now has test_app_sync.py to prevent this from ever happening again**
 
-**Lesson learned:** ALWAYS run `python strategies/test_app_sync.py` after ANY changes to strategies, filters, or configs.
+**Lesson learned:** ALWAYS run `python test_app_sync.py` after ANY changes to strategies, filters, or configs.

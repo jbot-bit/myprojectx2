@@ -141,7 +141,7 @@ git push
 
 ## 🛠️ What About Database Changes?
 
-### **Local Database (gold.db):**
+### **Local Database (data/db/gold.db):**
 - Lives on your PC only
 - NOT deployed to cloud
 - Cloud uses ProjectX API instead
@@ -169,7 +169,7 @@ git push
 # (Cloud gets data from ProjectX, not database)
 ```
 
-**Remember:** Cloud mode doesn't use `gold.db` - it uses ProjectX API!
+**Remember:** Cloud mode doesn't use `data/db/gold.db` - it uses ProjectX API!
 
 ---
 
@@ -181,7 +181,7 @@ git push
 python -m streamlit run trading_app/app_mobile.py
 
 # Access: http://localhost:8501
-# Uses: gold.db (local database)
+# Uses: data/db/gold.db (local database)
 ```
 
 ### **Production (Cloud):**
@@ -257,7 +257,7 @@ git push
 
 ### **NOT Deployed (Protected):**
 - ❌ `.env` (API keys)
-- ❌ `gold.db` (database)
+- ❌ `data/db/gold.db` (database)
 - ❌ `*.log` (log files)
 - ❌ `*.csv` (exports)
 - ❌ `.streamlit/secrets.toml`

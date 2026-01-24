@@ -6,7 +6,7 @@
 
 1. **Backup Created**: `backups/20260118_0106/`
    - All database files backed up with SHA256 verification
-   - 692.81 MB total (gold.db, live_data.db, trades.db, trading_app.db)
+  - 692.81 MB total (data/db/gold.db, live_data.db, trades.db, trading_app.db)
 
 2. **Pre-Migration Audits Passed**:
    - audit_master.py: 38/38 tests (100%)
@@ -74,7 +74,7 @@ This will:
 - Migrate 4 persistent tables:
   - bars_1m (1.4M rows)
   - bars_5m (320K rows)
-  - daily_features (745 rows)
+  - daily_features_v2 (745 rows)
   - validated_setups (19 rows)
 - Verify row counts match exactly
 - Create dataset catalog
@@ -112,7 +112,7 @@ Tables checked: 4
 ## How Database Router Works
 
 ### Local Mode (CLOUD_MODE=0)
-- All data read from `gold.db`
+- All data read from `data/db/gold.db`
 - Cache written to `live_data.db`
 - PC must be on for apps to work
 
@@ -127,7 +127,7 @@ Tables checked: 4
 **Persistent tables** (MotherDuck when CLOUD_MODE=1):
 - bars_1m
 - bars_5m
-- daily_features
+- daily_features_v2
 - validated_setups
 
 **Cache tables** (always local):
@@ -140,11 +140,11 @@ Tables checked: 4
 
 ## Adding New Instruments (MPL/NQ Data Updates)
 
-Your bars tables now support multiple instruments, but you need to rebuild daily_features for MPL/NQ:
+Your bars tables now support multiple instruments, but you need to rebuild daily_features_v2 for MPL/NQ:
 
 ```bash
-# Rebuild daily_features for all instruments
-python build_daily_features.py 2024-01-02 2026-01-15
+# Rebuild daily_features_v2 for all instruments
+python build_daily_features_v2.py 2024-01-02 2026-01-15
 
 # Or per instrument (if you add backfill scripts)
 python scripts/build_daily_features_mpl.py
@@ -170,11 +170,11 @@ CLOUD_MODE=0
 
 ### Option 2: Restore from backup
 ```bash
-# Delete current gold.db
-rm gold.db
+# Delete current database
+rm data/db/gold.db
 
 # Restore from backup
-cp backups/20260118_0106/gold.db ./gold.db
+cp backups/20260118_0106/gold.db data/db/gold.db
 
 # Verify
 python audit_master.py

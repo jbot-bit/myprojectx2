@@ -9,6 +9,11 @@ Gold (MGC) Data Pipeline for building a clean, replayable local dataset of Micro
 **Primary Focus**: 09:00, 10:00, 11:00 ORBs
 **Secondary**: 18:00, 23:00, 00:30 ORBs
 
+## Always-On Safety Rules
+
+- No sys.path hacks.
+- No import-time database or network calls.
+
 ## ⚠️ CANONICAL FEATURES TABLE
 
 **`daily_features_v2` is the ONLY canonical features table.**
@@ -38,7 +43,7 @@ Gold (MGC) Data Pipeline for building a clean, replayable local dataset of Micro
 python test_app_sync.py
 ```
 
-This validates that `trading_app/config.py` matches `gold.db` → `validated_setups` table.
+This validates that `trading_app/config.py` matches `data/db/gold.db` → `validated_setups` table.
 
 **DO NOT PROCEED if this test fails.** Fix the mismatch immediately.
 
@@ -133,7 +138,7 @@ Source → Normalize → Store → Aggregate → Feature Build
 
 1. **Source**: Databento (GLBX.MDP3) or ProjectX API
 2. **Normalize**: Convert to standard format with timezone handling
-3. **Store**: Insert into DuckDB (`gold.db`)
+3. **Store**: Insert into DuckDB (`data/db/gold.db`)
 4. **Aggregate**: Build 5-minute bars from 1-minute bars
 5. **Feature Build**: Calculate daily ORBs, session stats, indicators
 
@@ -221,7 +226,7 @@ Required environment variables:
 - `DATABENTO_DATASET`: Default "GLBX.MDP3"
 - `DATABENTO_SCHEMA`: Default "ohlcv-1m"
 - `DATABENTO_SYMBOLS`: Default "MGC.FUT"
-- `DUCKDB_PATH`: Default "gold.db"
+- `DUCKDB_PATH`: Default "data/db/gold.db"
 - `SYMBOL`: Default "MGC"
 - `TZ_LOCAL`: Default "Australia/Brisbane"
 - `PROJECTX_USERNAME`, `PROJECTX_API_KEY`, `PROJECTX_BASE_URL`: For ProjectX backfills
@@ -289,7 +294,7 @@ Mismatches between database and config.py cause:
 
 When updating MGC setups in validated_setups table:
 
-1. **FIRST**: Update `gold.db` → `validated_setups` table
+1. **FIRST**: Update `data/db/gold.db` → `validated_setups` table
 2. **IMMEDIATELY AFTER**: Update `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary
 3. **VERIFY**: Run `python test_app_sync.py` to confirm synchronization
 4. **ONLY PROCEED**: If ALL TESTS PASS
@@ -298,7 +303,7 @@ When updating MGC setups in validated_setups table:
 
 ### Files That Must Always Match Exactly
 
-- `gold.db` → `validated_setups.orb_size_filter` (for MGC rows)
+- `data/db/gold.db` → `validated_setups.orb_size_filter` (for MGC rows)
 - `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary values
 
 For each ORB time (0900, 1000, 1100, 1800, 2300, 0030):
